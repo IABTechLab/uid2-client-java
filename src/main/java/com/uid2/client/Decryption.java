@@ -24,6 +24,7 @@
 package com.uid2.client;
 
 import javax.crypto.*;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
@@ -35,11 +36,26 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Map;
 
 class Decryption {
 
-    static DecryptionResponse decrypt(byte[] encryptedId, IKeyContainer keys, Instant now) throws Exception {
+    public static final int GCM_AUTHTAG_LENGTH = 16;
+    public static final int GCM_IV_LENGTH = 12;
+
+    static DecryptionResponse decrypt(byte[] encryptedId, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
+        if (encryptedId[0] == 2)
+        {
+            return decryptV2(encryptedId, keys, now);
+        }
+        else if (encryptedId[1] == 112)
+        {
+            return decryptV3(encryptedId, keys, now, identityScope);
+        }
+
+        return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
+    }
+
+    static DecryptionResponse decryptV2(byte[] encryptedId, IKeyContainer keys, Instant now) throws Exception {
         try {
             ByteBuffer rootReader = ByteBuffer.wrap(encryptedId);
             int version = (int) rootReader.get();
@@ -62,10 +78,6 @@ class Decryption {
 
             ByteBuffer masterPayloadReader = ByteBuffer.wrap(masterDecrypted);
             long expiryMilliseconds = masterPayloadReader.getLong();
-            Instant expiry = Instant.ofEpochMilli(expiryMilliseconds);
-            if (now.isAfter(expiry)) {
-                return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN);
-            }
 
             long siteKeyId = masterPayloadReader.getInt();
             Key siteKey = keys.getKey(siteKeyId);
@@ -90,13 +102,80 @@ class Decryption {
             long establishedMilliseconds = identityPayloadReader.getLong();
             Instant established = Instant.ofEpochMilli(establishedMilliseconds);
 
+            Instant expiry = Instant.ofEpochMilli(expiryMilliseconds);
+            if (now.isAfter(expiry)) {
+                return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId);
+            }
+
             return new DecryptionResponse(DecryptionStatus.SUCCESS, idString, established, siteId);
         } catch (ArrayIndexOutOfBoundsException payloadEx) {
             return DecryptionResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
         }
     }
 
-    static EncryptionDataResponse encryptData(EncryptionDataRequest request, IKeyContainer keys) {
+    static DecryptionResponse decryptV3(byte[] encryptedId, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
+        try {
+            final ByteBuffer rootReader = ByteBuffer.wrap(encryptedId);
+            final byte prefix = rootReader.get();
+            if (decodeIdentityScopeV3(prefix) != identityScope)
+            {
+                return DecryptionResponse.makeError(DecryptionStatus.INVALID_IDENTITY_SCOPE);
+            }
+
+            final int version = (int) rootReader.get();
+            if (version != 112) {
+                return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
+            }
+
+            final long masterKeyId = rootReader.getInt();
+            final Key masterKey = keys.getKey(masterKeyId);
+            if (masterKey == null) {
+                return DecryptionResponse.makeError(DecryptionStatus.NOT_AUTHORIZED_FOR_KEY);
+            }
+
+            final byte[] masterPayload = decryptGCM(encryptedId, rootReader.position(), masterKey.getSecret());
+            final ByteBuffer masterReader = ByteBuffer.wrap(masterPayload);
+
+            final long expiresMilliseconds = masterReader.getLong();
+            final long createdMilliseconds = masterReader.getLong();
+
+            final int operatorSideId = masterReader.getInt();
+            final byte operatorType = masterReader.get();
+            final int operatorVersion = masterReader.getInt();
+            final int operatorKeyId = masterReader.getInt();
+
+            final long siteKeyId = masterReader.getInt();
+            final Key siteKey = keys.getKey(siteKeyId);
+            if (siteKey == null) {
+                return DecryptionResponse.makeError(DecryptionStatus.NOT_AUTHORIZED_FOR_KEY);
+            }
+
+            final byte[] sitePayload = decryptGCM(masterPayload, masterReader.position(), siteKey.getSecret());
+            final ByteBuffer siteReader = ByteBuffer.wrap(sitePayload);
+
+            final int siteId = siteReader.getInt();
+            final long publisherId = siteReader.getLong();
+            final int clientKeyId = siteReader.getInt();
+
+            final int privacyBits = siteReader.getInt();
+            final long establishedMilliseconds = siteReader.getLong();
+            final long refreshedMilliseconds = siteReader.getLong();
+            final byte[] id = Arrays.copyOfRange(sitePayload, siteReader.position(), sitePayload.length);
+            final String idString = Base64.getEncoder().encodeToString(id);
+            final Instant established = Instant.ofEpochMilli(establishedMilliseconds);
+
+            final Instant expiry = Instant.ofEpochMilli(expiresMilliseconds);
+            if (now.isAfter(expiry)) {
+                return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId);
+            }
+
+            return new DecryptionResponse(DecryptionStatus.SUCCESS, idString, established, siteId);
+        } catch (ArrayIndexOutOfBoundsException payloadEx) {
+            return DecryptionResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
+        }
+    }
+
+    static EncryptionDataResponse encryptData(EncryptionDataRequest request, IKeyContainer keys, IdentityScope identityScope) {
         if (request.getData() == null) {
             throw new IllegalArgumentException("data to encrypt must not be null");
         }
@@ -115,7 +194,7 @@ class Decryption {
                 siteId = request.getSiteId();
             } else {
                 try {
-                    DecryptionResponse decryptedToken = decrypt(Base64.getDecoder().decode(request.getAdvertisingToken()), keys, now);
+                    DecryptionResponse decryptedToken = decrypt(Base64.getDecoder().decode(request.getAdvertisingToken()), keys, now, identityScope);
                     if (!decryptedToken.isSuccess()) {
                         return EncryptionDataResponse.makeError(EncryptionStatus.TOKEN_DECRYPT_FAILURE);
                     }
@@ -137,26 +216,38 @@ class Decryption {
         }
 
         byte[] iv = request.getInitializationVector();
-        if (iv == null) {
-            iv = generateIv();
-        }
 
         try {
-            byte[] encryptedData = encrypt(request.getData(), iv, key.getSecret());
-            ByteBuffer writer = ByteBuffer.allocate(encryptedData.length + 18);
-            writer.put((byte)PayloadType.ENCRYPTED_DATA.value);
-            writer.put((byte)1); // version
-            writer.putLong(now.toEpochMilli());
-            writer.putInt(siteId);
+            final ByteBuffer payloadWriter = ByteBuffer.allocate(request.getData().length + 12);
+            payloadWriter.putLong(now.toEpochMilli());
+            payloadWriter.putInt(siteId);
+            payloadWriter.put(request.getData());
+            final byte[] encryptedPayload = encryptGCM(payloadWriter.array(), iv, key.getSecret());
+
+            final ByteBuffer writer = ByteBuffer.allocate(encryptedPayload.length + 6);
+            writer.put((byte)(PayloadType.ENCRYPTED_DATA_V3.value | (identityScope.value << 4) | 0xB));
+            writer.put((byte)112); // version
             writer.putInt((int)key.getId());
-            writer.put(encryptedData);
+            writer.put(encryptedPayload);
+
             return new EncryptionDataResponse(EncryptionStatus.SUCCESS, Base64.getEncoder().encodeToString(writer.array()));
         } catch (Exception ex) {
             return EncryptionDataResponse.makeError(EncryptionStatus.ENCRYPTION_FAILURE);
         }
     }
 
-    static DecryptionDataResponse decryptData(byte[] encryptedBytes, IKeyContainer keys) throws Exception {
+    static DecryptionDataResponse decryptData(byte[] encryptedBytes, IKeyContainer keys, IdentityScope identityScope) throws Exception {
+        if ((encryptedBytes[0] & 224) == (int)PayloadType.ENCRYPTED_DATA_V3.value)
+        {
+            return decryptDataV3(encryptedBytes, keys, identityScope);
+        }
+        else
+        {
+            return decryptDataV2(encryptedBytes, keys);
+        }
+    }
+
+    static DecryptionDataResponse decryptDataV2(byte[] encryptedBytes, IKeyContainer keys) throws Exception {
         ByteBuffer reader = ByteBuffer.wrap(encryptedBytes);
         if(Byte.toUnsignedInt(reader.get()) != PayloadType.ENCRYPTED_DATA.value) {
             return DecryptionDataResponse.makeError(DecryptionStatus.INVALID_PAYLOAD_TYPE);
@@ -183,6 +274,34 @@ class Decryption {
         return new DecryptionDataResponse(DecryptionStatus.SUCCESS, decryptedData, encryptedAt);
     }
 
+    static DecryptionDataResponse decryptDataV3(byte[] encryptedBytes, IKeyContainer keys, IdentityScope identityScope) throws Exception {
+        final ByteBuffer reader = ByteBuffer.wrap(encryptedBytes);
+        final IdentityScope payloadScope = decodeIdentityScopeV3(reader.get());
+        if (payloadScope != identityScope)
+        {
+            return DecryptionDataResponse.makeError(DecryptionStatus.INVALID_IDENTITY_SCOPE);
+        }
+        if (reader.get() != 112)
+        {
+            return DecryptionDataResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
+        }
+
+        final long keyId = reader.getInt();
+        final Key key = keys.getKey(keyId);
+        if (key == null) {
+            return DecryptionDataResponse.makeError(DecryptionStatus.NOT_AUTHORIZED_FOR_KEY);
+        }
+
+        final byte[] payload = decryptGCM(encryptedBytes, reader.position(), key.getSecret());
+        final ByteBuffer payloadReader = ByteBuffer.wrap(payload, 0, payload.length);
+
+        final Instant encryptedAt = Instant.ofEpochMilli(payloadReader.getLong());
+        final int siteId = payloadReader.getInt();
+        final byte[] decryptedData = Arrays.copyOfRange(payload, payloadReader.position(), payload.length);
+
+        return new DecryptionDataResponse(DecryptionStatus.SUCCESS, decryptedData, encryptedAt);
+    }
+
     private static byte[] decrypt(byte[] data, byte[] iv, byte[] secret)
             throws CryptoException,
             NoSuchPaddingException,
@@ -199,28 +318,40 @@ class Decryption {
         // your system/jvm has no AES algorithm providers
     }
 
-    private static byte[] encrypt(byte[] data, byte[] iv, byte[] secret)
-            throws CryptoException,
-            NoSuchPaddingException,
-            NoSuchAlgorithmException {
+    public static byte[] encryptGCM(byte[] b, byte[] iv, byte[] secretBytes) {
         try {
-            SecretKey key = new SecretKeySpec(secret, 0, secret.length, "AES");
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(iv));
-            byte[] encrypted = cipher.doFinal(data);
-            byte[] finalized = new byte[16 + encrypted.length];
-            for (int i = 0; i < 16; i++) finalized[i] = iv[i];
-            for (int i = 0; i < encrypted.length; i++) finalized[16 + i] = encrypted[i];
-            return finalized;
-        } catch (InvalidAlgorithmParameterException|InvalidKeyException|BadPaddingException|IllegalBlockSizeException e) {
-            throw new CryptoException(e);
+            final SecretKey k = new SecretKeySpec(secretBytes, "AES");
+            final Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
+            if (iv == null) {
+                iv = new byte[GCM_IV_LENGTH];
+                new SecureRandom().nextBytes(iv);
+            }
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_AUTHTAG_LENGTH * 8, iv);
+            c.init(Cipher.ENCRYPT_MODE, k, gcmParameterSpec);
+            ByteBuffer buffer = ByteBuffer.allocate(b.length + GCM_IV_LENGTH + GCM_AUTHTAG_LENGTH);
+            buffer.put(iv);
+            buffer.put(c.doFinal(b));
+            return buffer.array();
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to Encrypt", e);
         }
     }
 
-    private static byte[] generateIv() {
-        byte[] iv = new byte[16];
-        new SecureRandom().nextBytes(iv);
-        return iv;
+    public static byte[] decryptGCM(byte[] encryptedBytes, int offset, byte[] secretBytes) {
+        try {
+            final SecretKey key = new SecretKeySpec(secretBytes, "AES");
+            final GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_AUTHTAG_LENGTH * 8, encryptedBytes, offset, GCM_IV_LENGTH);
+            final Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
+            c.init(Cipher.DECRYPT_MODE, key, gcmParameterSpec);
+            return c.doFinal(encryptedBytes, offset + GCM_IV_LENGTH, encryptedBytes.length - offset - GCM_IV_LENGTH);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to Decrypt", e);
+        }
+    }
+
+    private static IdentityScope decodeIdentityScopeV3(byte value)
+    {
+        return IdentityScope.fromValue((value >> 4) & 1);
     }
 
     public static class CryptoException extends Exception {

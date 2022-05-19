@@ -59,4 +59,8 @@ public class DecryptionResponse {
     public static DecryptionResponse makeError(DecryptionStatus status) {
         return new DecryptionResponse(status, null, Instant.MIN, null);
     }
+
+    public static DecryptionResponse makeError(DecryptionStatus status, Instant established, Integer siteId) {
+        return new DecryptionResponse(status, null, established, siteId);
+    }
 }
