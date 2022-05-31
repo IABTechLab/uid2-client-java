@@ -104,10 +104,10 @@ class Decryption {
 
             Instant expiry = Instant.ofEpochMilli(expiryMilliseconds);
             if (now.isAfter(expiry)) {
-                return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId);
+                return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId, siteKey.getSiteId());
             }
 
-            return new DecryptionResponse(DecryptionStatus.SUCCESS, idString, established, siteId);
+            return new DecryptionResponse(DecryptionStatus.SUCCESS, idString, established, siteId, siteKey.getSiteId());
         } catch (ArrayIndexOutOfBoundsException payloadEx) {
             return DecryptionResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
         }
@@ -166,10 +166,10 @@ class Decryption {
 
             final Instant expiry = Instant.ofEpochMilli(expiresMilliseconds);
             if (now.isAfter(expiry)) {
-                return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId);
+                return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId, siteKey.getSiteId());
             }
 
-            return new DecryptionResponse(DecryptionStatus.SUCCESS, idString, established, siteId);
+            return new DecryptionResponse(DecryptionStatus.SUCCESS, idString, established, siteId, siteKey.getSiteId());
         } catch (ArrayIndexOutOfBoundsException payloadEx) {
             return DecryptionResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
         }
@@ -184,6 +184,7 @@ class Decryption {
         Key key = request.getKey();
         int siteId = -1;
         if (key == null) {
+            int siteKeySiteId;
             if (keys == null) {
                 return EncryptionDataResponse.makeError(EncryptionStatus.NOT_INITIALIZED);
             } else if (!keys.isValid(now)) {
@@ -192,6 +193,7 @@ class Decryption {
                 throw new IllegalArgumentException("only one of siteId or advertisingToken can be specified");
             } else if (request.getSiteId() != null) {
                 siteId = request.getSiteId();
+                siteKeySiteId = siteId;
             } else {
                 try {
                     DecryptionResponse decryptedToken = decrypt(Base64.getDecoder().decode(request.getAdvertisingToken()), keys, now, identityScope);
@@ -200,12 +202,13 @@ class Decryption {
                     }
 
                     siteId = decryptedToken.getSiteId();
+                    siteKeySiteId = decryptedToken.getSiteKeySiteId();
                 } catch (Exception ex) {
                     return EncryptionDataResponse.makeError(EncryptionStatus.TOKEN_DECRYPT_FAILURE);
                 }
             }
 
-            key = keys.getActiveSiteKey(siteId, now);
+            key = keys.getActiveSiteKey(siteKeySiteId, now);
             if (key == null) {
                 return EncryptionDataResponse.makeError(EncryptionStatus.NOT_AUTHORIZED_FOR_KEY);
             }
