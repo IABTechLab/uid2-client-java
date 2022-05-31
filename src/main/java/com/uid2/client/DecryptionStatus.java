@@ -32,4 +32,5 @@ public enum DecryptionStatus {
     KEYS_NOT_SYNCED,
     VERSION_NOT_SUPPORTED,
     INVALID_PAYLOAD_TYPE,
+    INVALID_IDENTITY_SCOPE,
 }

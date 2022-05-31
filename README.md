@@ -9,12 +9,12 @@ The UID 2 Project is subject to Tech Lab IPR’s Policy and is managed by the IA
 
 ## Install
 
-1. add reference to uid2-client-1.0.0-jar-with-dependencies.jar generated from build & package setup in your project
+1. add reference to uid2-client-2.0.0-jar-with-dependencies.jar generated from build & package setup in your project
 
 2. install the library locally and reference via maven
 
 ```
-    mvn install:install-file -Dfile="./target/uid2-client-1.0.0-jar-with-dependencies.jar" -DgroupId="com.uid2" -DartifactId="uid2-client" -Dpackaging=jar -Dversion="1.0.0"
+    mvn install:install-file -Dfile="./target/uid2-client-2.0.0-jar-with-dependencies.jar" -DgroupId="com.uid2" -DartifactId="uid2-client" -Dpackaging=jar -Dversion="2.0.0"
 ```
 
 this will install the jar into your local .m2 repository, you can set your desired target repo with `-DlocalRepositoryPath=path-to-specific-local-repo`
@@ -25,7 +25,7 @@ then on your maven project's pom.xml, add
         <dependency>
             <groupId>com.uid2</groupId>
             <artifactId>uid2-client</artifactId>
-            <version>1.0.0</version>
+            <version>2.0.0</version>
         </dependency>
 ```
 

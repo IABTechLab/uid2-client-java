@@ -23,8 +23,18 @@
 
 package com.uid2.client;
 
-public class UID2ClientFactory {
-    public static IUID2Client create(String endpoint, String authKey, String secretKey) {
-        return new UID2Client(endpoint, authKey, secretKey, IdentityScope.UID2);
+public enum IdentityType {
+    Email(0), Phone(1);
+
+    public final int value;
+
+    IdentityType(int value) { this.value = value; }
+
+    public static IdentityType fromValue(int value) {
+        switch (value) {
+            case 0: return Email;
+            case 1: return Phone;
+            default: throw new IllegalArgumentException();
+        }
     }
 }
