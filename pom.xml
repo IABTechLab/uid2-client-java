@@ -6,15 +6,37 @@
 
     <groupId>com.uid2</groupId>
     <artifactId>uid2-client</artifactId>
-    <version>2.0.1</version>
+    <version>3.0.0-SNAPSHOT</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>UID2 Client</description>
+    <url>https://github.com/IABTechLab/uid2-client-java</url>
     <packaging>jar</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>UID2 team</name>
+            <email>unifiedid-admin@thetradedesk.com</email>
+            <organization>UID</organization>
+            <organizationUrl>https://github.com/IABTechLab/uid2docs</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:get:ssh://github.com:IABTechLab/uid2-client-java.git</connection>
+        <developerConnection>scm:get:ssh://github.com:IABTechLab/uid2-client-java.git</developerConnection>
+        <url>https://github.com/IABTechLab/uid2-client-java</url>
+    </scm>
 
     <dependencies>
         <dependency>
@@ -31,11 +53,19 @@
         </dependency>
     </dependencies>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
                 <configuration>
                     <source>8</source>
                     <target>8</target>
@@ -43,6 +73,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.4.2</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -64,6 +95,60 @@
                 <configuration>
                     <encoding>UTF-8</encoding>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.7</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.3.2</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>write-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>${project.build.outputDirectory}/${project.artifactId}.properties</outputFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
