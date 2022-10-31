@@ -6,7 +6,7 @@
 
     <groupId>com.uid2</groupId>
     <artifactId>uid2-client</artifactId>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.0.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>UID2 Client</description>
@@ -143,7 +143,7 @@
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
-                        <phase>verify</phase>
+                        <phase>deploy</phase>
                         <goals>
                             <goal>sign</goal>
                         </goals>
