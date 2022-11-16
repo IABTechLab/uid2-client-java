@@ -1,0 +1,10 @@
+target*
+target/
+target/*
+.idea*
+.idea/*
+.idea/
+dependencies/
+build/**
+.DS_Store
+*/node_modules/*
