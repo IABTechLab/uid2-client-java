@@ -26,7 +26,7 @@ Add this dependency to your project's POM:
 
 ## Usage for Publishers
 To use this SDK as a Publisher with your own HTTP client library:
-1. Create an instance of PublisherUid2Helper as a class variable. 
+1. Create an instance of PublisherUid2Helper as an instance variable. 
 
     `private final PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);`
 1. When a user authenticates and authorizes the creation of a UID2:
