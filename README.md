@@ -24,11 +24,11 @@ Add this dependency to your project's POM:
 * See com.uid2.client.test.IntegrationExamples for example usage for DSPs.
 * See [uid2-examples](https://github.com/UnifiedID2/uid2-examples/tree/main/publisher) for example usage for Publishers.
 
-## Usage
+## Usage for Publishers
 To use this SDK as a Publisher with your own HTTP client library:
 1. Create an instance of PublisherUid2Helper as a class variable. 
 
-    `private final publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);`
+    `private final PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);`
 1. When a user authenticates and authorizes the creation of a UID2:
 
     `Envelope envelope = publisherUid2Helper.createEnvelope(IdentityInput.fromEmail(emailAddress));`
