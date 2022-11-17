@@ -19,32 +19,40 @@ Add this dependency to your project's POM:
         </dependency>
 ```
 
-## Examples
+## Usage for DSPs
 
-* See com.uid2.client.test.IntegrationExamples for example usage for DSPs.
-* See [uid2-examples](https://github.com/UnifiedID2/uid2-examples/tree/main/publisher) for example usage for Publishers.
+See com.uid2.client.test.IntegrationExamples for example usage for DSPs.
 
 ## Usage for Publishers
-To use this SDK as a Publisher with your own HTTP client library:
+You can use this SDK with your own HTTP client library, as outlined in the steps below. An example application is at [uid2-examples](https://github.com/UnifiedID2/uid2-examples/tree/main/publisher).
+
+
 1. Create an instance of PublisherUid2Helper as an instance variable. 
 
     `private final PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);`
 1. When a user authenticates and authorizes the creation of a UID2:
 
     `Envelope envelope = publisherUid2Helper.createEnvelope(IdentityInput.fromEmail(emailAddress));`
-1. Using the HTTP client library of your choice, post this envelope to the [/v2/token/generate](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md) endpoint, with:
+1. Using an HTTP client library of your choice, post this envelope to the [/v2/token/generate](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md) endpoint, with:
    1. Header: `Authorization: Bearer {UID2_API_KEY}`
    1. Body: `envelope.getEnvelope()`
 1. If the HTTP response status code is 200:
 
    `IdentityTokens identity = publisherUid2Helper.createIdentityfromTokenGenerateResponse({response body}, envelope.getNonce());`
-1. Store this identity as a JSON string in the user's session state, using:
 
-   `identity.getJsonString()`
+### Standard Integration
+If you're using [standard (client-side) integration](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/publisher-client-side.md):
+
+1. Send this identity as a JSON string back to the client (to use in the [identity field](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/sdks/client-side-identity.md#initopts-object-void)) using: `identity.getJsonString()`
+### Server-Only Integration
+If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/custom-publisher-integration.md):
+1. Store this identity as a JSON string in the user's session state, using: `identity.getJsonString()`
+1. To use the user's UID2 token, use `identity.getAdvertisingToken()`
+
 1. When the user accesses another page, or on a timer, determine whether a refresh is needed:
-   1. Retrieve the identity from the user's session state via:
+   1. Retrieve the identity JSON string from the user's session state, then call:
    
-      `IdentityTokens identity = IdentityTokens.fromJsonString(identityJsonString);`
+       `IdentityTokens identity = IdentityTokens.fromJsonString(identityJsonString);`
    1. Determine if the identity is refreshable (ie, the refresh token hasn't expired): 
     
       ` if (identity == null || !identity.isRefreshable()) { user will need to reauthenticate }`
@@ -58,4 +66,4 @@ To use this SDK as a Publisher with your own HTTP client library:
 
    `IdentityTokens refreshedIdentity = PublisherUid2Helper.createIdentityFromTokenRefreshResponse({response body}, identity); `
 1. If `refreshedIdentity` is null, the user has opted out and you must no longer use their identity tokens.
-1. Otherwise, store `refreshedIdentity.getJsonString()` in the user's session state. 
+1. Otherwise, replace the user's identity session state with: `refreshedIdentity.getJsonString()`. 
