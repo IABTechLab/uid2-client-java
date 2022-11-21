@@ -1,3 +1,5 @@
+# This script was used to generate envelopes used in the PublisherTests java class
+
 import base64
 import os
 import sys

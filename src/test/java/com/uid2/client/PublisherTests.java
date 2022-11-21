@@ -23,33 +23,37 @@ public class PublisherTests {
     private final PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);
     private final byte[] nonce = hexStringToByteArray("312fe5aa08b2a049");
 
-    private Envelope createEnvelopeFromIdentityInput(IdentityInput identityInput) {
+    private EnvelopeV2 createEnvelopeFromIdentityInput(TokenGenerateInput tokenGenerateInput) {
         final Instant instant = Instant.ofEpochMilli(1667885597644L);
         final byte[] iv = hexStringToByteArray("cc3ccaca9889eab3800e787e");
 
-        return publisherUid2Helper.createEnvelopeImpl(identityInput, nonce, instant, iv);
+        return publisherUid2Helper.createEnvelopeImpl(tokenGenerateInput, nonce, instant, iv);
     }
 
-    private String createEnvelope(IdentityType identityType, String value, String tcf, boolean hash) {
-        IdentityInput identityInput;
+    private EnvelopeV2 createEnvelopeForTokenGenerateRequest(IdentityType identityType, String value, String tcString, boolean hash) {
+        TokenGenerateInput tokenGenerateInput;
         if (identityType == IdentityType.Email) {
-            identityInput = IdentityInput.fromEmail(value).withTcfConsentString(tcf);
+            tokenGenerateInput = TokenGenerateInput.fromEmail(value).withTransparencyAndConsentString(tcString);
         }
         else {
-            identityInput = IdentityInput.fromPhone(value).withTcfConsentString(tcf);
+            tokenGenerateInput = TokenGenerateInput.fromPhone(value).withTransparencyAndConsentString(tcString);
         }
 
         if (!hash)
-            identityInput.doNotHash();
+            tokenGenerateInput.doNotHash();
 
-        final Envelope envelope = createEnvelopeFromIdentityInput(identityInput);
+        final EnvelopeV2 envelope = createEnvelopeFromIdentityInput(tokenGenerateInput);
         assertEquals(nonce, envelope.getNonce());
-        return envelope.getEnvelope();
+        return envelope;
+    }
+
+    private String createEnvelopeString(IdentityType identityType, String value, String tcString, boolean hash) {
+        return createEnvelopeForTokenGenerateRequest(identityType, value, tcString, hash).getEnvelope();
     }
 
     @Test
     public void unhashedEmail() {
-        final String envelope = createEnvelope(IdentityType.Email, "test@example.com", null, false);
+        final String envelope = createEnvelopeString(IdentityType.Email, "test@example.com", null, false);
 
         //See encrypt_request.py to see how all the expected envelopes were derived
         assertEquals("Acw8ysqYieqzgA54fifdV1TB6V+da8p/AFc8Ju/IYrD77pL7JYMJj8YqD9EsrG3d2d2j0H7kZjH41YsNLpFVCH+oce28z9L9ug==", envelope);
@@ -57,49 +61,51 @@ public class PublisherTests {
 
     @Test
     public void unhashedPhone() {
-        final String envelope = createEnvelope(IdentityType.Phone, "+12345678901", null, false);
+        final String envelope = createEnvelopeString(IdentityType.Phone, "+12345678901", null, false);
         assertEquals("Acw8ysqYieqzgA54fifdV1TB6V+da8p/AFc8Ju/IYqX+4JXyJYMJ0JJrSKV84juIkIH33GCmx+7RM2pSX9P4nAN0pn2g", envelope);
     }
 
     @Test
     public void hashedEmail() { //https://github.com/UnifiedID2/uid2docs/blob/main/api/README.md#email-address-hash-encoding
-        final String envelope = createEnvelope(IdentityType.Email, "user@example.com", null, true);
+        final String envelope = createEnvelopeString(IdentityType.Email, "user@example.com", null, true);
         final String expectedEnvelope = "Acw8ysqYieqzgA54fifdV1TB6V+da8p/AFc8Ju/IYrD77pL7WNFKiMt7QbM9mWHZwOWPyVTqSnDVNzhXRdcmIkV0ODOdll2inDo9iIZQ5oV2NvSUSWG5j6ACiXKH0JxiTPzs716eIH7P1Q==";
 
         assertEquals(expectedEnvelope, envelope);
-        final String envelopeWhenUsingUnnormalizedEmail = createEnvelope(IdentityType.Email, "   USER@EXAMPLE.COM   ", null, true);
+        final String envelopeWhenUsingUnnormalizedEmail = createEnvelopeString(IdentityType.Email, "   USER@EXAMPLE.COM   ", null, true);
         assertEquals(expectedEnvelope, envelopeWhenUsingUnnormalizedEmail);
     }
 
     @Test
     public void hashedGmail() { //https://github.com/UnifiedID2/uid2docs/blob/main/api/README.md#email-address-hash-encoding
-        final String envelope = createEnvelope(IdentityType.Email, "janedoe@gmail.com", null, true);
+        final String envelope = createEnvelopeString(IdentityType.Email, "janedoe@gmail.com", null, true);
         final String expectedEnvelope = "Acw8ysqYieqzgA54fifdV1TB6V+da8p/AFc8Ju/IYrD77pL7WNFKiMt7QbN4vErK69qumy3EXliuNSZ0a/4mTht7DyqMjF20oUECkYNZvtJhGo+wfXSDj6ACEfrViY4lnt1KEUjC4JlDaQ==";
 
         assertEquals(expectedEnvelope, envelope);
-        final String envelopeWhenUsingUnnormalizedEmail = createEnvelope(IdentityType.Email, "   jane.doe+home@gmail.com   ", null, true);
+        final String envelopeWhenUsingUnnormalizedEmail = createEnvelopeString(IdentityType.Email, "   jane.doe+home@gmail.com   ", null, true);
         assertEquals(expectedEnvelope, envelopeWhenUsingUnnormalizedEmail);
     }
 
+
     @Test
-    public void hashedEmailWithTcf() {
-        final String tcf = "CPhJRpMPhJRpMABAMBFRACBoALAAAEJAAIYgAKwAQAKgArABAAqAAA";
-        final String envelope = createEnvelope(IdentityType.Email, "user@example.com", tcf, true);
+    public void hashedEmailWithTcString() {
+        final String tcString = "CPhJRpMPhJRpMABAMBFRACBoALAAAEJAAIYgAKwAQAKgArABAAqAAA";
+        final String envelope = createEnvelopeString(IdentityType.Email, "user@example.com", tcString, true);
         final String expectedEnvelope = "Acw8ysqYieqzgA54fifdV1TB6V+da8p/AFc8Ju/IYrD77pL7WNFKiMt7QbM9mWHZwOWPyVTqSnDVNzhXRdcmIkV0ODOdll2inDo9iIZQ5oV2NvSUSWG5j6BTr3kl2OMGYCCQWOw+fx5/D8+7+J2+xJVUXN8K2yBbjpYqiOpOVVTktDh7TxkPwEGuYR5onLsXKFzjg7rdh0Mfu+emB6JrjFw/en304ydJgpPefDK/4/cohZQdgpjaqQ==";
         assertEquals(expectedEnvelope, envelope);
     }
 
     @Test
     public void hashedPhone() { //https://github.com/UnifiedID2/uid2docs/blob/main/api/README.md#phone-number-hash-encoding
-        final String envelope = createEnvelope(IdentityType.Phone, "+12345678901", null, true);
+        final String envelope = createEnvelopeString(IdentityType.Phone, "+12345678901", null, true);
         assertEquals("Acw8ysqYieqzgA54fifdV1TB6V+da8p/AFc8Ju/IYqX+4JXyWNFKiMt7QbMMm27H3fmEq2zPRUnXdFpLTdVdc0RNWxOruBaarHYQksdqpbkVFa+walbcj6AClILBJjbDMl1IoeqJVG2fyw==", envelope);
     }
 
     @Test
     public void decryptGenerateResponse() {
+        final EnvelopeV2 envelope = createEnvelopeForTokenGenerateRequest(IdentityType.Email, "test@example.com", null, true);
         final String response = "RUlLWcXlSdRhpf82J8iDqeVFbZQx2MCcVaTjhf1gVPpSS3SfOMzfCB8tW8VHzY15b5ZN6FKlZ/3FjHi54H7uyyVp2BS7puWgzGiv5jxhp0hpP2fL1KdmRs8UpX2XgmdEkfeYjTzFHFhq8SfocV2MIK8Gu4QtCtQdMg1Vk9fyeIOwgRUODkHnFZN8rcZIPDdqkZRS6Rftgdizss1FSkInYNpT2Cq07iIHVREmuJdZIinK0qDjIXcXUI3oE8WzdEtd/e4/8xEEZ4HRYuhNF640hX/O+ivBgygW/nqctAr6r9zYu65zs45UYClSUNaWsvE34IWq4q61T99z8etf81lS8E/PWrskOnH968azv0/FVFlLiKks0a1W1iDqq0/pps8LBq/Eo8ByadXQITDFwT6LN9qQE1lW4bGQrY3ZgALZQHsW1eAdaedaYwGOhp81xLlrq9aRaKXdiLuil/lgUNQX51yW8U8izYIq8cue0cUMg/TDV+5YtcC5eZiQskTjMFkInjfDI8k5F5KGnVRfsj8w+mcXv0O9E7djTy6Mmt4OQ1MxDFYuzptf3GnC7GK8VHpxHc84rOZADzBcgVOfYz4x8jA3fPVMkE08fMMpzH8OpH0riQHjk95rAF3KcOss5IvmPsUy+ZgCwOloWH+dwgYy8CDTR3RYPA+zOmEk4bGwvy6hQ5JJwah43ba73IrWZpiANfyCFMr7PY1HFvp7fC+i8w8zLTxMcLgH0m8zXMJXo6IVJDhuQKM/ViSkS/ONatlQvbtFehZfMwzPeD/mDmy1JAcvAAqmiAl13ULdNrIET9zyqmJVEaDEawVckomeIJoznbBS7WEFelcueYcXBi+Tl7qTlPL8UI4AjrzYp/sfMCvCoBtQnFYQAmChmE5OCpnE0X/uCa9oUK7HrVEqgBLft25w4d1mYtMV02gZ0SB/T2MA3BeSEp6RUKrYO63+/8eYUF4pEuQEjDcdRX6rxs9lpPPLKglnn9VteJ61BjsLphwYxqwgdlHZhS6xSvqYveHwwe94QyOYeyiJiEqJ+QooUciWSyRXBfJdcE4inuzO4T/wZauocgw8ZiKJMAfPzXjSLdVNM/sosd0vIhgXvlMpj+a+B4lbsfcVjRGrwU1VPZvHlubVCxJGieW7hQ8ugzpSYibMxxvhFBCyzjKHYodllp/umuq2KmoMdbB2lOsVFtZ3ufYs7cqSTcZIgPFUXlEJs/hUFvTnUCfZ1vC+YNF4d7ngVvCdMYsOCLQNAZeMaVoSG8m/cvY2FT0MGAgLhuu+IGWMcGVYPUrjP6Hy9gpq/wEkRnnfDAo+ENmMQsYcdzg+VNREZ4p4";
 
-        IdentityTokens identity = publisherUid2Helper.createIdentityfromTokenGenerateResponse(response, nonce);
+        IdentityTokens identity = publisherUid2Helper.createIdentityfromTokenGenerateResponse(response, envelope);
 
         /* The expected IdentityTokens fields were derived using decrypt_response.py, which had the following output:
         {
@@ -163,7 +169,8 @@ public class PublisherTests {
         }
          */
 
-        assertEquals("AgAAAANVKWUKoXWL9OdHdxoEhRlHC9BEJucY44HF3RmJHlXzjEJ/nvySkVFeRbo3W/2Mpe9qi4haYz6psljI6ZwUq8n6jPyAR0WK5LDrTxUPibeaV9aZJoa6gNCKfJ/Z8tZtG/iWUbZkkDPmJiF7LTxqB1TQX0UvtLDbDbewsa+b+PJgEw==", refreshedIdentity.getAdvertisingToken());
+        assertEquals("AgAAAANVKWUKoXWL9OdHdxoEhRlHC9BEJucY44HF3RmJHlXzjEJ/nvySkVFeRbo3W/2Mpe9qi4haYz6psljI6ZwUq8n6jPyAR0WK5LDrTxUPibeaV9aZJoa6gNCKfJ/Z8tZtG/iWUbZkkDPmJiF7LTxqB1TQX0UvtLDbDbewsa+b+PJgEw==",
+                refreshedIdentity.getAdvertisingToken());
         assertEquals("AAAAAARS93G4B29nG5kXD5C97S5wGBJcGU3NXBYME+vMqlvvgXG4RuRt+UHG6fe7hiGoK7QtQVL1qj1SdpyuiJQHeM1PfRzk5vjXEv39wedDxQNWAnJsF6I6W6HPFCJADcUd/IEk2FKTq5+al5KwL9woU82WNCCt+n6ut29Bb/F3S/blW2G7/Q2i+tImcwuTTiAZ2uYzgg/t4HfB880rpa28E/cfqJ3vsJHFGiDOUqU9JpNPFByOnxay5PQgkRlMjmea6ZfAwOCyFC69E51B3NZb3+mdx9zaHB4e6hCmk3BLPhSQzV3zOM1IRS4Rq2xO5EuEGEaSU1K3iluXTXBAOoalbjj1qln+BCu0ohA9sqfEOC/hZcmYL0YEkPHLXW2C094g",
                 refreshedIdentity.getRefreshToken());
         assertEquals(Instant.ofEpochMilli(1668065878329L), refreshedIdentity.getIdentityExpires()); //November 10, 2022 7:37:58 AM
@@ -248,21 +255,35 @@ public class PublisherTests {
     @Test
     public void invalidEmail() {
         assertThrows(IllegalArgumentException.class,
-                () -> createEnvelope(IdentityType.Email, "this is not an email address", null, true));
+                () -> createEnvelopeString(IdentityType.Email, "this is not an email address", null, true));
 
         assertThrows(IllegalArgumentException.class,
-                () -> createEnvelope(IdentityType.Email, "neither.is@this@", null, true));
+                () -> createEnvelopeString(IdentityType.Email, "neither.is@this@", null, true));
     }
 
     @Test
     public void unnormalizedOrInvalidPhone() {
         assertThrows(IllegalArgumentException.class,
-                () -> createEnvelope(IdentityType.Phone, "+123 44 555-66-77", null, true));
+                () -> createEnvelopeString(IdentityType.Phone, "+123 44 555-66-77", null, true));
 
         assertThrows(IllegalArgumentException.class,
-                () -> createEnvelope(IdentityType.Phone, "1 (123) 456-7890", null, true));
+                () -> createEnvelopeString(IdentityType.Phone, "1 (123) 456-7890", null, true));
 
         assertThrows(IllegalArgumentException.class,
-                () -> createEnvelope(IdentityType.Phone, "this is not a phone number", null, true));
+                () -> createEnvelopeString(IdentityType.Phone, "this is not a phone number", null, true));
+    }
+
+    @Test
+    public void invalidEncryptedString() {
+        final EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail("test@example.com"));
+        assertThrows(IllegalArgumentException.class,
+                () -> publisherUid2Helper.createIdentityfromTokenGenerateResponse("this is not an encrypted response", envelope));
+
+        assertThrows(RuntimeException.class, //using a request envelope where a response is expected:
+                () -> publisherUid2Helper.createIdentityfromTokenGenerateResponse(envelope.getEnvelope(), envelope));
+
+        IdentityTokens identity = IdentityTokens.fromJsonString(expectedDecryptedJsonForTokenGenerateResponse);
+        assertThrows(IllegalArgumentException.class,
+            () -> PublisherUid2Helper.createIdentityFromTokenRefreshResponse("this is not an encrypted response", identity));
     }
 }

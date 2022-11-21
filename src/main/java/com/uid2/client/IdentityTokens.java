@@ -9,6 +9,11 @@ import java.time.Instant;
 import java.util.Objects;
 
 public class IdentityTokens {
+  /**
+   * Creates an IdentityTokens instance
+   * @param jsonString a JSON string generated from a previous call to {@link #getJsonString}. Typically this string is stored in the user's session.
+   * @return an IdentityTokens instance
+   */
   static public IdentityTokens fromJsonString(String jsonString) {
     Objects.requireNonNull(jsonString, "jsonString must not be null");
 
@@ -21,13 +26,32 @@ public class IdentityTokens {
     }
   }
 
+  /**
+   * @return whether this identity is due to be refreshed. If true, a call to <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-refresh.md">/token/refresh</a> is due.
+   */
   public boolean isDueForRefresh() {
     return isDueForRefreshImpl(Instant.now());
   }
+
+  /**
+   * @return the advertising token. This token can be sent to the SSP for bidding.
+   */
   public String getAdvertisingToken() { return advertisingToken; }
 
+  /**
+   * @return the refresh token. This is used as the POST body in <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-refresh.md">/token/refresh</a>
+   */
   public String getRefreshToken() { return refreshToken; }
+
+  /**
+   * @return the identity as represented by a JSON string. This should be sent back to the client if using <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/publisher-client-side.md">standard integration</a>,
+   * or stored in the user's session if using <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/custom-publisher-integration.md">Server-Only integration.</a>
+   */
   public String getJsonString() {return jsonString;} //this ensures we make newly added fields available, even before this class is updated.
+
+  /**
+   * @return whether the identity is refreshable. If false, the refresh token has expired. This means the identity should be removed from the user's session and must no longer be used.
+   */
   public boolean isRefreshable() { return isRefreshableImpl(Instant.now()); }
 
   static IdentityTokens fromJson(JsonObject json) {

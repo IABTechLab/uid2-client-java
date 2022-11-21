@@ -3,6 +3,10 @@ package com.uid2.client;
 import java.util.Base64;
 
 public class InputUtil { //from https://github.com/IABTechLab/uid2-operator/blob/master/src/main/java/com/uid2/operator/service/InputUtil.java
+  /**
+   * @param phoneNumber a phone number in any format
+   * @return whether phoneNumber is normalized, which is a requirement for {@link TokenGenerateInput#fromPhone}
+   */
   public static boolean isPhoneNumberNormalized(String phoneNumber) {
     //from https://github.com/IABTechLab/uid2-operator/blob/14de3733e72f72adf1d9af7091dee03ea9cdb5b2/src/main/java/com/uid2/operator/service/InputUtil.java#L80
     final int MIN_PHONENUMBER_DIGITS = 10;

@@ -4,37 +4,37 @@ import com.google.gson.JsonObject;
 
 import java.security.MessageDigest;
 
-public class IdentityInput {
-    static public IdentityInput fromEmail(String email) {
-        return new IdentityInput(IdentityType.Email, email, true);
+public class TokenGenerateInput {
+    public static TokenGenerateInput fromEmail(String email) {
+        return new TokenGenerateInput(IdentityType.Email, email, true);
     }
 
-    static public IdentityInput fromPhone(String phone) {
-        return new IdentityInput(IdentityType.Phone, phone, true);
+    public static TokenGenerateInput fromPhone(String phone) {
+        return new TokenGenerateInput(IdentityType.Phone, phone, true);
     }
 
-    public IdentityInput withTcfConsentString(String tcf) {
-        this.tcf = tcf;
+    public TokenGenerateInput withTransparencyAndConsentString(String tcString) {
+        this.transparencyAndConsentString = tcString;
         return this;
     }
 
-    IdentityInput doNotHash() {
-        hash = false;
+    TokenGenerateInput doNotHash() {
+        needHash = false;
         return this;
     }
 
     String getAsJsonString() {
-        if (hash) {
-            return createHashedJsonRequestForGenerateToken(identityType, emailOrPhone, tcf);
+        if (needHash) {
+            return createHashedJsonRequestForGenerateToken(identityType, emailOrPhone, transparencyAndConsentString);
         } else {
-            return createJsonRequestForGenerateToken(identityType, emailOrPhone, tcf);
+            return createJsonRequestForGenerateToken(identityType, emailOrPhone, transparencyAndConsentString);
         }
     }
 
-    private IdentityInput(IdentityType identityType, String emailOrPhone, boolean hash) {
+    private TokenGenerateInput(IdentityType identityType, String emailOrPhone, boolean hash) {
         this.identityType = identityType;
         this.emailOrPhone = emailOrPhone;
-        this.hash = hash;
+        this.needHash = hash;
     }
 
     private static String getBase64EncodedHash(String input) {
@@ -52,42 +52,42 @@ public class IdentityInput {
     }
 
 
-    private static String createJsonRequestForGenerateToken(IdentityType identityType, String value, String tcf) {
+    private static String createJsonRequestForGenerateToken(IdentityType identityType, String value, String tcString) {
         final String property = (identityType == IdentityType.Email) ? "email" : "phone";
-        return createJsonRequestForGenerateToken(property, value, tcf);
+        return createJsonRequestForGenerateToken(property, value, tcString);
     }
 
-    private static String createJsonRequestForGenerateToken(String property, String value, String tcf) {
+    private static String createJsonRequestForGenerateToken(String property, String value, String tcString) {
         JsonObject json = new JsonObject();
 
         json.addProperty(property, value);
-        if (tcf != null) {
-            json.addProperty("tcf_consent_string", tcf);
+        if (tcString != null) {
+            json.addProperty("tcf_consent_string", tcString);
         }
 
         return json.toString();
     }
 
-    static String createHashedJsonRequestForGenerateToken(IdentityType identityType, String unhashedValue, String tcf) {
+    static String createHashedJsonRequestForGenerateToken(IdentityType identityType, String unhashedValue, String tcString) {
         if (identityType == IdentityType.Email) {
             String normalizedEmail = InputUtil.normalizeEmailString(unhashedValue);
             if (normalizedEmail == null) {
                 throw new IllegalArgumentException("invalid email address");
             }
             String hashedNormalizedEmail = getBase64EncodedHash(normalizedEmail);
-            return createJsonRequestForGenerateToken("email_hash", hashedNormalizedEmail, tcf);
+            return createJsonRequestForGenerateToken("email_hash", hashedNormalizedEmail, tcString);
         } else {  //phone
             if (!InputUtil.isPhoneNumberNormalized(unhashedValue)) {
                 throw new IllegalArgumentException("phone number is not normalized");
             }
 
             String hashedNormalizedPhone = getBase64EncodedHash(unhashedValue);
-            return createJsonRequestForGenerateToken("phone_hash", hashedNormalizedPhone, tcf);
+            return createJsonRequestForGenerateToken("phone_hash", hashedNormalizedPhone, tcString);
         }
     }
 
     private final IdentityType identityType;
     private final String emailOrPhone;
-    private boolean hash;
-    private String tcf;
+    private boolean needHash;
+    private String transparencyAndConsentString;
 }

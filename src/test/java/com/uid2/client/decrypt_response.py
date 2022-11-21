@@ -1,3 +1,5 @@
+# This script was used for the PublisherTests.decryptGenerateResponse() test, to ensure python and java had identical results
+
 import base64
 import json
 import sys
