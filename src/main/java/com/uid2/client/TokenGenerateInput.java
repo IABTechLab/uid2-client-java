@@ -31,10 +31,10 @@ public class TokenGenerateInput {
         }
     }
 
-    private TokenGenerateInput(IdentityType identityType, String emailOrPhone, boolean hash) {
+    private TokenGenerateInput(IdentityType identityType, String emailOrPhone, boolean needHash) {
         this.identityType = identityType;
         this.emailOrPhone = emailOrPhone;
-        this.needHash = hash;
+        this.needHash = needHash;
     }
 
     private static String getBase64EncodedHash(String input) {
