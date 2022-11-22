@@ -30,13 +30,13 @@ You can use this SDK with your own HTTP client library, as outlined in the steps
 1. Create an instance of PublisherUid2Helper as an instance variable. 
 
     `private final PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);`
-1. When a user authenticates and authorizes the creation of a UID2:
+2. When a user authenticates and authorizes the creation of a UID2:
 
     `EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail(emailAddress));`
-1. Using an HTTP client library of your choice, post this envelope to the [/v2/token/generate](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md) endpoint, with:
+3. Using an HTTP client library of your choice, post this envelope to the [/v2/token/generate](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md) endpoint, with:
    1. Header: `Authorization: Bearer {UID2_API_KEY}`
-   1. Body: `envelope.getEnvelope()`
-1. If the HTTP response status code is _not_ 200, see [Response Status Codes](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md#response-status-codes) to determine next steps. Otherwise:
+   2. Body: `envelope.getEnvelope()`
+4. If the HTTP response status code is _not_ 200, see [Response Status Codes](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md#response-status-codes) to determine next steps. Otherwise:
 
    `IdentityTokens identity = publisherUid2Helper.createIdentityfromTokenGenerateResponse({response body}, envelope);`
 
@@ -47,23 +47,23 @@ If you're using [standard (client-side) integration](https://github.com/UnifiedI
 ### Server-Only Integration
 If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/custom-publisher-integration.md):
 1. Store this identity as a JSON string in the user's session, using: `identity.getJsonString()`
-1. To use the user's UID2 token, use `identity.getAdvertisingToken()`
+2. To use the user's UID2 token, use `identity.getAdvertisingToken()`
 
-1. When the user accesses another page, or on a timer, determine whether a refresh is needed:
+3. When the user accesses another page, or on a timer, determine whether a refresh is needed:
    1. Retrieve the identity JSON string from the user's session, then call:
    
        `IdentityTokens identity = IdentityTokens.fromJsonString(identityJsonString);`
-   1. Determine if the identity is refreshable (ie, the refresh token hasn't expired): 
+   2. Determine if the identity is refreshable (ie, the refresh token hasn't expired): 
     
       ` if (identity == null || !identity.isRefreshable()) { we must no longer use this identity (eg, remove this identity from the user's session) }`
-   1. Determine if a refresh is needed:
+   3. Determine if a refresh is needed:
    
       `if (identity.isDueForRefresh()) {..}`
-1. If a refresh is needed, post to the [/v2/token/refresh](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-refresh.md) endpoint, with:
+4. If a refresh is needed, post to the [/v2/token/refresh](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-refresh.md) endpoint, with:
    1. Header: `Authorization: Bearer {UID2_API_KEY}`
    2. Body: `identity.getRefreshToken()`
-1. If the refresh HTTP response status code is 200:
+5. If the refresh HTTP response status code is 200:
 
    `IdentityTokens refreshedIdentity = PublisherUid2Helper.createIdentityFromTokenRefreshResponse({response body}, identity); `
-1. If `refreshedIdentity` is null, the user has opted out and you must no longer use their identity tokens.
-1. Otherwise, replace the identity that was previously stored in the user's session with: `refreshedIdentity.getJsonString()`. 
+6. If `refreshedIdentity` is null, the user has opted out, and you must no longer use their identity tokens.
+7. Otherwise, replace the identity that was previously stored in the user's session with: `refreshedIdentity.getJsonString()`. 

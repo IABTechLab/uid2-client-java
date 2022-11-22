@@ -11,7 +11,7 @@ import java.util.Objects;
 public class IdentityTokens {
   /**
    * Creates an IdentityTokens instance
-   * @param jsonString a JSON string generated from a previous call to {@link #getJsonString}. Typically this string is stored in the user's session.
+   * @param jsonString a JSON string generated from a previous call to {@link #getJsonString}. Typically, this string is stored in the user's session.
    * @return an IdentityTokens instance
    */
   static public IdentityTokens fromJsonString(String jsonString) {

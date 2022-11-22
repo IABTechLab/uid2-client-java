@@ -49,7 +49,7 @@ public class PublisherUid2Helper {
     /**
      * @param encryptedResponse the response body returned by a call to <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-refresh.md">/token/refresh</a>
      * @param currentIdentity the current IdentityTokens instance, typically retrieved from a user's session
-     * @return the refreshed IdentityTokens instance (with a new advertising token and updated expiry times). Typically this will be used to replace the current identity in the user's session
+     * @return the refreshed IdentityTokens instance (with a new advertising token and updated expiry times). Typically, this will be used to replace the current identity in the user's session
      */
     public static IdentityTokens createIdentityFromTokenRefreshResponse(String encryptedResponse, IdentityTokens currentIdentity) {
         return createIdentityFromTokenRefreshResponseImpl(encryptedResponse, currentIdentity, Instant.now());
