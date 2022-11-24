@@ -5,14 +5,26 @@ import com.google.gson.JsonObject;
 import java.security.MessageDigest;
 
 public class TokenGenerateInput {
+    /**
+     * @param email a normalized or unnormalized email address
+     * @return a TokenGenerateInput instance, to be used in {@link PublisherUid2Helper#createEnvelopeForTokenGenerateRequest}
+     */
     public static TokenGenerateInput fromEmail(String email) {
         return new TokenGenerateInput(IdentityType.Email, email, true);
     }
 
+    /**
+     * @param phone a <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/README.md#phone-number-normalization">normalized</a> phone number
+     * @return a TokenGenerateInput instance, to be used in {@link PublisherUid2Helper#createEnvelopeForTokenGenerateRequest}
+     */
     public static TokenGenerateInput fromPhone(String phone) {
         return new TokenGenerateInput(IdentityType.Phone, phone, true);
     }
 
+    /**
+     * @param tcString a <a href="https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework">Transparency and Consent String</a>, which is a requirement for EUID but not for UID2
+     * @return a TokenGenerateInput instance, to be used in {@link PublisherUid2Helper#createEnvelopeForTokenGenerateRequest}
+     */
     public TokenGenerateInput withTransparencyAndConsentString(String tcString) {
         this.transparencyAndConsentString = tcString;
         return this;
