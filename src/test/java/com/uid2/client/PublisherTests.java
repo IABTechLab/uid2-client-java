@@ -152,7 +152,10 @@ public class PublisherTests {
         // echo {refresh token from decryptGenerateResponse's identity.getRefreshToken()}| curl -X POST "http://localhost:8180/v2/token/refresh" -H "Authorization: Bearer trusted-partner-key" -d @- | .\decrypt_response.py {getRefreshResponseKey above} --is-refresh
         final String encryptedResponse = "suJBe05BsUlmulBse8Kuq6haiirs5O8wokoXQz8rxK047Q60vZQrWGy3+ufTwpIKpoMGLFGvVXpE8ifoN4Z34qPrGaJaVuCmcVTbQ8kkou/RwLp+hjoXaaTBmlqVGGbVrBzFg14KMlZLKKEh7EfABSQeUvbi3TtOzbluHZn0jCri3qJEDnSFP4tXhGjJw5ufB4GiSGOzfuw6rvRrWh+FjpNein8ijVNzA4MQAYMGrZEeKd639hCu5Q4tdkuOZKrkLTUPoeKNmt3moyQtKxztpPa/UCDJ/bOpIiLXI+vLScHG0ekhRq/5eQ7nFk3wUd9mlrA3f/+MyqkaPSjIVYvmcpzC55qh0PXLXkOzhIrLUjaIP8UzU30us+pHL2exdUZrrh4w8Pp7MZkdYzEBvc7ZyeXObNzBJNED62T7GI5UxKAndMoSPxsewttZ2MpAepfRQ9RH97eIX+Bg2KJa5WOOLK5KfVS01oKxXbwcCsGpw5sDAIiobrYdWWn9UMUhbFpbuqsmSWW4vFZR02RMHzif8N/vJkBLyvxSAlP363QULrEVMOueG91MI1W9BICYvTM06ZHYt5dz2l1GkKu+OSKAaTLvCJAWsCDgowtJcHtl0kYmZBJn/yfcc3a8SQC1dv2el1l3DWG6J8Udrci6rmOzox0MqIWkBfOqEOHFOPpV8RqYTJVYuKEigYAiAvw7RFA7ZSCwJ3nhc6GUD7XoCK96Y/TrLud3gagxRUz4D+OZUidQP01LeVW9XfBi/UGxQC1WcZ/AS7MF3byjXDJRR6MZRbTm4hkLJm1hQzGsiVNBbBR/qCwoaAI9PwvBKoZpujMzH3+HdUOubCw6sOCWfgO4cwn7TTyQAf9KJ1B6Tj+RNWe3HyImcCpfBMl8suMRh8cZX48r/Z3um4w0bNLog7L1VVA4J6G8EXvpDdkE/78mIdL7dNraZdioF/X/vP7efkDTHTLiJsGq7fZxGqqrFt/ENqhsgpq7punMq8k96sDQ7ujVc4LN0M6qPqIYiC7lT4haXtdugFaKBZp80bbV5ZM1s0VH9nw7SgJUA9RZcxYkU5x77kY+i6fUK45bDC0x0j4lPpC027CgzJhGZffZyvRCPzXYDTa9s40JswKLnKf27HwwYCTJNsnIMRBJlUSnU/JqLvzYFIBSEa2SNsD4qlvdoWqo0bZvpDquqz2mH36w3u7j5L/CoTy7dcjORPdC9/nJN/b+b/G5vjE5bcDtfek3Kc6n6ABjRnXYVstK43ghUeczUHzRwUjdX616pphGliP+bTZHtcfr2DBp2N5vMgxf4bMmhseDlzc=";
         final Instant refreshFrom = Instant.ofEpochMilli(1668062281329L);
-        IdentityTokens refreshedIdentity = PublisherUid2Helper.createIdentityFromTokenRefreshResponseImpl(encryptedResponse, currentIdentity, refreshFrom); //returns null if user has opted out
+        TokenRefreshResponse tokenRefreshResponse = PublisherUid2Helper.createTokenRefreshResponseImpl(encryptedResponse, currentIdentity, refreshFrom);
+        assertTrue(tokenRefreshResponse.isSuccess());
+        assertNotNull(tokenRefreshResponse.getIdentityJsonString());
+        IdentityTokens refreshedIdentity = tokenRefreshResponse.getIdentity();
 
         /* the command line above also resulted in the following output:
         {
@@ -187,8 +190,9 @@ public class PublisherTests {
         assertNotNull(currentIdentity); //missing fields normally throw an exception. refresh_response_key does not, in order to support saved V1 sessions
 
         final String expectedRefreshResponseForV1Session = "{\"body\":{\"advertising_token\":\"AgAAAANsVKE9wmkKhBhOucQ26SXHAAr02EnIkXxJQP2kalEEov3h18AP7nGIhQUQQVAPKaL6y8iyyA65YtZhYHLKW+eJhXUFqm4vl+F2Gg3Q7bBu+GZ6DzY5rpDfukw3vztJccEqdkKaEdbJIIKi/jwRazQWbAJNXF4V4HUd9SExMJ+QKQ==\",\"user_token\":\"AgAAAAJd/kXzNcUdHRt4iyZIzYYD+DegEYk8brfvjFFtjmJZysI82h01mo4J8mkdt8vZ6e30Zbor6rcLAJ3MeDOPG0eRD5agLn0/bgP5kAFF0HCLOtEgmaTQ0mC0NIAcQUxznKQ=\",\"refresh_token\":\"AAAAAAT7HUXdgdgMjz5isYkZTlgWtgiW5YesZEZIIfFqvtqCeXGYZUvfzO896LhNeL6jlJZRfNMl8Pr63NRG0zS5atNKKU3OzVLLqd+W8xgtQd3VUndq7l6eHtVMckiQ5Z/XyuAcYP+vCe1JXzM/67SQ9VMgPV8UFMyo3UZQDuOyKlPQaav91gq/L4yTA/6EnOTUxs/sc2zegIQeYRasSMuQqXAHLOGy4v86/fLVxdjj+eEtIvrBDVAdubrITHgFmLALSHx0sdAgq+yRiEvOM+i7vfqTxcNI6zfL8y6dypI243Pm+D4n145CURT243n7ZrmF6bWUayGOZTkLdRJe4E3Mf+QewkAUZsShrofUB4ylehe1U1wedh5648+zLaTmBwC1\",\"identity_expires\":1668398943517,\"refresh_expires\":1668481743517,\"refresh_from\":1668395346517,\"refresh_response_key\":\"7Cm2fFFbM2klAzTHEqbDnE8BFJKm02doDxI5uIcCl3Y=\"},\"status\":\"success\"}";
-        IdentityTokens refreshedIdentity = PublisherUid2Helper.createIdentityFromTokenRefreshResponseImpl(expectedRefreshResponseForV1Session, currentIdentity, currentIdentity.getRefreshFrom());
-        assertNotNull(refreshedIdentity);
+        TokenRefreshResponse tokenRefreshResponse = PublisherUid2Helper.createTokenRefreshResponseImpl(expectedRefreshResponseForV1Session, currentIdentity, currentIdentity.getRefreshFrom());
+        assertTrue(tokenRefreshResponse.isSuccess());
+        assertNotNull(tokenRefreshResponse.getIdentity());
     }
 
     @Test
@@ -230,9 +234,11 @@ public class PublisherTests {
 
         IdentityTokens currentIdentity = IdentityTokens.fromJsonString(json.toString());
 
-        IdentityTokens refreshedIdentity = PublisherUid2Helper.createIdentityFromTokenRefreshResponse(encryptedRefreshOptOutResponse, currentIdentity);
-
-        assertNull(refreshedIdentity);
+        TokenRefreshResponse tokenRefreshResponse = PublisherUid2Helper.createTokenRefreshResponse(encryptedRefreshOptOutResponse, currentIdentity);
+        assertTrue(tokenRefreshResponse.isOptout());
+        assertFalse(tokenRefreshResponse.isSuccess());
+        assertNull(tokenRefreshResponse.getIdentityJsonString());
+        assertNull(tokenRefreshResponse.getIdentity());
     }
 
     @Test
@@ -284,6 +290,6 @@ public class PublisherTests {
 
         IdentityTokens identity = IdentityTokens.fromJsonString(expectedDecryptedJsonForTokenGenerateResponse);
         assertThrows(IllegalArgumentException.class,
-            () -> PublisherUid2Helper.createIdentityFromTokenRefreshResponse("this is not an encrypted response", identity));
+            () -> PublisherUid2Helper.createTokenRefreshResponse("this is not an encrypted response", identity));
     }
 }

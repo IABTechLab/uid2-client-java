@@ -37,13 +37,13 @@ public class PublisherUid2Helper {
      */
     public IdentityTokens createIdentityfromTokenGenerateResponse(String response, EnvelopeV2 envelope) {
         String identityJsonString = decrypt(response, secretKey, false, envelope.getNonce());
-        JsonObject jsonIdentity = new Gson().fromJson(identityJsonString, JsonObject.class);
+        JsonObject responseJson = new Gson().fromJson(identityJsonString, JsonObject.class);
 
-        if (!"success".equals(jsonIdentity.get("status").getAsString())) {
-            throw new Uid2Exception("Got unexpected token generate status in decrypted response:\n" + new GsonBuilder().setPrettyPrinting().create().toJson(jsonIdentity));
+        if (!"success".equals(responseJson.get("status").getAsString())) {
+            throw new Uid2Exception("Got unexpected token generate status in decrypted response:\n" + new GsonBuilder().setPrettyPrinting().create().toJson(responseJson));
         }
 
-        return IdentityTokens.fromJson(getBodyAsJson(jsonIdentity));
+        return IdentityTokens.fromJson(TokenRefreshResponse.getBodyAsJson(responseJson));
     }
 
     /**
@@ -51,8 +51,8 @@ public class PublisherUid2Helper {
      * @param currentIdentity the current IdentityTokens instance, typically retrieved from a user's session
      * @return the refreshed IdentityTokens instance (with a new advertising token and updated expiry times). Typically, this will be used to replace the current identity in the user's session
      */
-    public static IdentityTokens createIdentityFromTokenRefreshResponse(String encryptedResponse, IdentityTokens currentIdentity) {
-        return createIdentityFromTokenRefreshResponseImpl(encryptedResponse, currentIdentity, Instant.now());
+    public static TokenRefreshResponse createTokenRefreshResponse(String encryptedResponse, IdentityTokens currentIdentity) {
+        return createTokenRefreshResponseImpl(encryptedResponse, currentIdentity, Instant.now());
     }
 
     EnvelopeV2 createEnvelopeImpl(TokenGenerateInput tokenGenerateInput, byte[] nonce, Instant timestamp, byte[] iv) {
@@ -72,7 +72,7 @@ public class PublisherUid2Helper {
         return new EnvelopeV2(InputUtil.byteArrayToBase64(envelopeBuffer.array()), nonce);
     }
 
-    static IdentityTokens createIdentityFromTokenRefreshResponseImpl(String encryptedResponse, IdentityTokens currentIdentity, Instant timestamp) {
+    static TokenRefreshResponse createTokenRefreshResponseImpl(String encryptedResponse, IdentityTokens currentIdentity, Instant timestamp) {
         String response;
         String refreshResponseKey = currentIdentity.getRefreshResponseKey();
         if (refreshResponseKey != null) {
@@ -81,21 +81,7 @@ public class PublisherUid2Helper {
             response = encryptedResponse;
         }
 
-        JsonObject responseJson = new Gson().fromJson(response, JsonObject.class);
-        String status = responseJson.get("status").getAsString();
-
-        if ("optout".equals(status)) {
-            return null;
-        } else if (!"success".equals(status)) {
-            throw new Uid2Exception("Got unexpected token refresh status: " + status);
-        }
-
-        IdentityTokens refreshedIdentity = IdentityTokens.fromJson(getBodyAsJson(responseJson));
-        if (!refreshedIdentity.isRefreshableImpl(timestamp) || refreshedIdentity.hasIdentityExpired(timestamp)) {
-            throw new Uid2Exception("Invalid identity in token refresh response: " + response);
-        }
-
-        return refreshedIdentity;
+        return new TokenRefreshResponse(response, timestamp);
     }
 
 
@@ -117,10 +103,6 @@ public class PublisherUid2Helper {
             resultBytes = payload;
         }
         return new String(resultBytes, StandardCharsets.UTF_8);
-    }
-
-    private static JsonObject getBodyAsJson(JsonObject jsonResponse) {
-        return jsonResponse.get("body").getAsJsonObject();
     }
 
     private final SecureRandom secureRandom = new SecureRandom();

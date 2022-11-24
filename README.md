@@ -64,6 +64,5 @@ If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs
    2. Body: `identity.getRefreshToken()`
 5. If the refresh HTTP response status code is 200:
 
-   `IdentityTokens refreshedIdentity = PublisherUid2Helper.createIdentityFromTokenRefreshResponse({response body}, identity); `
-6. If `refreshedIdentity` is null, the user has opted out, and you must no longer use their identity tokens.
-7. Otherwise, replace the identity that was previously stored in the user's session with: `refreshedIdentity.getJsonString()`. 
+   `TokenRefreshResponse tokenRefreshResponse = PublisherUid2Helper.createTokenRefreshResponse(encryptedResponse.bodyAsString(), identity);`
+6. You should then store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method will return null, indicating that the user's identity should be removed from their session. (Optout can be confirmed via `tokenRefreshResponse.isOptout()`.)
