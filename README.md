@@ -34,7 +34,7 @@ As a publisher, there are two ways to use this SDK:
 2. **Advanced usage** is for those publishers that prefer to use their own HTTP library. 
 
 
-An example application which demonstrates both Basic and Advanced usage is at [uid2-examples](https://github.com/UnifiedID2/uid2-examples/tree/main/publisher).
+An example application which demonstrates both Basic and Advanced usage is at [uid2-examples](https://github.com/UnifiedID2/uid2-examples/tree/main/publisher/uid2-java-test-site).
 
 ### Basic usage
 1. Create an instance of PublisherUid2Client as an instance variable.
