@@ -134,7 +134,7 @@ public class PublisherUid2Helper {
             properties.load(istream);
             artifactAndVersion = properties.getProperty("artifactId") + "-" + properties.getProperty("version");
         } catch (ClassNotFoundException | IOException e) {
-            artifactAndVersion = "<unknown - " + e + ">";
+            artifactAndVersion = "<err:" + e.getMessage() + ">"; //keep this short (getMessage() instead of just "e") as it can appear in dashboards with limited screen real-estate
         }
         return artifactAndVersion;
     }
