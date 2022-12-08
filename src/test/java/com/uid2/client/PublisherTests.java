@@ -19,9 +19,13 @@ public class PublisherTests {
         return data;
     }
 
-    private final String UID2_SECRET_KEY = "ioG3wKxAokmp+rERx6A4kM/13qhyolUXIu14WN16Spo=";
+    private final static String UID2_SECRET_KEY = "ioG3wKxAokmp+rERx6A4kM/13qhyolUXIu14WN16Spo=";
     private final PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);
     private final byte[] nonce = hexStringToByteArray("312fe5aa08b2a049");
+
+    //used in integration tests:
+    final PublisherUid2Client publisherUid2Client = new PublisherUid2Client(System.getenv("UID2_BASE_URL"), System.getenv("UID2_API_KEY"), System.getenv("UID2_SECRET_KEY"));
+
 
     private EnvelopeV2 createEnvelopeFromIdentityInput(TokenGenerateInput tokenGenerateInput) {
         final Instant instant = Instant.ofEpochMilli(1667885597644L);
@@ -34,8 +38,7 @@ public class PublisherTests {
         TokenGenerateInput tokenGenerateInput;
         if (identityType == IdentityType.Email) {
             tokenGenerateInput = TokenGenerateInput.fromEmail(value).withTransparencyAndConsentString(tcString);
-        }
-        else {
+        } else {
             tokenGenerateInput = TokenGenerateInput.fromPhone(value).withTransparencyAndConsentString(tcString);
         }
 
@@ -52,10 +55,16 @@ public class PublisherTests {
     }
 
     @Test
+    public void versionHeader() {
+        String header = PublisherUid2Helper.getVersionHttpHeader();
+        assertTrue(header.contains("java-diy-uid2-client-"));
+    }
+
+    //See encrypt_request.py to see how all the expected envelopes were derived
+    @Test
     public void unhashedEmail() {
         final String envelope = createEnvelopeString(IdentityType.Email, "test@example.com", null, false);
 
-        //See encrypt_request.py to see how all the expected envelopes were derived
         assertEquals("Acw8ysqYieqzgA54fifdV1TB6V+da8p/AFc8Ju/IYrD77pL7JYMJj8YqD9EsrG3d2d2j0H7kZjH41YsNLpFVCH+oce28z9L9ug==", envelope);
     }
 
@@ -290,6 +299,110 @@ public class PublisherTests {
 
         IdentityTokens identity = IdentityTokens.fromJsonString(expectedDecryptedJsonForTokenGenerateResponse);
         assertThrows(IllegalArgumentException.class,
-            () -> PublisherUid2Helper.createTokenRefreshResponse("this is not an encrypted response", identity));
+                () -> PublisherUid2Helper.createTokenRefreshResponse("this is not an encrypted response", identity));
+    }
+
+    @Test //this test requires these env vars to be configured: UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY
+    public void integrationGenerateAndRefresh() {
+        IdentityTokens identity = publisherUid2Client.generateToken(TokenGenerateInput.fromEmail("test@example.com"));
+        assertNotNull(identity);
+        assertFalse(identity.isDueForRefresh());
+        assertNotNull(identity.getAdvertisingToken());
+        assertNotNull(identity.getRefreshToken());
+        assertNotNull(identity.getJsonString());
+        assertTrue(identity.isRefreshable());
+
+        TokenRefreshResponse tokenRefreshResponse = publisherUid2Client.refreshToken(identity);
+        assertTrue(tokenRefreshResponse.isSuccess());
+        assertFalse(tokenRefreshResponse.isOptout());
+        assertNotNull(tokenRefreshResponse.getIdentityJsonString());
+
+        IdentityTokens refreshedIdentity = tokenRefreshResponse.getIdentity();
+        assertNotNull(refreshedIdentity);
+        assertFalse(refreshedIdentity.isDueForRefresh());
+        assertNotNull(refreshedIdentity.getAdvertisingToken());
+        assertNotNull(refreshedIdentity.getRefreshToken());
+        assertNotNull(refreshedIdentity.getJsonString());
+        assertTrue(identity.isRefreshable());
+    }
+
+    @Test //this test requires these env vars to be configured: UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY
+    public void integrationOptOut() {
+        IdentityTokens identity = publisherUid2Client.generateToken(TokenGenerateInput.fromEmail("optout@email.com"));
+        assertNotNull(identity);
+        assertFalse(identity.isDueForRefresh());
+        assertNotNull(identity.getAdvertisingToken());
+        assertNotNull(identity.getRefreshToken());
+        assertNotNull(identity.getJsonString());
+        assertTrue(identity.isRefreshable());
+
+        TokenRefreshResponse tokenRefreshResponse = publisherUid2Client.refreshToken(identity);
+        assertFalse(tokenRefreshResponse.isSuccess());
+        assertTrue(tokenRefreshResponse.isOptout());
+        assertNull(tokenRefreshResponse.getIdentityJsonString());
+        assertNull(tokenRefreshResponse.getIdentity());
+    }
+
+    @Test //this test requires these env vars to be configured: UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY
+    public void integrationPhone() {
+        IdentityTokens identity = publisherUid2Client.generateToken(TokenGenerateInput.fromPhone("+12345678901"));
+        assertNotNull(identity);
+        assertFalse(identity.isDueForRefresh());
+        assertNotNull(identity.getAdvertisingToken());
+        assertNotNull(identity.getRefreshToken());
+        assertNotNull(identity.getJsonString());
+        assertTrue(identity.isRefreshable());
+
+        TokenRefreshResponse tokenRefreshResponse = publisherUid2Client.refreshToken(identity);
+        assertTrue(tokenRefreshResponse.isSuccess());
+        assertFalse(tokenRefreshResponse.isOptout());
+        assertNotNull(tokenRefreshResponse.getIdentityJsonString());
+
+        IdentityTokens refreshedIdentity = tokenRefreshResponse.getIdentity();
+        assertNotNull(refreshedIdentity);
+        assertFalse(refreshedIdentity.isDueForRefresh());
+        assertNotNull(refreshedIdentity.getAdvertisingToken());
+        assertNotNull(refreshedIdentity.getRefreshToken());
+        assertNotNull(refreshedIdentity.getJsonString());
+        assertTrue(identity.isRefreshable());
+    }
+
+
+    @Test //this test requires these env vars to be configured: UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY
+    public void integrationBadRequests() {
+        assertThrows(IllegalArgumentException.class,
+                () -> publisherUid2Client.generateToken(TokenGenerateInput.fromEmail("this is not an email address")));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> publisherUid2Client.generateToken(TokenGenerateInput.fromPhone("this is not a phone number")));
+
+        String unnormalizedPhoneNumber = "+123 44 555-66-77";
+        assertThrows(IllegalArgumentException.class,
+                () -> publisherUid2Client.generateToken(TokenGenerateInput.fromPhone(unnormalizedPhoneNumber)));
+
+        IdentityTokens currentIdentity = IdentityTokens.fromJsonString(expectedDecryptedJsonForTokenGenerateResponse);
+        Uid2Exception exception = assertThrows(Uid2Exception.class, //expired token
+                () -> publisherUid2Client.refreshToken(currentIdentity));
+        assertTrue(exception.getMessage().contains("expired"));
+
+
+        assertThrows(NullPointerException.class, () -> publisherUid2Client.generateToken(TokenGenerateInput.fromEmail(null)));
+        assertThrows(NullPointerException.class, () -> publisherUid2Client.refreshToken(null));
+
+        final String UID2_BASE_URL = System.getenv("UID2_BASE_URL");
+        final String UID2_API_KEY =  System.getenv("UID2_API_KEY");
+        final String UID2_SECRET_KEY = System.getenv("UID2_SECRET_KEY");
+        PublisherUid2Client badUrlClient = new PublisherUid2Client("https://www.example.com/", UID2_API_KEY, UID2_SECRET_KEY);
+        assertThrows(Uid2Exception.class, () -> badUrlClient.generateToken(TokenGenerateInput.fromEmail("test@example.com")));
+
+        PublisherUid2Client badApiKey = new PublisherUid2Client(UID2_BASE_URL, "bad api key", UID2_SECRET_KEY);
+        Uid2Exception badApiKeyException = assertThrows(Uid2Exception.class, () -> badApiKey.generateToken(TokenGenerateInput.fromEmail("test@example.com")));
+        assertTrue(badApiKeyException.getMessage().contains("401"));
+
+        assertThrows(IllegalArgumentException.class, () -> new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, "bad secret key"));
+
+        PublisherUid2Client invalidSecretKey = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, PublisherTests.UID2_SECRET_KEY); //this key is for internal tests, and not valid for a local Operator
+        Uid2Exception invalidSecretKeyException = assertThrows(Uid2Exception.class, () -> invalidSecretKey.generateToken(TokenGenerateInput.fromEmail("test@example.com")));
+        assertTrue(invalidSecretKeyException.getMessage().contains("400"));
     }
 }

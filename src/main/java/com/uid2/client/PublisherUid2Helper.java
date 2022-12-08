@@ -4,11 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Properties;
 
 
 public class PublisherUid2Helper {
@@ -53,6 +56,17 @@ public class PublisherUid2Helper {
      */
     public static TokenRefreshResponse createTokenRefreshResponse(String encryptedResponse, IdentityTokens currentIdentity) {
         return createTokenRefreshResponseImpl(encryptedResponse, currentIdentity, Instant.now());
+    }
+
+    /**
+     * @return the SDK version string, to be used with an "X-UID2-Client-Version" HTTP header. This header is required for all requests sent to /token/generate and /token/refresh.
+     */
+    public static String getVersionHttpHeader() {
+        return "java-diy-" + getArtifactAndVersion();
+    }
+
+    static String getArtifactAndVersion() {
+        return artifactAndVersion;
     }
 
     EnvelopeV2 createEnvelopeImpl(TokenGenerateInput tokenGenerateInput, byte[] nonce, Instant timestamp, byte[] iv) {
@@ -105,7 +119,29 @@ public class PublisherUid2Helper {
         return new String(resultBytes, StandardCharsets.UTF_8);
     }
 
+    private static String setArtifactAndVersion() {
+        String artifactAndVersion;
+
+        try { // https://stackoverflow.com/a/3697482/297451
+            Class<?> cls = Class.forName("com.uid2.client.PublisherUid2Client");
+
+            InputStream istream = cls.getClassLoader().getResourceAsStream("project.properties");
+            if (istream == null) {
+                throw new IOException("project.properties not found");
+            }
+
+            final Properties properties = new Properties();
+            properties.load(istream);
+            artifactAndVersion = properties.getProperty("artifactId") + "-" + properties.getProperty("version");
+        } catch (ClassNotFoundException | IOException e) {
+            artifactAndVersion = "<err:" + e.getMessage() + ">"; //keep this short (getMessage() instead of just "e") as it can appear in dashboards with limited screen real-estate
+        }
+        return artifactAndVersion;
+    }
+
+
     private final SecureRandom secureRandom = new SecureRandom();
     private final byte[] secretKey;
     private static final int TIMESTAMP_LENGTH = 8;
+    private static final String artifactAndVersion = setArtifactAndVersion();
 }
