@@ -20,6 +20,7 @@ public class PublisherUid2Client {
     /**
      * @param tokenGenerateInput represents the input required for <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md#unencrypted-json-body-parameters">/token/generate</a>
      * @return an IdentityTokens instance
+     * @throws Uid2Exception if the response did not contain a "success" status, or the response code was not 200, or there was an error communicating with the provided UID2 Base URL
      */
     public IdentityTokens generateToken(TokenGenerateInput tokenGenerateInput) {
         EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(tokenGenerateInput);

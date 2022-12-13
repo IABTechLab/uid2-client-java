@@ -405,4 +405,35 @@ public class PublisherTests {
         Uid2Exception invalidSecretKeyException = assertThrows(Uid2Exception.class, () -> invalidSecretKey.generateToken(TokenGenerateInput.fromEmail("test@example.com")));
         assertTrue(invalidSecretKeyException.getMessage().contains("400"));
     }
+
+    @Test //this test requires these env vars to be configured: EUID_BASE_URL, EUID_API_KEY, EUID_SECRET_KEY
+    public void tcStringIntegration() {
+        final String EUID_BASE_URL = System.getenv("EUID_BASE_URL");
+        final String EUID_API_KEY =  System.getenv("EUID_API_KEY");
+        final String EUID_SECRET_KEY = System.getenv("EUID_SECRET_KEY");
+
+        PublisherUid2Client client = new PublisherUid2Client(EUID_BASE_URL, EUID_API_KEY, EUID_SECRET_KEY);
+
+        final String tcString = "CPhJRpMPhJRpMABAMBFRACBoALAAAEJAAIYgAKwAQAKgArABAAqAAA";
+        IdentityTokens identity = client.generateToken(TokenGenerateInput.fromEmail("user@example.com").withTransparencyAndConsentString(tcString));
+        assertNotNull(identity);
+        assertFalse(identity.isDueForRefresh());
+        assertNotNull(identity.getAdvertisingToken());
+        assertNotNull(identity.getRefreshToken());
+        assertNotNull(identity.getJsonString());
+        assertTrue(identity.isRefreshable());
+    }
+
+    @Test //this test requires these env vars to be configured: EUID_BASE_URL, EUID_API_KEY, EUID_SECRET_KEY
+    public void tcStringWithInsufficientConsent() {
+        final String EUID_BASE_URL = System.getenv("EUID_BASE_URL");
+        final String EUID_API_KEY =  System.getenv("EUID_API_KEY");
+        final String EUID_SECRET_KEY = System.getenv("EUID_SECRET_KEY");
+
+        PublisherUid2Client client = new PublisherUid2Client(EUID_BASE_URL, EUID_API_KEY, EUID_SECRET_KEY);
+
+        final String tcString = "CPehXK9PehXK9ABAMBFRACBoADAAAEJAAIYgAKwAQAKgArABAAqAAA";
+        Uid2Exception exception = assertThrows(Uid2Exception.class, () -> client.generateToken(TokenGenerateInput.fromEmail("user@example.com").withTransparencyAndConsentString(tcString)));
+        assertTrue(exception.getMessage().contains("insufficient_user_consent"));
+    }
 }

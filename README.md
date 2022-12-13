@@ -39,7 +39,7 @@ An example application which demonstrates both Basic and Advanced usage is at [u
 ### Basic usage
 1. Create an instance of PublisherUid2Client as an instance variable.
  
-   `private final PublisherUid2Client publisherUid2Client = new PublisherUid2Client(UID2_SECRET_KEY, UID2_BASE_URL, UID2_API_KEY);`
+   `private final PublisherUid2Client publisherUid2Client = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);`
 
 2. When a user authenticates and authorizes the creation of a UID2:
  
