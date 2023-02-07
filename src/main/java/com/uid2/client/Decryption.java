@@ -19,6 +19,31 @@ class Decryption {
     public static final int GCM_AUTHTAG_LENGTH = 16;
     public static final int GCM_IV_LENGTH = 12;
 
+    public static final int ADVERTISING_TOKEN_V3 = 112;
+    public static final int ADVERTISING_TOKEN_V4 = 118;
+
+    static DecryptionResponse decrypt(String token, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
+        String headerStr = token.substring(0, 4);
+        Boolean isBase64URL = (headerStr.indexOf('+') != -1 || headerStr.indexOf('/') != -1);
+        byte[] data = isBase64URL ? Base64.getUrlDecoder().decode(headerStr) : Base64.getDecoder().decode(headerStr);
+
+        if (data[0] == 2)
+        {
+            return decryptV2(Base64.getDecoder().decode(token), keys, now);
+        }
+        else if (data[1] == ADVERTISING_TOKEN_V3)
+        {
+            return decryptV3(Base64.getDecoder().decode(token), keys, now, identityScope);
+        }
+        else if (data[1] == ADVERTISING_TOKEN_V4)
+        {
+            //same as V3 but use Base64URL encoding
+            return decryptV3(Base64.getUrlDecoder().decode(token), keys, now, identityScope);
+        }
+
+        return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
+    }
+
     static DecryptionResponse decrypt(byte[] encryptedId, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
         if (encryptedId[0] == 2)
         {
@@ -173,7 +198,7 @@ class Decryption {
                 siteKeySiteId = siteId;
             } else {
                 try {
-                    DecryptionResponse decryptedToken = decrypt(Base64.getDecoder().decode(request.getAdvertisingToken()), keys, now, identityScope);
+                    DecryptionResponse decryptedToken = decrypt(request.getAdvertisingToken(), keys, now, identityScope);
                     if (!decryptedToken.isSuccess()) {
                         return EncryptionDataResponse.makeError(EncryptionStatus.TOKEN_DECRYPT_FAILURE);
                     }

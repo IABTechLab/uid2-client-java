@@ -78,7 +78,7 @@ public class UID2Client implements IUID2Client {
         }
 
         try {
-            return Decryption.decrypt(Base64.getDecoder().decode(token), container, now, this.identityScope);
+            return Decryption.decrypt(token, container, now, this.identityScope);
         } catch (Exception e) {
             return DecryptionResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
         }
