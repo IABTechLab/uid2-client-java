@@ -24,8 +24,8 @@ class Decryption {
 
     static DecryptionResponse decrypt(String token, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
         String headerStr = token.substring(0, 4);
-        Boolean isBase64URL = (headerStr.indexOf('+') != -1 || headerStr.indexOf('/') != -1);
-        byte[] data = isBase64URL ? Base64.getUrlDecoder().decode(headerStr) : Base64.getDecoder().decode(headerStr);
+        Boolean isBase64UrlEncoding = (headerStr.indexOf('-') != -1 || headerStr.indexOf('_') != -1);
+        byte[] data = isBase64UrlEncoding ? Base64.getUrlDecoder().decode(headerStr) : Base64.getDecoder().decode(headerStr);
 
         if (data[0] == 2)
         {
