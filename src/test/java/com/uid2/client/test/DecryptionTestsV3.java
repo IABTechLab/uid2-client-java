@@ -12,7 +12,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Base64;
 
-public class DecryptionTests {
+public class DecryptionTestsV3 {
 
     public static final long MASTER_KEY_ID = 164;
     public static final long SITE_KEY_ID = 165;
@@ -74,9 +74,7 @@ public class DecryptionTests {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         byte[] payload = KeyGen.encryptV3(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
         String advertisingToken = Base64.getEncoder().encodeToString(Arrays.copyOfRange(payload, 0, payload.length - 1));
-
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
-
         DecryptionResponse res = client.decrypt(advertisingToken);
         assertEquals(DecryptionStatus.INVALID_PAYLOAD, res.getStatus());
     }
@@ -88,7 +86,7 @@ public class DecryptionTests {
 
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
-        String advertisingToken = Base64.getEncoder().encodeToString(KeyGen.encryptV3(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY, params));
+        String advertisingToken = Base64.getEncoder().encodeToString(KeyGen.generateUID2TokenWithDebugInfo(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY, params, false));
 
         DecryptionResponse res = client.decrypt(advertisingToken, expiry.plus(1, ChronoUnit.SECONDS));
         assertEquals(DecryptionStatus.EXPIRED_TOKEN, res.getStatus());
@@ -276,7 +274,7 @@ public class DecryptionTests {
         final byte[] data = {1, 2, 3, 4, 5, 6};
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
-        String advertisingToken = Base64.getEncoder().encodeToString(KeyGen.encryptV3(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY, params));
+        String advertisingToken = Base64.getEncoder().encodeToString(KeyGen.generateUID2TokenWithDebugInfo(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY, params, false));
         EncryptionDataResponse encrypted = client.encryptData(EncryptionDataRequest.forData(data).withAdvertisingToken(advertisingToken));
         assertEquals(EncryptionStatus.TOKEN_DECRYPT_FAILURE, encrypted.getStatus());
 

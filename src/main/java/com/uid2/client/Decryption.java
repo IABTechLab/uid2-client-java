@@ -34,11 +34,13 @@ class Decryption {
         {
             return decryptV2(Base64.getDecoder().decode(token), keys, now);
         }
-        else if (data[1] == ADVERTISING_TOKEN_V3)
+        //java byte is signed so we wanna convert to unsigned before checking the enum
+        int unsignedByte = ((int) data[1]) & 0xff;
+        if (unsignedByte == ADVERTISING_TOKEN_V3)
         {
             return decryptV3(Base64.getDecoder().decode(token), keys, now, identityScope);
         }
-        else if (data[1] == ADVERTISING_TOKEN_V4)
+        else if (unsignedByte  == ADVERTISING_TOKEN_V4)
         {
             //same as V3 but use Base64URL encoding
             return decryptV3(Base64.getUrlDecoder().decode(token), keys, now, identityScope);
@@ -114,10 +116,8 @@ class Decryption {
                 return DecryptionResponse.makeError(DecryptionStatus.INVALID_IDENTITY_SCOPE);
             }
 
-            final int version = (int) rootReader.get();
-            if (version != 112) {
-                return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
-            }
+            //version
+            rootReader.get();
 
             final long masterKeyId = rootReader.getInt();
             final Key masterKey = keys.getKey(masterKeyId);

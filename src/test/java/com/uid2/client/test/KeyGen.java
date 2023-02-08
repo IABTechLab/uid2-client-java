@@ -29,6 +29,9 @@ public class KeyGen {
         public Params withTokenExpiry(Instant expiry) { tokenExpiry = expiry; return this; }
     }
 
+    public static int ADVERTISING_TOKEN_V3 = 112;
+    public static final int ADVERTISING_TOKEN_V4 = 128;
+
     public static Params defaultParams() { return new Params(); }
 
     public static byte[] encryptV2(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
@@ -68,10 +71,14 @@ public class KeyGen {
     }
 
     public static byte[] encryptV3(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
-        return encryptV3(uid, masterKey, siteId, siteKey, defaultParams());
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), false);
     }
 
-    public static byte[] encryptV3(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+    public static byte[] encryptV4(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), true);
+    }
+
+    public static byte[] generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, boolean v4AdToken) throws Exception {
         final ByteBuffer sitePayloadWriter = ByteBuffer.allocate(128);
 
         // publisher data
@@ -100,7 +107,7 @@ public class KeyGen {
         final byte[] encryptedMasterPayload = encryptGCM(Arrays.copyOfRange(masterPayloadWriter.array(), 0, masterPayloadWriter.position()), masterKey.getSecret());
         final ByteBuffer rootWriter = ByteBuffer.allocate(encryptedMasterPayload.length + 6);
         rootWriter.put((byte)((params.identityScope << 4) | (params.identityType << 2)));
-        rootWriter.put((byte)112);
+        rootWriter.put((byte) (v4AdToken? ADVERTISING_TOKEN_V4 : ADVERTISING_TOKEN_V3));
         rootWriter.putInt((int)masterKey.getId());
         rootWriter.put(encryptedMasterPayload);
 
