@@ -44,19 +44,6 @@ class Decryption {
         return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
     }
 
-    static DecryptionResponse decrypt(byte[] encryptedId, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
-        if (encryptedId[0] == 2)
-        {
-            return decryptV2(encryptedId, keys, now);
-        }
-        else if (encryptedId[1] == 112)
-        {
-            return decryptV3(encryptedId, keys, now, identityScope);
-        }
-
-        return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
-    }
-
     static DecryptionResponse decryptV2(byte[] encryptedId, IKeyContainer keys, Instant now) throws Exception {
         try {
             ByteBuffer rootReader = ByteBuffer.wrap(encryptedId);
