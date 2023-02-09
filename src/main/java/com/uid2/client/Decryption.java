@@ -42,6 +42,23 @@ class Decryption {
         }
         else if (unsignedByte  == ADVERTISING_TOKEN_V4)
         {
+            int inputSizeMod4 = token.length() % 4;
+            //it's within spec https://www.rfc-editor.org/rfc/rfc4648#section-5
+            if(inputSizeMod4 > 0)
+            {
+                //java might not require this (unlike in C++/python sdk)
+                //but doing this just in case
+                int paddingNeeded = 4 - inputSizeMod4;
+                String padding = "";
+                //just adds some padding back and the rest of the decoding should work
+                for (int i = 0; i < paddingNeeded; i++)
+                {
+                    padding += '=';
+                }
+                String paddedToken = token + padding;
+                return decryptV3(Base64.getUrlDecoder().decode(paddedToken), keys, now, identityScope);
+            }
+
             //same as V3 but use Base64URL encoding
             return decryptV3(Base64.getUrlDecoder().decode(token), keys, now, identityScope);
         }
