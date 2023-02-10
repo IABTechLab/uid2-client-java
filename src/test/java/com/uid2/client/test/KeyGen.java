@@ -1,9 +1,6 @@
 package com.uid2.client.test;
 
-import com.uid2.client.IdentityScope;
-import com.uid2.client.IdentityType;
-import com.uid2.client.Key;
-import com.uid2.client.UID2Base64UrlCoder;
+import com.uid2.client.*;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -29,9 +26,6 @@ public class KeyGen {
         public Params() {}
         public Params withTokenExpiry(Instant expiry) { tokenExpiry = expiry; return this; }
     }
-
-    public static int ADVERTISING_TOKEN_V3 = 112;
-    public static final int ADVERTISING_TOKEN_V4 = 128;
 
     public static Params defaultParams() { return new Params(); }
 
@@ -72,22 +66,22 @@ public class KeyGen {
     }
 
     public static String encryptV3(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
-        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), false);
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), AdvertisingTokenVersion.V3);
     }
 
     public static String encryptV3(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
-        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, false);
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V3);
     }
 
     public static String encryptV4(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
-        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), true);
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), AdvertisingTokenVersion.V4);
     }
 
     public static String encryptV4(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
-        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, true);
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V4);
     }
 
-    public static String generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, boolean v4AdToken) throws Exception {
+    public static String generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, AdvertisingTokenVersion adTokenVersion) throws Exception {
         final ByteBuffer sitePayloadWriter = ByteBuffer.allocate(128);
 
         // publisher data
@@ -116,11 +110,11 @@ public class KeyGen {
         final byte[] encryptedMasterPayload = encryptGCM(Arrays.copyOfRange(masterPayloadWriter.array(), 0, masterPayloadWriter.position()), masterKey.getSecret());
         final ByteBuffer rootWriter = ByteBuffer.allocate(encryptedMasterPayload.length + 6);
         rootWriter.put((byte)((params.identityScope << 4) | (params.identityType << 2)));
-        rootWriter.put((byte) (v4AdToken? ADVERTISING_TOKEN_V4 : ADVERTISING_TOKEN_V3));
+        rootWriter.put((byte)adTokenVersion.value());
         rootWriter.putInt((int)masterKey.getId());
         rootWriter.put(encryptedMasterPayload);
 
-        if (v4AdToken) {
+        if (adTokenVersion == AdvertisingTokenVersion.V4) {
             return UID2Base64UrlCoder.encode(rootWriter.array());
 
         }

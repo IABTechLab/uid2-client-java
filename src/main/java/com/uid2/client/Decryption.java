@@ -19,12 +19,6 @@ class Decryption {
     public static final int GCM_AUTHTAG_LENGTH = 16;
     public static final int GCM_IV_LENGTH = 12;
 
-    //showing as "AHA..." in the Base64 Encoding (Base64 'H' is 000111 and 112 is 01110000)
-    public static int ADVERTISING_TOKEN_V3 = 112;
-    //showing as "AIA..." in the Base64URL Encoding ('H' is followed by 'I' hence
-    //this choice for the next token version) (Base64 'I' is 001000 and 128 is 10000000)
-    public static final int ADVERTISING_TOKEN_V4 = 128;
-
     static DecryptionResponse decrypt(String token, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
         String headerStr = token.substring(0, 4);
         Boolean isBase64UrlEncoding = (headerStr.indexOf('-') != -1 || headerStr.indexOf('_') != -1);
@@ -36,11 +30,11 @@ class Decryption {
         }
         //java byte is signed so we wanna convert to unsigned before checking the enum
         int unsignedByte = ((int) data[1]) & 0xff;
-        if (unsignedByte == ADVERTISING_TOKEN_V3)
+        if (unsignedByte == AdvertisingTokenVersion.V3.value())
         {
             return decryptV3(Base64.getDecoder().decode(token), keys, now, identityScope);
         }
-        else if (unsignedByte  == ADVERTISING_TOKEN_V4)
+        else if (unsignedByte  == AdvertisingTokenVersion.V4.value())
         {
             //same as V3 but use Base64URL encoding
             return decryptV3(UID2Base64UrlCoder.decode(token), keys, now, identityScope);
