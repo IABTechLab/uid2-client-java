@@ -65,23 +65,15 @@ public class UID2TokenGenerator {
         return rootWriter.array();
     }
 
-    public static String generateUid2TokenV3(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
-        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), AdvertisingTokenVersion.V3);
-    }
-
     public static String generateUid2TokenV3(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
         return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V3);
-    }
-
-    public static String generateUid2TokenV4(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
-        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), AdvertisingTokenVersion.V4);
     }
 
     public static String generateUid2TokenV4(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
         return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V4);
     }
 
-    public static String generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, AdvertisingTokenVersion adTokenVersion) throws Exception {
+    private static String generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, AdvertisingTokenVersion adTokenVersion) throws Exception {
         final ByteBuffer sitePayloadWriter = ByteBuffer.allocate(128);
 
         // publisher data
