@@ -3,6 +3,7 @@ package com.uid2.client.test;
 import com.uid2.client.IdentityScope;
 import com.uid2.client.IdentityType;
 import com.uid2.client.Key;
+import com.uid2.client.UID2Base64UrlCoder;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -71,14 +72,22 @@ public class KeyGen {
     }
 
     public static String encryptV3(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
-        return Base64.getEncoder().encodeToString(generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), false));
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), false);
+    }
+
+    public static String encryptV3(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, false);
     }
 
     public static String encryptV4(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
-        return Base64.getUrlEncoder().encodeToString(generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), true));
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), true);
     }
 
-    public static byte[] generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, boolean v4AdToken) throws Exception {
+    public static String encryptV4(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, true);
+    }
+
+    public static String generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, boolean v4AdToken) throws Exception {
         final ByteBuffer sitePayloadWriter = ByteBuffer.allocate(128);
 
         // publisher data
@@ -111,7 +120,13 @@ public class KeyGen {
         rootWriter.putInt((int)masterKey.getId());
         rootWriter.put(encryptedMasterPayload);
 
-        return rootWriter.array();
+        if (v4AdToken) {
+            return UID2Base64UrlCoder.encode(rootWriter.array());
+
+        }
+        else {
+            return Base64.getEncoder().encodeToString(rootWriter.array());
+        }
     }
 
     public static String encryptDataV2(byte[] data, Key key, int siteId, Instant now) throws Exception {
