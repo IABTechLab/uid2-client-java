@@ -30,7 +30,7 @@ public class DecryptionTestsV4 {
     public void smokeTest() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
-        String advertisingToken = Base64.getUrlEncoder().encodeToString(KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
+        String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
         DecryptionResponse res = client.decrypt(advertisingToken);
         assertEquals(EXAMPLE_UID, res.getUid());
     }
@@ -38,7 +38,7 @@ public class DecryptionTestsV4 {
     @Test
     public void emptyKeyContainer() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
-        String advertisingToken = Base64.getUrlEncoder().encodeToString(KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
+        String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
         DecryptionResponse res = client.decrypt(advertisingToken);
         assertEquals(DecryptionStatus.NOT_INITIALIZED, res.getStatus());
     }
@@ -46,7 +46,7 @@ public class DecryptionTestsV4 {
     @Test
     public void expiredKeyContainer() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
-        String advertisingToken = Base64.getUrlEncoder().encodeToString(KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
+        String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
 
         Key masterKeyExpired = new Key(MASTER_KEY_ID, -1, NOW, NOW.minus(2, ChronoUnit.HOURS), NOW.minus(1, ChronoUnit.HOURS), getMasterSecret());
         Key siteKeyExpired = new Key(SITE_KEY_ID, SITE_ID, NOW, NOW.minus(2, ChronoUnit.HOURS), NOW.minus(1, ChronoUnit.HOURS), getSiteSecret());
@@ -59,7 +59,7 @@ public class DecryptionTestsV4 {
     @Test
     public void notAuthorizedForKey() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
-        String advertisingToken = Base64.getUrlEncoder().encodeToString(KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
+        String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
 
         Key anotherMasterKey = new Key(MASTER_KEY_ID + SITE_KEY_ID + 1, -1, NOW, NOW, NOW.plus(1, ChronoUnit.HOURS), getMasterSecret());
         Key anotherSiteKey = new Key(MASTER_KEY_ID + SITE_KEY_ID + 2, SITE_ID, NOW, NOW, NOW.plus(1, ChronoUnit.HOURS), getSiteSecret());
@@ -72,8 +72,9 @@ public class DecryptionTestsV4 {
     @Test
     public void invalidPayload() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
-        byte[] payload = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
-        String advertisingToken = Base64.getUrlEncoder().encodeToString(Arrays.copyOfRange(payload, 0, payload.length - 1));
+        String payload = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
+        byte[] payloadInBytes = Base64.getUrlDecoder().decode(payload);
+        String advertisingToken = Base64.getUrlEncoder().encodeToString(Arrays.copyOfRange(payloadInBytes, 0, payloadInBytes.length - 1));
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
         DecryptionResponse res = client.decrypt(advertisingToken);
         assertEquals(DecryptionStatus.INVALID_PAYLOAD, res.getStatus());
@@ -137,7 +138,7 @@ public class DecryptionTestsV4 {
         final byte[] data = {1, 2, 3, 4, 5, 6};
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
-        String advertisingToken = Base64.getUrlEncoder().encodeToString(KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
+        String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
         EncryptionDataResponse encrypted = client.encryptData(EncryptionDataRequest.forData(data).withAdvertisingToken(advertisingToken));
         assertEquals(EncryptionStatus.SUCCESS, encrypted.getStatus());
         DecryptionDataResponse decrypted = client.decryptData(encrypted.getEncryptedData());
@@ -150,7 +151,7 @@ public class DecryptionTestsV4 {
         final byte[] data = {1, 2, 3, 4, 5, 6};
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
-        String advertisingToken = Base64.getUrlEncoder().encodeToString(KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID2, SITE_KEY));
+        String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID2, SITE_KEY);
         EncryptionDataResponse encrypted = client.encryptData(EncryptionDataRequest.forData(data).withAdvertisingToken(advertisingToken));
         assertEquals(EncryptionStatus.SUCCESS, encrypted.getStatus());
         DecryptionDataResponse decrypted = client.decryptData(encrypted.getEncryptedData());
@@ -163,7 +164,7 @@ public class DecryptionTestsV4 {
         final byte[] data = {1, 2, 3, 4, 5, 6};
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
-        String advertisingToken = Base64.getUrlEncoder().encodeToString(KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
+        String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
         assertThrows(IllegalArgumentException.class, () -> {
             client.encryptData(EncryptionDataRequest.forData(data).withAdvertisingToken(advertisingToken).withSiteId(SITE_KEY.getSiteId()));
         });
@@ -194,7 +195,7 @@ public class DecryptionTestsV4 {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         final Key key = new Key(SITE_KEY_ID, SITE_ID2, NOW, NOW, NOW.minus(1, ChronoUnit.DAYS), getTestSecret(9));
         client.refreshJson(keySetToJson(MASTER_KEY, key));
-        final String advertisingToken = Base64.getUrlEncoder().encodeToString(KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, key));
+        final String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, key);
         EncryptionDataResponse encrypted = client.encryptData(EncryptionDataRequest.forData(data).withAdvertisingToken(advertisingToken));
         assertEquals(EncryptionStatus.NOT_AUTHORIZED_FOR_KEY, encrypted.getStatus());
     }

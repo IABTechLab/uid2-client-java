@@ -70,12 +70,12 @@ public class KeyGen {
         return rootWriter.array();
     }
 
-    public static byte[] encryptV3(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
-        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), false);
+    public static String encryptV3(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
+        return Base64.getEncoder().encodeToString(generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), false));
     }
 
-    public static byte[] encryptV4(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
-        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), true);
+    public static String encryptV4(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
+        return Base64.getUrlEncoder().encodeToString(generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), true));
     }
 
     public static byte[] generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, boolean v4AdToken) throws Exception {
