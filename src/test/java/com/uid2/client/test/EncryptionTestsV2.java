@@ -12,7 +12,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Base64;
 
-public class DecryptionTestsV2 {
+public class EncryptionTestsV2 {
 
     public static final long MASTER_KEY_ID = 164;
     public static final long SITE_KEY_ID = 165;
@@ -29,7 +29,7 @@ public class DecryptionTestsV2 {
     public void smokeTest() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
-        String advertisingToken = Base64.getEncoder().encodeToString(KeyGen.encryptV2(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
+        String advertisingToken = Base64.getEncoder().encodeToString(UID2TokenGenerator.generateUid2TokenV2(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
         DecryptionResponse res = client.decrypt(advertisingToken);
         assertEquals(EXAMPLE_UID, res.getUid());
     }
@@ -37,7 +37,7 @@ public class DecryptionTestsV2 {
     @Test
     public void emptyKeyContainer() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
-        String advertisingToken = Base64.getEncoder().encodeToString(KeyGen.encryptV2(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
+        String advertisingToken = Base64.getEncoder().encodeToString(UID2TokenGenerator.generateUid2TokenV2(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
         DecryptionResponse res = client.decrypt(advertisingToken);
         assertEquals(DecryptionStatus.NOT_INITIALIZED, res.getStatus());
     }
@@ -45,7 +45,7 @@ public class DecryptionTestsV2 {
     @Test
     public void expiredKeyContainer() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
-        String advertisingToken = Base64.getEncoder().encodeToString(KeyGen.encryptV2(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
+        String advertisingToken = Base64.getEncoder().encodeToString(UID2TokenGenerator.generateUid2TokenV2(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
 
         Key masterKeyExpired = new Key(MASTER_KEY_ID, -1, NOW, NOW.minus(2, ChronoUnit.HOURS), NOW.minus(1, ChronoUnit.HOURS), getMasterSecret());
         Key siteKeyExpired = new Key(SITE_KEY_ID, SITE_ID, NOW, NOW.minus(2, ChronoUnit.HOURS), NOW.minus(1, ChronoUnit.HOURS), getSiteSecret());
@@ -58,7 +58,7 @@ public class DecryptionTestsV2 {
     @Test
     public void notAuthorizedForKey() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
-        String advertisingToken = Base64.getEncoder().encodeToString(KeyGen.encryptV2(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
+        String advertisingToken = Base64.getEncoder().encodeToString(UID2TokenGenerator.generateUid2TokenV2(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY));
 
         Key anotherMasterKey = new Key(MASTER_KEY_ID + SITE_KEY_ID + 1, -1, NOW, NOW, NOW.plus(1, ChronoUnit.HOURS), getMasterSecret());
         Key anotherSiteKey = new Key(MASTER_KEY_ID + SITE_KEY_ID + 2, SITE_ID, NOW, NOW, NOW.plus(1, ChronoUnit.HOURS), getSiteSecret());
@@ -71,7 +71,7 @@ public class DecryptionTestsV2 {
     @Test
     public void invalidPayload() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
-        byte[] payload = KeyGen.encryptV2(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
+        byte[] payload = UID2TokenGenerator.generateUid2TokenV2(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
         String advertisingToken = Base64.getEncoder().encodeToString(Arrays.copyOfRange(payload, 0, payload.length - 1));
 
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
@@ -83,11 +83,11 @@ public class DecryptionTestsV2 {
     @Test
     public void tokenExpiryAndCustomNow() throws Exception {
         final Instant expiry = Instant.parse("2021-03-22T09:01:02Z");
-        final KeyGen.Params params = KeyGen.defaultParams().withTokenExpiry(expiry);
+        final UID2TokenGenerator.Params params = UID2TokenGenerator.defaultParams().withTokenExpiry(expiry);
 
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
-        String advertisingToken = Base64.getEncoder().encodeToString(KeyGen.encryptV2(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY, params));
+        String advertisingToken = Base64.getEncoder().encodeToString(UID2TokenGenerator.generateUid2TokenV2(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY, params));
 
         DecryptionResponse res = client.decrypt(advertisingToken, expiry.plus(1, ChronoUnit.SECONDS));
         assertEquals(DecryptionStatus.EXPIRED_TOKEN, res.getStatus());
@@ -100,7 +100,7 @@ public class DecryptionTestsV2 {
     public void decryptData() throws Exception {
         final byte[] data = {1, 2, 3, 4, 5, 6};
         final Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
-        final String encrypted = KeyGen.encryptDataV2(data, SITE_KEY, 12345, now);
+        final String encrypted = UID2TokenGenerator.encryptDataV2(data, SITE_KEY, 12345, now);
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(SITE_KEY));
         DecryptionDataResponse decrypted = client.decryptData(encrypted);
@@ -112,7 +112,7 @@ public class DecryptionTestsV2 {
     @Test
     public void decryptDataBadPayloadType() throws Exception {
         final byte[] data = {1, 2, 3, 4, 5, 6};
-        final String encrypted = KeyGen.encryptDataV2(data, SITE_KEY, 12345, Instant.now());
+        final String encrypted = UID2TokenGenerator.encryptDataV2(data, SITE_KEY, 12345, Instant.now());
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(SITE_KEY));
         byte[] encryptedBytes = Base64.getDecoder().decode(encrypted);
@@ -124,7 +124,7 @@ public class DecryptionTestsV2 {
     @Test
     public void decryptDataBadVersion() throws Exception {
         final byte[] data = {1, 2, 3, 4, 5, 6};
-        final String encrypted = KeyGen.encryptDataV2(data, SITE_KEY, 12345, Instant.now());
+        final String encrypted = UID2TokenGenerator.encryptDataV2(data, SITE_KEY, 12345, Instant.now());
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(SITE_KEY));
         byte[] encryptedBytes = Base64.getDecoder().decode(encrypted);
@@ -136,7 +136,7 @@ public class DecryptionTestsV2 {
     @Test
     public void decryptDataBadPayload() throws Exception {
         final byte[] data = {1, 2, 3, 4, 5, 6};
-        final String encrypted = KeyGen.encryptDataV2(data, SITE_KEY, 12345, Instant.now());
+        final String encrypted = UID2TokenGenerator.encryptDataV2(data, SITE_KEY, 12345, Instant.now());
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(SITE_KEY));
         byte[] encryptedBytes = Base64.getDecoder().decode(encrypted);
@@ -155,7 +155,7 @@ public class DecryptionTestsV2 {
     @Test
     public void decryptDataNoDecryptionKey() throws Exception {
         final byte[] data = {1, 2, 3, 4, 5, 6};
-        final String encrypted = KeyGen.encryptDataV2(data, SITE_KEY, 12345, Instant.now());
+        final String encrypted = UID2TokenGenerator.encryptDataV2(data, SITE_KEY, 12345, Instant.now());
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(SITE_KEY));
         client.refreshJson(keySetToJson(MASTER_KEY));

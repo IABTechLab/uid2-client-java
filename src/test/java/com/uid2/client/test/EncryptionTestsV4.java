@@ -13,7 +13,7 @@ import java.util.Base64;
 
 import static org.junit.Assert.*;
 
-public class DecryptionTestsV4 {
+public class EncryptionTestsV4 {
 
     public static final long MASTER_KEY_ID = 164;
     public static final long SITE_KEY_ID = 165;
@@ -72,7 +72,7 @@ public class DecryptionTestsV4 {
         //for the next ~20 years ...
         Instant masterKeyExpires = Instant.ofEpochMilli(referenceTimestampMs).plus(1*365*20, ChronoUnit.DAYS);
         Instant siteKeyExpires = Instant.ofEpochMilli(referenceTimestampMs).plus(1*365*20, ChronoUnit.DAYS);
-        KeyGen.Params params = KeyGen.defaultParams().withTokenExpiry(Instant.ofEpochMilli(referenceTimestampMs).plus(1*365*20, ChronoUnit.DAYS));
+        UID2TokenGenerator.Params params = UID2TokenGenerator.defaultParams().withTokenExpiry(Instant.ofEpochMilli(referenceTimestampMs).plus(1*365*20, ChronoUnit.DAYS));
 
         final Key masterKey = new Key(MASTER_KEY_ID, -1, masterKeyCreated, masterKeyActivates, masterKeyExpires, getMasterSecret());
         final Key siteKey = new Key(SITE_KEY_ID, SITE_ID, siteKeyCreated, siteKeyActivates, siteKeyExpires, getSiteSecret());
@@ -80,7 +80,7 @@ public class DecryptionTestsV4 {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(masterKey, siteKey));
         //verify that the dynamically created ad token can be decrypted
-        String runtimeAdvertisingToken = KeyGen.encryptV4(EXAMPLE_UID, masterKey, SITE_ID, siteKey, params);
+        String runtimeAdvertisingToken = UID2TokenGenerator.generateUid2TokenV4(EXAMPLE_UID, masterKey, SITE_ID, siteKey, params);
         //best effort check as the token might simply just not require padding
         assertEquals(-1, runtimeAdvertisingToken.indexOf('='));
 
@@ -98,7 +98,7 @@ public class DecryptionTestsV4 {
     public void smokeTest() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
-        String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
+        String advertisingToken = UID2TokenGenerator.generateUid2TokenV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
         DecryptionResponse res = client.decrypt(advertisingToken);
         assertEquals(EXAMPLE_UID, res.getUid());
     }
@@ -106,7 +106,7 @@ public class DecryptionTestsV4 {
     @Test
     public void emptyKeyContainer() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
-        String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
+        String advertisingToken = UID2TokenGenerator.generateUid2TokenV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
         DecryptionResponse res = client.decrypt(advertisingToken);
         assertEquals(DecryptionStatus.NOT_INITIALIZED, res.getStatus());
     }
@@ -114,7 +114,7 @@ public class DecryptionTestsV4 {
     @Test
     public void expiredKeyContainer() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
-        String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
+        String advertisingToken = UID2TokenGenerator.generateUid2TokenV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
 
         Key masterKeyExpired = new Key(MASTER_KEY_ID, -1, NOW, NOW.minus(2, ChronoUnit.HOURS), NOW.minus(1, ChronoUnit.HOURS), getMasterSecret());
         Key siteKeyExpired = new Key(SITE_KEY_ID, SITE_ID, NOW, NOW.minus(2, ChronoUnit.HOURS), NOW.minus(1, ChronoUnit.HOURS), getSiteSecret());
@@ -127,7 +127,7 @@ public class DecryptionTestsV4 {
     @Test
     public void notAuthorizedForKey() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
-        String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
+        String advertisingToken = UID2TokenGenerator.generateUid2TokenV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
 
         Key anotherMasterKey = new Key(MASTER_KEY_ID + SITE_KEY_ID + 1, -1, NOW, NOW, NOW.plus(1, ChronoUnit.HOURS), getMasterSecret());
         Key anotherSiteKey = new Key(MASTER_KEY_ID + SITE_KEY_ID + 2, SITE_ID, NOW, NOW, NOW.plus(1, ChronoUnit.HOURS), getSiteSecret());
@@ -140,7 +140,7 @@ public class DecryptionTestsV4 {
     @Test
     public void invalidPayload() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
-        String payload = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
+        String payload = UID2TokenGenerator.generateUid2TokenV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY);
         byte[] payloadInBytes = UID2Base64UrlCoder.decode(payload);
         String advertisingToken = UID2Base64UrlCoder.encode(Arrays.copyOfRange(payloadInBytes, 0, payloadInBytes.length - 1));
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
@@ -151,11 +151,11 @@ public class DecryptionTestsV4 {
     @Test
     public void tokenExpiryAndCustomNow() throws Exception {
         final Instant expiry = Instant.parse("2021-03-22T09:01:02Z");
-        final KeyGen.Params params = KeyGen.defaultParams().withTokenExpiry(expiry);
+        final UID2TokenGenerator.Params params = UID2TokenGenerator.defaultParams().withTokenExpiry(expiry);
 
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         client.refreshJson(keySetToJson(MASTER_KEY, SITE_KEY));
-        String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY, params);
+        String advertisingToken = UID2TokenGenerator.generateUid2TokenV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY, params);
 
         DecryptionResponse res = client.decrypt(advertisingToken, expiry.plus(1, ChronoUnit.SECONDS));
         assertEquals(DecryptionStatus.EXPIRED_TOKEN, res.getStatus());
@@ -170,7 +170,7 @@ public class DecryptionTestsV4 {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         final Key key = new Key(SITE_KEY_ID, SITE_ID2, NOW, NOW, NOW.minus(1, ChronoUnit.DAYS), getTestSecret(9));
         client.refreshJson(keySetToJson(MASTER_KEY, key));
-        final String advertisingToken = KeyGen.encryptV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, key);
+        final String advertisingToken = UID2TokenGenerator.generateUid2TokenV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, key);
         EncryptionDataResponse encrypted = client.encryptData(EncryptionDataRequest.forData(data).withAdvertisingToken(advertisingToken));
         assertEquals(EncryptionStatus.NOT_AUTHORIZED_FOR_KEY, encrypted.getStatus());
     }

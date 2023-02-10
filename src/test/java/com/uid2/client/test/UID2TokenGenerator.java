@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Random;
 
-public class KeyGen {
+public class UID2TokenGenerator {
     public static class Params
     {
         Instant tokenExpiry = Instant.now().plus(1, ChronoUnit.HOURS);
@@ -29,11 +29,11 @@ public class KeyGen {
 
     public static Params defaultParams() { return new Params(); }
 
-    public static byte[] encryptV2(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
-        return encryptV2(uid, masterKey, siteId, siteKey, defaultParams());
+    public static byte[] generateUid2TokenV2(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
+        return generateUid2TokenV2(uid, masterKey, siteId, siteKey, defaultParams());
     }
 
-    public static byte[] encryptV2(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+    public static byte[] generateUid2TokenV2(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
         Random rd = new Random();
         byte[] uidBytes = uid.getBytes(StandardCharsets.UTF_8);
         ByteBuffer identityWriter = ByteBuffer.allocate(4 + 4 + uidBytes.length + 4 + 8);
@@ -65,19 +65,19 @@ public class KeyGen {
         return rootWriter.array();
     }
 
-    public static String encryptV3(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
+    public static String generateUid2TokenV3(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
         return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), AdvertisingTokenVersion.V3);
     }
 
-    public static String encryptV3(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+    public static String generateUid2TokenV3(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
         return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V3);
     }
 
-    public static String encryptV4(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
+    public static String generateUid2TokenV4(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
         return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, defaultParams(), AdvertisingTokenVersion.V4);
     }
 
-    public static String encryptV4(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+    public static String generateUid2TokenV4(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
         return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V4);
     }
 
