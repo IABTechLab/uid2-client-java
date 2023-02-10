@@ -20,6 +20,12 @@ class Decryption {
     public static final int GCM_IV_LENGTH = 12;
 
     static DecryptionResponse decrypt(String token, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
+
+        if(token.length() < 4)
+        {
+            return DecryptionResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
+        }
+
         String headerStr = token.substring(0, 4);
         Boolean isBase64UrlEncoding = (headerStr.indexOf('-') != -1 || headerStr.indexOf('_') != -1);
         byte[] data = isBase64UrlEncoding ? UID2Base64UrlCoder.decode(headerStr) : Base64.getDecoder().decode(headerStr);
