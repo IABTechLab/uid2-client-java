@@ -21,6 +21,10 @@ public class UID2Base64UrlCoder {
             {
                 paddingCount++;
             }
+            else //'=' has to be at the very back
+            {
+                break;
+            }
         }
         if(paddingCount > 0)
         {

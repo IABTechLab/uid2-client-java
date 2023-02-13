@@ -30,14 +30,28 @@ public class EncryptionTestsV4 {
     // unit tests to ensure the base64url encoding and decoding are identical in all supported
     // uid2 client sdks in different programming languages
     @Test
-    public void crossPlatformConsistencyCheck_Base64UrlTest()
+    public void crossPlatformConsistencyCheck_Base64UrlTestCases()
     {
-        int[] rawInput = { 0xff, 0xE0, 0x88, 0xFF, 0xEE, 0x99, 0x99 };
-        byte[] rawInputBytes = intArrayToByteArray(rawInput);
-
+        int[] case1 = { 0xff, 0xE0, 0x88, 0xFF, 0xEE, 0x99, 0x99 };
         //the Base64 equivalent is "/+CI/+6ZmQ=="
-        //and we want the Base64URL encoded to remove the '=' padding
-        String expectedBase64URLStr =  "_-CI_-6ZmQ";
+        //and we want the Base64URL encoded to remove 2 '=' paddings at the back
+        //String case1Base64Encoded = Base64.getEncoder().encodeToString(intArrayToByteArray(case1));
+        crossPlatformConsistencyCheck_Base64UrlTest(case1, "_-CI_-6ZmQ");
+
+        //the Base64 equivalent is "/+CI/+6ZmZk=" to remove 1 padding
+        int[] case2 = { 0xff, 0xE0, 0x88, 0xFF, 0xEE, 0x99, 0x99, 0x99};
+        //String case2Base64Encoded = Base64.getEncoder().encodeToString(intArrayToByteArray(case2));
+        crossPlatformConsistencyCheck_Base64UrlTest(case2, "_-CI_-6ZmZk");
+
+        //the Base64 equivalent is "/+CI/+6Z" which requires no padding removal
+        int[] case3 = { 0xff, 0xE0, 0x88, 0xFF, 0xEE, 0x99};
+        //String case3Base64Encoded = Base64.getEncoder().encodeToString(intArrayToByteArray(case3));
+        crossPlatformConsistencyCheck_Base64UrlTest(case3, "_-CI_-6Z");
+    }
+
+    public void crossPlatformConsistencyCheck_Base64UrlTest(int[] rawInput, String expectedBase64URLStr)
+    {
+        byte[] rawInputBytes = intArrayToByteArray(rawInput);
         final ByteBuffer writer = ByteBuffer.allocate(rawInput.length);
         for (int i = 0; i < rawInput.length; i++)
         {
