@@ -78,7 +78,7 @@ public class PublisherUid2Helper {
         writer.put(nonce);
         writer.put(jsonEmailBytes);
 
-        byte[] encrypted = Decryption.encryptGCM(writer.array(), iv, secretKey);
+        byte[] encrypted = UID2Encryption.encryptGCM(writer.array(), iv, secretKey);
         ByteBuffer envelopeBuffer = ByteBuffer.allocate(encrypted.length + 1);
         final byte envelopeVersion = 1;
         envelopeBuffer.put(envelopeVersion);
@@ -103,7 +103,7 @@ public class PublisherUid2Helper {
     {
         //from parseV2Response
         byte[] responseBytes = InputUtil.base64ToByteArray(response);
-        byte[] payload = Decryption.decryptGCM(responseBytes, 0, secretKey);
+        byte[] payload = UID2Encryption.decryptGCM(responseBytes, 0, secretKey);
 
         byte[] resultBytes;
         if (!isRefreshResponse) {

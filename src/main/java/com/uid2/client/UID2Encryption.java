@@ -14,7 +14,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 
-class Decryption {
+class UID2Encryption {
 
     public static final int GCM_AUTHTAG_LENGTH = 16;
     public static final int GCM_IV_LENGTH = 12;
