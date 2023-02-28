@@ -1,8 +1,6 @@
 package com.uid2.client.test;
 
-import com.uid2.client.IdentityScope;
-import com.uid2.client.IdentityType;
-import com.uid2.client.Key;
+import com.uid2.client.*;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -18,7 +16,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Random;
 
-public class KeyGen {
+public class UID2TokenGenerator {
     public static class Params
     {
         Instant tokenExpiry = Instant.now().plus(1, ChronoUnit.HOURS);
@@ -31,11 +29,11 @@ public class KeyGen {
 
     public static Params defaultParams() { return new Params(); }
 
-    public static byte[] encryptV2(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
-        return encryptV2(uid, masterKey, siteId, siteKey, defaultParams());
+    public static byte[] generateUid2TokenV2(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
+        return generateUid2TokenV2(uid, masterKey, siteId, siteKey, defaultParams());
     }
 
-    public static byte[] encryptV2(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+    public static byte[] generateUid2TokenV2(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
         Random rd = new Random();
         byte[] uidBytes = uid.getBytes(StandardCharsets.UTF_8);
         ByteBuffer identityWriter = ByteBuffer.allocate(4 + 4 + uidBytes.length + 4 + 8);
@@ -67,11 +65,15 @@ public class KeyGen {
         return rootWriter.array();
     }
 
-    public static byte[] encryptV3(String uid, Key masterKey, long siteId, Key siteKey) throws Exception {
-        return encryptV3(uid, masterKey, siteId, siteKey, defaultParams());
+    public static String generateUid2TokenV3(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V3);
     }
 
-    public static byte[] encryptV3(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+    public static String generateUid2TokenV4(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V4);
+    }
+
+    private static String generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, AdvertisingTokenVersion adTokenVersion) throws Exception {
         final ByteBuffer sitePayloadWriter = ByteBuffer.allocate(128);
 
         // publisher data
@@ -100,11 +102,17 @@ public class KeyGen {
         final byte[] encryptedMasterPayload = encryptGCM(Arrays.copyOfRange(masterPayloadWriter.array(), 0, masterPayloadWriter.position()), masterKey.getSecret());
         final ByteBuffer rootWriter = ByteBuffer.allocate(encryptedMasterPayload.length + 6);
         rootWriter.put((byte)((params.identityScope << 4) | (params.identityType << 2)));
-        rootWriter.put((byte)112);
+        rootWriter.put((byte)adTokenVersion.value());
         rootWriter.putInt((int)masterKey.getId());
         rootWriter.put(encryptedMasterPayload);
 
-        return rootWriter.array();
+        if (adTokenVersion == AdvertisingTokenVersion.V4) {
+            return UID2Base64UrlCoder.encode(rootWriter.array());
+
+        }
+        else {
+            return Base64.getEncoder().encodeToString(rootWriter.array());
+        }
     }
 
     public static String encryptDataV2(byte[] data, Key key, int siteId, Instant now) throws Exception {
