@@ -37,6 +37,7 @@ public class PublisherUid2Helper {
      * @param response the response body returned by a call to <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md">/token/generate</a>
      * @param envelope the EnvelopeV2 instance returned by {@link #createEnvelopeForTokenGenerateRequest}
      * @return an IdentityTokens instance
+     * @throws Uid2Exception if the response did not contain a "success" status
      */
     public IdentityTokens createIdentityfromTokenGenerateResponse(String response, EnvelopeV2 envelope) {
         String identityJsonString = decrypt(response, secretKey, false, envelope.getNonce());
