@@ -14,19 +14,36 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 
-class Decryption {
+class UID2Encryption {
 
     public static final int GCM_AUTHTAG_LENGTH = 16;
     public static final int GCM_IV_LENGTH = 12;
 
-    static DecryptionResponse decrypt(byte[] encryptedId, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
-        if (encryptedId[0] == 2)
+    static DecryptionResponse decrypt(String token, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
+
+        if(token.length() < 4)
         {
-            return decryptV2(encryptedId, keys, now);
+            return DecryptionResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
         }
-        else if (encryptedId[1] == 112)
+
+        String headerStr = token.substring(0, 4);
+        Boolean isBase64UrlEncoding = (headerStr.indexOf('-') != -1 || headerStr.indexOf('_') != -1);
+        byte[] data = isBase64UrlEncoding ? UID2Base64UrlCoder.decode(headerStr) : Base64.getDecoder().decode(headerStr);
+
+        if (data[0] == 2)
         {
-            return decryptV3(encryptedId, keys, now, identityScope);
+            return decryptV2(Base64.getDecoder().decode(token), keys, now);
+        }
+        //java byte is signed so we wanna convert to unsigned before checking the enum
+        int unsignedByte = ((int) data[1]) & 0xff;
+        if (unsignedByte == AdvertisingTokenVersion.V3.value())
+        {
+            return decryptV3(Base64.getDecoder().decode(token), keys, now, identityScope);
+        }
+        else if (unsignedByte  == AdvertisingTokenVersion.V4.value())
+        {
+            //same as V3 but use Base64URL encoding
+            return decryptV3(UID2Base64UrlCoder.decode(token), keys, now, identityScope);
         }
 
         return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
@@ -99,10 +116,8 @@ class Decryption {
                 return DecryptionResponse.makeError(DecryptionStatus.INVALID_IDENTITY_SCOPE);
             }
 
-            final int version = (int) rootReader.get();
-            if (version != 112) {
-                return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
-            }
+            //version
+            rootReader.get();
 
             final long masterKeyId = rootReader.getInt();
             final Key masterKey = keys.getKey(masterKeyId);
@@ -173,7 +188,7 @@ class Decryption {
                 siteKeySiteId = siteId;
             } else {
                 try {
-                    DecryptionResponse decryptedToken = decrypt(Base64.getDecoder().decode(request.getAdvertisingToken()), keys, now, identityScope);
+                    DecryptionResponse decryptedToken = decrypt(request.getAdvertisingToken(), keys, now, identityScope);
                     if (!decryptedToken.isSuccess()) {
                         return EncryptionDataResponse.makeError(EncryptionStatus.TOKEN_DECRYPT_FAILURE);
                     }

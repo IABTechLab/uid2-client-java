@@ -78,7 +78,7 @@ public class UID2Client implements IUID2Client {
         }
 
         try {
-            return Decryption.decrypt(Base64.getDecoder().decode(token), container, now, this.identityScope);
+            return UID2Encryption.decrypt(token, container, now, this.identityScope);
         } catch (Exception e) {
             return DecryptionResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
         }
@@ -86,7 +86,7 @@ public class UID2Client implements IUID2Client {
 
     @Override
     public EncryptionDataResponse encryptData(EncryptionDataRequest request) {
-        return Decryption.encryptData(request, this.container.get(), this.identityScope);
+        return UID2Encryption.encryptData(request, this.container.get(), this.identityScope);
     }
 
     @Override
@@ -101,7 +101,7 @@ public class UID2Client implements IUID2Client {
         }
 
         try {
-            return Decryption.decryptData(Base64.getDecoder().decode(encryptedData), container, this.identityScope);
+            return UID2Encryption.decryptData(Base64.getDecoder().decode(encryptedData), container, this.identityScope);
         } catch (Exception e) {
             return DecryptionDataResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
         }
@@ -113,7 +113,7 @@ public class UID2Client implements IUID2Client {
         ByteBuffer writer = ByteBuffer.allocate(16);
         writer.putLong(now.toEpochMilli());
         writer.put(nonce);
-        byte[] encrypted = Decryption.encryptGCM(writer.array(), null, this.secretKey);
+        byte[] encrypted = UID2Encryption.encryptGCM(writer.array(), null, this.secretKey);
         ByteBuffer request = ByteBuffer.allocate(encrypted.length + 1);
         request.put((byte)1); // version
         request.put(encrypted);
@@ -135,7 +135,7 @@ public class UID2Client implements IUID2Client {
 
     private byte[] parseV2Response(byte[] envelope, byte[] nonce) throws IllegalStateException {
         byte[] envelopeBytes = Base64.getDecoder().decode(envelope);
-        byte[] payload = Decryption.decryptGCM(envelopeBytes, 0, this.secretKey);
+        byte[] payload = UID2Encryption.decryptGCM(envelopeBytes, 0, this.secretKey);
         byte[] receivedNonce = Arrays.copyOfRange(payload, 8, 8 + nonce.length);
         if (!Arrays.equals(receivedNonce, nonce)) {
             throw new IllegalStateException("nonce mismatch");
