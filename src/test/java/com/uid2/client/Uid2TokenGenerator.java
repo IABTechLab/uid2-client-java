@@ -1,6 +1,4 @@
-package com.uid2.client.test;
-
-import com.uid2.client.*;
+package com.uid2.client;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -16,7 +14,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Random;
 
-public class UID2TokenGenerator {
+class Uid2TokenGenerator {
     public static class Params
     {
         Instant tokenExpiry = Instant.now().plus(1, ChronoUnit.HOURS);
@@ -73,7 +71,7 @@ public class UID2TokenGenerator {
         return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V4);
     }
 
-    private static String generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, AdvertisingTokenVersion adTokenVersion) throws Exception {
+    private static String generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, AdvertisingTokenVersion adTokenVersion) {
         final ByteBuffer sitePayloadWriter = ByteBuffer.allocate(128);
 
         // publisher data
@@ -107,7 +105,7 @@ public class UID2TokenGenerator {
         rootWriter.put(encryptedMasterPayload);
 
         if (adTokenVersion == AdvertisingTokenVersion.V4) {
-            return UID2Base64UrlCoder.encode(rootWriter.array());
+            return Uid2Base64UrlCoder.encode(rootWriter.array());
 
         }
         else {

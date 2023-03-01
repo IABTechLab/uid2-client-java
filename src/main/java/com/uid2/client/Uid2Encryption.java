@@ -14,7 +14,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 
-class UID2Encryption {
+class Uid2Encryption {
 
     public static final int GCM_AUTHTAG_LENGTH = 16;
     public static final int GCM_IV_LENGTH = 12;
@@ -27,8 +27,8 @@ class UID2Encryption {
         }
 
         String headerStr = token.substring(0, 4);
-        Boolean isBase64UrlEncoding = (headerStr.indexOf('-') != -1 || headerStr.indexOf('_') != -1);
-        byte[] data = isBase64UrlEncoding ? UID2Base64UrlCoder.decode(headerStr) : Base64.getDecoder().decode(headerStr);
+        boolean isBase64UrlEncoding = (headerStr.indexOf('-') != -1 || headerStr.indexOf('_') != -1);
+        byte[] data = isBase64UrlEncoding ? Uid2Base64UrlCoder.decode(headerStr) : Base64.getDecoder().decode(headerStr);
 
         if (data[0] == 2)
         {
@@ -43,7 +43,7 @@ class UID2Encryption {
         else if (unsignedByte  == AdvertisingTokenVersion.V4.value())
         {
             //same as V3 but use Base64URL encoding
-            return decryptV3(UID2Base64UrlCoder.decode(token), keys, now, identityScope);
+            return decryptV3(Uid2Base64UrlCoder.decode(token), keys, now, identityScope);
         }
 
         return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
@@ -107,7 +107,7 @@ class UID2Encryption {
         }
     }
 
-    static DecryptionResponse decryptV3(byte[] encryptedId, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
+    static DecryptionResponse decryptV3(byte[] encryptedId, IKeyContainer keys, Instant now, IdentityScope identityScope) {
         try {
             final ByteBuffer rootReader = ByteBuffer.wrap(encryptedId);
             final byte prefix = rootReader.get();
