@@ -19,7 +19,7 @@ class Uid2Encryption {
     public static final int GCM_AUTHTAG_LENGTH = 16;
     public static final int GCM_IV_LENGTH = 12;
 
-    static DecryptionResponse decrypt(String token, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
+    static DecryptionResponse decrypt(String token, KeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
 
         if(token.length() < 4)
         {
@@ -49,7 +49,7 @@ class Uid2Encryption {
         return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
     }
 
-    static DecryptionResponse decryptV2(byte[] encryptedId, IKeyContainer keys, Instant now) throws Exception {
+    static DecryptionResponse decryptV2(byte[] encryptedId, KeyContainer keys, Instant now) throws Exception {
         try {
             ByteBuffer rootReader = ByteBuffer.wrap(encryptedId);
             int version = (int) rootReader.get();
@@ -107,7 +107,7 @@ class Uid2Encryption {
         }
     }
 
-    static DecryptionResponse decryptV3(byte[] encryptedId, IKeyContainer keys, Instant now, IdentityScope identityScope) {
+    static DecryptionResponse decryptV3(byte[] encryptedId, KeyContainer keys, Instant now, IdentityScope identityScope) {
         try {
             final ByteBuffer rootReader = ByteBuffer.wrap(encryptedId);
             final byte prefix = rootReader.get();
@@ -167,7 +167,7 @@ class Uid2Encryption {
         }
     }
 
-    static EncryptionDataResponse encryptData(EncryptionDataRequest request, IKeyContainer keys, IdentityScope identityScope) {
+    static EncryptionDataResponse encryptData(EncryptionDataRequest request, KeyContainer keys, IdentityScope identityScope) {
         if (request.getData() == null) {
             throw new IllegalArgumentException("data to encrypt must not be null");
         }
@@ -231,7 +231,7 @@ class Uid2Encryption {
         }
     }
 
-    static DecryptionDataResponse decryptData(byte[] encryptedBytes, IKeyContainer keys, IdentityScope identityScope) throws Exception {
+    static DecryptionDataResponse decryptData(byte[] encryptedBytes, KeyContainer keys, IdentityScope identityScope) throws Exception {
         if ((encryptedBytes[0] & 224) == (int)PayloadType.ENCRYPTED_DATA_V3.value)
         {
             return decryptDataV3(encryptedBytes, keys, identityScope);
@@ -242,7 +242,7 @@ class Uid2Encryption {
         }
     }
 
-    static DecryptionDataResponse decryptDataV2(byte[] encryptedBytes, IKeyContainer keys) throws Exception {
+    static DecryptionDataResponse decryptDataV2(byte[] encryptedBytes, KeyContainer keys) throws Exception {
         ByteBuffer reader = ByteBuffer.wrap(encryptedBytes);
         if(Byte.toUnsignedInt(reader.get()) != PayloadType.ENCRYPTED_DATA.value) {
             return DecryptionDataResponse.makeError(DecryptionStatus.INVALID_PAYLOAD_TYPE);
@@ -269,7 +269,7 @@ class Uid2Encryption {
         return new DecryptionDataResponse(DecryptionStatus.SUCCESS, decryptedData, encryptedAt);
     }
 
-    static DecryptionDataResponse decryptDataV3(byte[] encryptedBytes, IKeyContainer keys, IdentityScope identityScope) throws Exception {
+    static DecryptionDataResponse decryptDataV3(byte[] encryptedBytes, KeyContainer keys, IdentityScope identityScope) throws Exception {
         final ByteBuffer reader = ByteBuffer.wrap(encryptedBytes);
         final IdentityScope payloadScope = decodeIdentityScopeV3(reader.get());
         if (payloadScope != identityScope)
