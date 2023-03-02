@@ -64,7 +64,7 @@ public class EncryptionTestsV2 {
         client.refreshJson(keySetToJson(anotherMasterKey, anotherSiteKey));
 
         DecryptionResponse res = client.decrypt(advertisingToken);
-        assertEquals(DecryptionStatus.NOT_AUTHORIZED_FOR_KEY, res.getStatus());
+        assertEquals(DecryptionStatus.NOT_AUTHORIZED_FOR_MASTER_KEY, res.getStatus());
     }
 
     @Test

@@ -60,7 +60,7 @@ class Uid2Encryption {
             long masterKeyId = rootReader.getInt();
             Key masterKey = keys.getKey(masterKeyId);
             if (masterKey == null) {
-                return DecryptionResponse.makeError(DecryptionStatus.NOT_AUTHORIZED_FOR_KEY);
+                return DecryptionResponse.makeError(DecryptionStatus.NOT_AUTHORIZED_FOR_MASTER_KEY);
             }
 
             byte[] masterIv = new byte[16];
@@ -122,7 +122,7 @@ class Uid2Encryption {
             final long masterKeyId = rootReader.getInt();
             final Key masterKey = keys.getKey(masterKeyId);
             if (masterKey == null) {
-                return DecryptionResponse.makeError(DecryptionStatus.NOT_AUTHORIZED_FOR_KEY);
+                return DecryptionResponse.makeError(DecryptionStatus.NOT_AUTHORIZED_FOR_MASTER_KEY);
             }
 
             final byte[] masterPayload = decryptGCM(encryptedId, rootReader.position(), masterKey.getSecret());

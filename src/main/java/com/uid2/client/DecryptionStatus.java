@@ -2,6 +2,7 @@
 
 public enum DecryptionStatus {
     SUCCESS,
+    NOT_AUTHORIZED_FOR_MASTER_KEY,
     NOT_AUTHORIZED_FOR_KEY,
     NOT_INITIALIZED,
     INVALID_PAYLOAD,

@@ -76,16 +76,14 @@ public class EncryptionTestsV4 {
         final long referenceTimestampMs = 1672534861000L;
         // 1 hour before ref timestamp
         final long establishedMs = referenceTimestampMs - (3600 * 1000);
-        final long lastRefreshedMs = referenceTimestampMs;
-        final long tokenCreatedMs = referenceTimestampMs;
         Instant masterKeyCreated = Instant.ofEpochMilli(referenceTimestampMs).minus(1, ChronoUnit.DAYS);
         Instant siteKeyCreated = Instant.ofEpochMilli(referenceTimestampMs).minus(10, ChronoUnit.DAYS);
         Instant masterKeyActivates = Instant.ofEpochMilli(referenceTimestampMs);
         Instant siteKeyActivates = Instant.ofEpochMilli(referenceTimestampMs).minus(1, ChronoUnit.DAYS);
         //for the next ~20 years ...
-        Instant masterKeyExpires = Instant.ofEpochMilli(referenceTimestampMs).plus(1*365*20, ChronoUnit.DAYS);
-        Instant siteKeyExpires = Instant.ofEpochMilli(referenceTimestampMs).plus(1*365*20, ChronoUnit.DAYS);
-        Uid2TokenGenerator.Params params = Uid2TokenGenerator.defaultParams().withTokenExpiry(Instant.ofEpochMilli(referenceTimestampMs).plus(1*365*20, ChronoUnit.DAYS));
+        Instant masterKeyExpires = Instant.ofEpochMilli(referenceTimestampMs).plus(365*20, ChronoUnit.DAYS);
+        Instant siteKeyExpires = Instant.ofEpochMilli(referenceTimestampMs).plus(365*20, ChronoUnit.DAYS);
+        Uid2TokenGenerator.Params params = Uid2TokenGenerator.defaultParams().withTokenExpiry(Instant.ofEpochMilli(referenceTimestampMs).plus(365*20, ChronoUnit.DAYS));
 
         final Key masterKey = new Key(MASTER_KEY_ID, -1, masterKeyCreated, masterKeyActivates, masterKeyExpires, getMasterSecret());
         final Key siteKey = new Key(SITE_KEY_ID, SITE_ID, siteKeyCreated, siteKeyActivates, siteKeyExpires, getSiteSecret());
@@ -138,7 +136,7 @@ public class EncryptionTestsV4 {
     }
 
     @Test
-    public void notAuthorizedForKey() throws Exception {
+    public void notAuthorizedForMasterKey() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
         String advertisingToken = Uid2TokenGenerator.generateUid2TokenV4(EXAMPLE_UID, MASTER_KEY, SITE_ID, SITE_KEY, Uid2TokenGenerator.defaultParams());
 
@@ -147,7 +145,7 @@ public class EncryptionTestsV4 {
         client.refreshJson(keySetToJson(anotherMasterKey, anotherSiteKey));
 
         DecryptionResponse res = client.decrypt(advertisingToken);
-        assertEquals(DecryptionStatus.NOT_AUTHORIZED_FOR_KEY, res.getStatus());
+        assertEquals(DecryptionStatus.NOT_AUTHORIZED_FOR_MASTER_KEY, res.getStatus());
     }
 
     @Test
