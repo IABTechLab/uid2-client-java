@@ -61,7 +61,7 @@ public class UID2Client implements IUID2Client {
         }
     }
 
-    public void refreshJson(String json) throws Exception {
+    public void refreshJson(String json) {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
         this.container.set(KeyParser.parse(inputStream));
     }
@@ -87,6 +87,14 @@ public class UID2Client implements IUID2Client {
     @Override
     public EncryptionDataResponse encryptData(EncryptionDataRequest request) {
         return Uid2Encryption.encryptData(request, this.container.get(), this.identityScope);
+    }
+
+    @Override
+    public EncryptionDataResponse encrypt(String rawUid) {
+        return encrypt(rawUid, Instant.now());
+    }
+    EncryptionDataResponse encrypt(String rawUid, Instant now) {
+        return Uid2Encryption.encrypt(rawUid, this.container.get(), this.identityScope, now);
     }
 
     @Override

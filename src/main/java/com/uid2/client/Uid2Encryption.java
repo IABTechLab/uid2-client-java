@@ -167,6 +167,41 @@ class Uid2Encryption {
         }
     }
 
+    static EncryptionDataResponse encrypt(String rawUid, KeyContainer keys, IdentityScope identityScope, Instant now)
+    {
+        if (keys == null)
+            return EncryptionDataResponse.makeError(EncryptionStatus.NOT_INITIALIZED);
+
+        else if (!keys.isValid(now))
+            return EncryptionDataResponse.makeError(EncryptionStatus.KEYS_NOT_SYNCED);
+
+        Key masterKey = keys.getMasterKey(now);
+        if (masterKey == null)
+            return EncryptionDataResponse.makeError(EncryptionStatus.NOT_AUTHORIZED_FOR_MASTER_KEY);
+
+        Key defaultKey = keys.getDefaultKey(now);
+        if (defaultKey == null)
+        {
+            return EncryptionDataResponse.makeError(EncryptionStatus.NOT_AUTHORIZED_FOR_KEY);
+        }
+
+        Instant expiry = now.plusSeconds(keys.getTokenExpirySeconds());
+        Uid2TokenGenerator.Params encryptParams = Uid2TokenGenerator.defaultParams().withTokenExpiry(expiry);
+
+        try
+        {
+            String advertisingToken = (identityScope == IdentityScope.UID2) ? Uid2TokenGenerator.generateUid2TokenV4(rawUid, masterKey, keys.getCallerSiteId(), defaultKey, encryptParams) :
+                    Uid2TokenGenerator.generateEuidTokenV4(rawUid, masterKey, keys.getCallerSiteId(), defaultKey, encryptParams);
+
+            return new EncryptionDataResponse(EncryptionStatus.SUCCESS, advertisingToken);
+        }
+        catch (Exception e)
+        {
+            return EncryptionDataResponse.makeError(EncryptionStatus.ENCRYPTION_FAILURE);
+        }
+    }
+
+
     static EncryptionDataResponse encryptData(EncryptionDataRequest request, KeyContainer keys, IdentityScope identityScope) {
         if (request.getData() == null) {
             throw new IllegalArgumentException("data to encrypt must not be null");
@@ -269,7 +304,7 @@ class Uid2Encryption {
         return new DecryptionDataResponse(DecryptionStatus.SUCCESS, decryptedData, encryptedAt);
     }
 
-    static DecryptionDataResponse decryptDataV3(byte[] encryptedBytes, KeyContainer keys, IdentityScope identityScope) throws Exception {
+    static DecryptionDataResponse decryptDataV3(byte[] encryptedBytes, KeyContainer keys, IdentityScope identityScope) {
         final ByteBuffer reader = ByteBuffer.wrap(encryptedBytes);
         final IdentityScope payloadScope = decodeIdentityScopeV3(reader.get());
         if (payloadScope != identityScope)

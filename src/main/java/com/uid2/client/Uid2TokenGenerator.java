@@ -19,7 +19,6 @@ class Uid2TokenGenerator {
     {
         Instant tokenExpiry = Instant.now().plus(1, ChronoUnit.HOURS);
         public int identityScope = IdentityScope.UID2.value;
-        public int identityType = IdentityType.Email.value;
 
         public Params() {}
         public Params withTokenExpiry(Instant expiry) { tokenExpiry = expiry; return this; }
@@ -63,13 +62,19 @@ class Uid2TokenGenerator {
         return rootWriter.array();
     }
 
-    public static String generateUid2TokenV3(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+    public static String generateUid2TokenV3(String uid, Key masterKey, long siteId, Key siteKey, Params params) {
         return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V3);
     }
 
-    public static String generateUid2TokenV4(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+    public static String generateUid2TokenV4(String uid, Key masterKey, long siteId, Key siteKey, Params params)  {
         return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V4);
     }
+
+    public static String generateEuidTokenV4(String uid, Key masterKey, long siteId, Key siteKey, Params params) {
+        params.identityScope = IdentityScope.EUID.value;
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V4);
+    }
+
 
     private static String generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, AdvertisingTokenVersion adTokenVersion) {
         final ByteBuffer sitePayloadWriter = ByteBuffer.allocate(128);
@@ -99,7 +104,11 @@ class Uid2TokenGenerator {
 
         final byte[] encryptedMasterPayload = encryptGCM(Arrays.copyOfRange(masterPayloadWriter.array(), 0, masterPayloadWriter.position()), masterKey.getSecret());
         final ByteBuffer rootWriter = ByteBuffer.allocate(encryptedMasterPayload.length + 6);
-        rootWriter.put((byte)((params.identityScope << 4) | (params.identityType << 2)));
+
+        char firstChar = uid.charAt(0);
+        IdentityType identityType = (firstChar == 'F' || firstChar == 'B') ? IdentityType.Phone : IdentityType.Email; //see UID2-79+Token+and+ID+format+v3
+
+        rootWriter.put((byte)((params.identityScope << 4) | (identityType.value << 2)));
         rootWriter.put((byte)adTokenVersion.value());
         rootWriter.putInt((int)masterKey.getId());
         rootWriter.put(encryptedMasterPayload);

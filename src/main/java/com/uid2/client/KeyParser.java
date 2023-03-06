@@ -8,8 +8,9 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
+
 class KeyParser {
-    static KeyContainer parse(InputStream stream) throws Exception {
+    static KeyContainer parse(InputStream stream) {
         JsonObject json = JsonParser.parseReader(new InputStreamReader(stream)).getAsJsonObject();
         JsonElement bodyElement = json.get("body");
         if (bodyElement.isJsonArray()) { // key/latest response, which will become legacy
@@ -29,10 +30,11 @@ class KeyParser {
         }
         else { //key/sharing response
             JsonObject body = json.get("body").getAsJsonObject();
-            int callerSiteId = body.get("caller_site_id").getAsInt();
-            int masterKeysetId = body.get("master_keyset_id").getAsInt();
-            int defaultKeysetId = body.get("default_keyset_id").getAsInt();
-            long tokenExpirySeconds = body.get("token_expiry_seconds").getAsLong();
+
+            int callerSiteId = getAsInt(body,"caller_site_id");
+            int masterKeysetId = getAsInt(body,"master_keyset_id");
+            int defaultKeysetId = getAsInt(body,"default_keyset_id");
+            long tokenExpirySeconds = getAsLong(body,"token_expiry_seconds");
             if (tokenExpirySeconds == 0) {
                 final short defaultTokenExpiryDays = 30;
                 tokenExpirySeconds = defaultTokenExpiryDays * 24 * 60 * 60;
@@ -56,5 +58,14 @@ class KeyParser {
 
             return new KeyContainer(callerSiteId, masterKeysetId, defaultKeysetId, tokenExpirySeconds, keys);
         }
+    }
+
+    static private int getAsInt(JsonObject body, String memberName) {
+        JsonElement element = body.get(memberName);
+        return element == null ? 0 : element.getAsInt();
+    }
+    static private long getAsLong(JsonObject body, String memberName) {
+        JsonElement element = body.get(memberName);
+        return element == null ? 0 : element.getAsLong();
     }
 }
