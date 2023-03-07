@@ -1,9 +1,9 @@
 package com.uid2.client;
 
 import com.google.gson.stream.JsonWriter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.StringWriter;
 import java.time.Instant;

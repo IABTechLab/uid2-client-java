@@ -1,7 +1,8 @@
 package com.uid2.client;
 
 import com.google.gson.stream.JsonWriter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
@@ -10,8 +11,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.stream.Collectors;
-
-import static org.junit.Assert.*;
 
 public class EncryptionTestsV4 {
 
@@ -447,22 +446,32 @@ public class EncryptionTestsV4 {
         return KeySetToJsonForSharingWithHeader("\"default_keyset_id\": 99999,", SITE_ID, keys);
     }
 
-    private static int CalculateKeySetId(int siteId)
+    private static String CalculateKeySetId(int siteId, String defaultKeyset)
     {
+        int keysetId;
         //{k.SiteId switch { -1 => 1, SITE_ID => 99999, _ => k.SiteId }},
         switch (siteId)
         {
             case -1:
-                return 1;
+                keysetId = 1;
+                break;
             case SITE_ID:
-                return 99999;
+                if (!defaultKeyset.contains("99999"))
+                    return "";
+                else
+                    keysetId = 99999;
+                break;
             default:
-                return siteId;
+                keysetId = siteId;
+                break;
         }
+
+        return String.format("                \"keyset_id\": %d,\n", keysetId);
     }
 
     private static String KeySetToJsonForSharingWithHeader(String defaultKeyset, int callerSiteId, Key... keys)
     {
+
         return String.format("{\n" +
                 "    \"body\": {\n" +
                 "        \"caller_site_id\": %d,\n" +
@@ -473,15 +482,14 @@ public class EncryptionTestsV4 {
                 "}", callerSiteId, defaultKeyset,
                 Arrays.stream(keys)
                         .map(k -> String.format("{\n" +
-                                "                \"id\": %d,\n" +
-                                "                \"keyset_id\": %d,\n" +
+                                "                \"id\": %d,\n%s" +
                                 "                \"created\": %d,\n" +
                                 "                \"activates\": %d,\n" +
                                 "                \"expires\": %d,\n" +
                                 "                \"secret\": \"%s\"\n" +
                                 "            }",
                                 k.getId(),
-                                CalculateKeySetId(k.getSiteId()),
+                                CalculateKeySetId(k.getSiteId(), defaultKeyset),
                                 k.getCreated().getEpochSecond(),
                                 k.getActivates().getEpochSecond(),
                                 k.getExpires().getEpochSecond(),

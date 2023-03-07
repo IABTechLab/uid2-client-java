@@ -47,7 +47,7 @@ class KeyParser {
                 JsonObject item = element.getAsJsonObject();
                 Key key = Key.createKeysetKey(
                         item.get("id").getAsLong(),
-                        item.get("keyset_id").getAsInt(),
+                        getAsInt(item, "keyset_id"),
                         Instant.ofEpochSecond(item.get("created").getAsLong()),
                         Instant.ofEpochSecond(item.get("activates").getAsLong()),
                         Instant.ofEpochSecond(item.get("expires").getAsLong()),

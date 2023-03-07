@@ -1,13 +1,12 @@
 package com.uid2.client;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-
-import static org.junit.Assert.*;
 
 
 public class KeyParserTests {
@@ -80,7 +79,7 @@ public class KeyParserTests {
         assertThrows(Exception.class, () -> parse("{\"body\": [{\"id\": 5}]}"));
     }
 
-    private KeyContainer parse(String str) throws Exception {
+    private KeyContainer parse(String str) {
         InputStream inputStream = new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8));
         return KeyParser.parse(inputStream);
     }

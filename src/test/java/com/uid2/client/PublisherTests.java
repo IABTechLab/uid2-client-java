@@ -1,12 +1,11 @@
 package com.uid2.client;
 
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.junit.Test;
-
 import java.time.Instant;
 
-import static org.junit.Assert.*;
 
 public class PublisherTests {
     private static byte[] hexStringToByteArray(String s) {
