@@ -32,7 +32,7 @@ public class UID2Client implements IUID2Client {
     public void refresh() throws UID2ClientException {
         try {
             V2Request request = makeV2Request(Instant.now());
-            URL serviceUrl = new URL(endpoint + "/v2/key/latest");
+            URL serviceUrl = new URL(endpoint + "/v2/key/sharing");
             URLConnection conn = serviceUrl.openConnection();
             HttpURLConnection httpsConnection = (HttpURLConnection) conn;
             httpsConnection.setRequestMethod("POST");
