@@ -39,6 +39,8 @@ public class UID2Client implements IUID2Client {
             httpsConnection.setDoInput(true);
             httpsConnection.setDoOutput(true);
             httpsConnection.setRequestProperty("Authorization", "Bearer " + this.authKey);
+            httpsConnection.setRequestProperty("X-UID2-Client-Version", "java-" + PublisherUid2Helper.getArtifactAndVersion());
+
             try(OutputStream os = httpsConnection.getOutputStream()) {
                 os.write(request.envelope);
             }
@@ -57,7 +59,7 @@ public class UID2Client implements IUID2Client {
                 throw new UID2ClientException("error while parsing json response", e);
             }
         } catch (IOException e) {
-            throw new UID2ClientException("error communicating with api endpoint", e);
+            throw new UID2ClientException("error communicating with api endpoint: " + endpoint, e);
         }
     }
 

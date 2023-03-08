@@ -12,7 +12,7 @@ public class IntegrationExamples {
     final String TEST_ENDPOINT = System.getenv("UID2_BASE_URL");
     final String TEST_API_KEY =  System.getenv("UID2_API_KEY");
     final String TEST_SECRET_KEY = System.getenv("UID2_SECRET_KEY");
-    private static final String TEST_TOKEN = "AgAAAOl7YylgZJJ/hUsxVU7YCuXMuCAq3Muz7KaJN/miMBL/q6hgN8QY/ocy5c8d/zBvkfDMrLz+6jJvFWWHnl1u2O1mtX20/Ctft8CRwZl32b0d58fWoEhijxROd1q5DBww6+7N7ay26IttdQ+B4Rf4MTL2T/3PK9yyETae1l4v0ODd7w==";
+    final String TEST_TOKEN = System.getenv("UID2_TEST_TOKEN");
 
 
     @Test // - insert your API key & test uid before enabling this test
