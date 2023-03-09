@@ -6,6 +6,7 @@
 public enum DecryptionStatus {
 
     SUCCESS,
+<<<<<<< HEAD
      /**
       * NOT_AUTHORIZED_FOR_MASTER_KEY can occur for old tokens, when the master key used to encrypt it has been deleted (eg after 30 days).
       * It can also occur for participants that have been removed from the UID platform, and therefore no longer have access to master keys.
@@ -14,6 +15,9 @@ public enum DecryptionStatus {
      /**
       * NOT_AUTHORIZED_FOR_KEY can occur when decrypting a token from a participant that has not granted sharing access to the receiver.
       */
+=======
+    NOT_AUTHORIZED_FOR_MASTER_KEY, //note this error can occur for old tokens also, since old encryption keys are regularly deleted
+>>>>>>> 842be6ab81cc3d9ef81e20a737315ddae2b6b354
     NOT_AUTHORIZED_FOR_KEY,
      /**
       * NOT_INITIALIZED: IUID2Client.refresh() has not been called or did not succeed.
