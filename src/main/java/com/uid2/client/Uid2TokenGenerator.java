@@ -1,6 +1,4 @@
-package com.uid2.client.test;
-
-import com.uid2.client.*;
+package com.uid2.client;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -16,12 +14,11 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Random;
 
-public class UID2TokenGenerator {
+class Uid2TokenGenerator {
     public static class Params
     {
         Instant tokenExpiry = Instant.now().plus(1, ChronoUnit.HOURS);
         public int identityScope = IdentityScope.UID2.value;
-        public int identityType = IdentityType.Email.value;
 
         public Params() {}
         public Params withTokenExpiry(Instant expiry) { tokenExpiry = expiry; return this; }
@@ -65,15 +62,21 @@ public class UID2TokenGenerator {
         return rootWriter.array();
     }
 
-    public static String generateUid2TokenV3(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+    public static String generateUid2TokenV3(String uid, Key masterKey, long siteId, Key siteKey, Params params) {
         return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V3);
     }
 
-    public static String generateUid2TokenV4(String uid, Key masterKey, long siteId, Key siteKey, Params params) throws Exception {
+    public static String generateUid2TokenV4(String uid, Key masterKey, long siteId, Key siteKey, Params params)  {
         return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V4);
     }
 
-    private static String generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, AdvertisingTokenVersion adTokenVersion) throws Exception {
+    public static String generateEuidTokenV4(String uid, Key masterKey, long siteId, Key siteKey, Params params) {
+        params.identityScope = IdentityScope.EUID.value;
+        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V4);
+    }
+
+
+    private static String generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, AdvertisingTokenVersion adTokenVersion) {
         final ByteBuffer sitePayloadWriter = ByteBuffer.allocate(128);
 
         // publisher data
@@ -101,13 +104,17 @@ public class UID2TokenGenerator {
 
         final byte[] encryptedMasterPayload = encryptGCM(Arrays.copyOfRange(masterPayloadWriter.array(), 0, masterPayloadWriter.position()), masterKey.getSecret());
         final ByteBuffer rootWriter = ByteBuffer.allocate(encryptedMasterPayload.length + 6);
-        rootWriter.put((byte)((params.identityScope << 4) | (params.identityType << 2)));
+
+        char firstChar = uid.charAt(0);
+        IdentityType identityType = (firstChar == 'F' || firstChar == 'B') ? IdentityType.Phone : IdentityType.Email; //see UID2-79+Token+and+ID+format+v3
+
+        rootWriter.put((byte)((params.identityScope << 4) | (identityType.value << 2)));
         rootWriter.put((byte)adTokenVersion.value());
         rootWriter.putInt((int)masterKey.getId());
         rootWriter.put(encryptedMasterPayload);
 
         if (adTokenVersion == AdvertisingTokenVersion.V4) {
-            return UID2Base64UrlCoder.encode(rootWriter.array());
+            return Uid2Base64UrlCoder.encode(rootWriter.array());
 
         }
         else {

@@ -13,6 +13,19 @@ public interface IUID2Client {
         return decrypt(token, Instant.now());
     }
 
+    /**
+     * @deprecated
+     * Use encrypt() instead
+     */
+    @Deprecated
     EncryptionDataResponse encryptData(EncryptionDataRequest request) throws UID2ClientException;
+
+    EncryptionDataResponse encrypt(String rawUid) throws UID2ClientException;
+
+    /**
+     * @deprecated
+     * Use decrypt() instead
+     */
+    @Deprecated
     DecryptionDataResponse decryptData(String encryptedData) throws UID2ClientException;
 }

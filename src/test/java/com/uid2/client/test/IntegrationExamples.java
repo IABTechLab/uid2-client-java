@@ -4,13 +4,16 @@ import com.uid2.client.*;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class IntegrationExamples {
-    private static final String TEST_ENDPOINT = "https://operator-integ.uidapi.com";
-    private static final String TEST_API_KEY = "your-api-key";
-    private static final String TEST_SECRET_KEY = "your-secret-key";
-    private static final String TEST_TOKEN = "AgAAAOl7YylgZJJ/hUsxVU7YCuXMuCAq3Muz7KaJN/miMBL/q6hgN8QY/ocy5c8d/zBvkfDMrLz+6jJvFWWHnl1u2O1mtX20/Ctft8CRwZl32b0d58fWoEhijxROd1q5DBww6+7N7ay26IttdQ+B4Rf4MTL2T/3PK9yyETae1l4v0ODd7w==";
+    final String TEST_ENDPOINT = System.getenv("UID2_BASE_URL");
+    final String TEST_API_KEY =  System.getenv("UID2_API_KEY");
+    final String TEST_SECRET_KEY = System.getenv("UID2_SECRET_KEY");
+    final String TEST_TOKEN = System.getenv("UID2_TEST_TOKEN");
+
 
     @Test // - insert your API key & test uid before enabling this test
     public void runE2E() throws Exception {
@@ -49,22 +52,23 @@ public class IntegrationExamples {
     }
 
     @Test
-    public void runEncryptDecryptData() throws Exception {
+    public void runSharingExample() throws Exception {
         IUID2Client client = UID2ClientFactory.create(TEST_ENDPOINT, TEST_API_KEY, TEST_SECRET_KEY);
         client.refresh();
 
-        final byte[] data = "Hello World!".getBytes();
-        EncryptionDataResponse encrypted = client.encryptData(EncryptionDataRequest.forData(data).withAdvertisingToken(TEST_TOKEN));
+        final String rawUid = "P2xdbu2ldlpXV1z6n3bET7T1g0xfqmldZPDdPTvydRQ=";
+        EncryptionDataResponse encrypted = client.encrypt(rawUid);
         if (!encrypted.isSuccess()) {
             System.out.println("Failed to encrypt data: " + encrypted.getStatus());
         } else {
-            DecryptionDataResponse decrypted = client.decryptData(encrypted.getEncryptedData());
+            DecryptionResponse decrypted = client.decrypt(encrypted.getEncryptedData());
             if (!decrypted.isSuccess()) {
                 System.out.println("Failed to decrypt data: " + decrypted.getStatus());
             } else {
                 System.out.println("Encrypted: " + encrypted.getEncryptedData());
-                System.out.println("Decrypted: " + new String(decrypted.getDecryptedData()));
-                System.out.println("Encrypted at: " + decrypted.getEncryptedAt());
+                System.out.println("Decrypted: " + decrypted.getUid());
+                System.out.println("Encrypted at: " + decrypted.getEstablished());
+                assertEquals(rawUid, decrypted.getUid());
             }
         }
     }

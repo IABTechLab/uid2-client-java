@@ -14,12 +14,12 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 
-class UID2Encryption {
+class Uid2Encryption {
 
     public static final int GCM_AUTHTAG_LENGTH = 16;
     public static final int GCM_IV_LENGTH = 12;
 
-    static DecryptionResponse decrypt(String token, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
+    static DecryptionResponse decrypt(String token, KeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
 
         if(token.length() < 4)
         {
@@ -27,8 +27,8 @@ class UID2Encryption {
         }
 
         String headerStr = token.substring(0, 4);
-        Boolean isBase64UrlEncoding = (headerStr.indexOf('-') != -1 || headerStr.indexOf('_') != -1);
-        byte[] data = isBase64UrlEncoding ? UID2Base64UrlCoder.decode(headerStr) : Base64.getDecoder().decode(headerStr);
+        boolean isBase64UrlEncoding = (headerStr.indexOf('-') != -1 || headerStr.indexOf('_') != -1);
+        byte[] data = isBase64UrlEncoding ? Uid2Base64UrlCoder.decode(headerStr) : Base64.getDecoder().decode(headerStr);
 
         if (data[0] == 2)
         {
@@ -43,13 +43,13 @@ class UID2Encryption {
         else if (unsignedByte  == AdvertisingTokenVersion.V4.value())
         {
             //same as V3 but use Base64URL encoding
-            return decryptV3(UID2Base64UrlCoder.decode(token), keys, now, identityScope);
+            return decryptV3(Uid2Base64UrlCoder.decode(token), keys, now, identityScope);
         }
 
         return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
     }
 
-    static DecryptionResponse decryptV2(byte[] encryptedId, IKeyContainer keys, Instant now) throws Exception {
+    static DecryptionResponse decryptV2(byte[] encryptedId, KeyContainer keys, Instant now) throws Exception {
         try {
             ByteBuffer rootReader = ByteBuffer.wrap(encryptedId);
             int version = (int) rootReader.get();
@@ -60,7 +60,7 @@ class UID2Encryption {
             long masterKeyId = rootReader.getInt();
             Key masterKey = keys.getKey(masterKeyId);
             if (masterKey == null) {
-                return DecryptionResponse.makeError(DecryptionStatus.NOT_AUTHORIZED_FOR_KEY);
+                return DecryptionResponse.makeError(DecryptionStatus.NOT_AUTHORIZED_FOR_MASTER_KEY);
             }
 
             byte[] masterIv = new byte[16];
@@ -107,7 +107,7 @@ class UID2Encryption {
         }
     }
 
-    static DecryptionResponse decryptV3(byte[] encryptedId, IKeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
+    static DecryptionResponse decryptV3(byte[] encryptedId, KeyContainer keys, Instant now, IdentityScope identityScope) {
         try {
             final ByteBuffer rootReader = ByteBuffer.wrap(encryptedId);
             final byte prefix = rootReader.get();
@@ -122,7 +122,7 @@ class UID2Encryption {
             final long masterKeyId = rootReader.getInt();
             final Key masterKey = keys.getKey(masterKeyId);
             if (masterKey == null) {
-                return DecryptionResponse.makeError(DecryptionStatus.NOT_AUTHORIZED_FOR_KEY);
+                return DecryptionResponse.makeError(DecryptionStatus.NOT_AUTHORIZED_FOR_MASTER_KEY);
             }
 
             final byte[] masterPayload = decryptGCM(encryptedId, rootReader.position(), masterKey.getSecret());
@@ -167,7 +167,42 @@ class UID2Encryption {
         }
     }
 
-    static EncryptionDataResponse encryptData(EncryptionDataRequest request, IKeyContainer keys, IdentityScope identityScope) {
+    static EncryptionDataResponse encrypt(String rawUid, KeyContainer keys, IdentityScope identityScope, Instant now)
+    {
+        if (keys == null)
+            return EncryptionDataResponse.makeError(EncryptionStatus.NOT_INITIALIZED);
+
+        else if (!keys.isValid(now))
+            return EncryptionDataResponse.makeError(EncryptionStatus.KEYS_NOT_SYNCED);
+
+        Key masterKey = keys.getMasterKey(now);
+        if (masterKey == null)
+            return EncryptionDataResponse.makeError(EncryptionStatus.NOT_AUTHORIZED_FOR_MASTER_KEY);
+
+        Key defaultKey = keys.getDefaultKey(now);
+        if (defaultKey == null)
+        {
+            return EncryptionDataResponse.makeError(EncryptionStatus.NOT_AUTHORIZED_FOR_KEY);
+        }
+
+        Instant expiry = now.plusSeconds(keys.getTokenExpirySeconds());
+        Uid2TokenGenerator.Params encryptParams = Uid2TokenGenerator.defaultParams().withTokenExpiry(expiry);
+
+        try
+        {
+            String advertisingToken = (identityScope == IdentityScope.UID2) ? Uid2TokenGenerator.generateUid2TokenV4(rawUid, masterKey, keys.getCallerSiteId(), defaultKey, encryptParams) :
+                    Uid2TokenGenerator.generateEuidTokenV4(rawUid, masterKey, keys.getCallerSiteId(), defaultKey, encryptParams);
+
+            return new EncryptionDataResponse(EncryptionStatus.SUCCESS, advertisingToken);
+        }
+        catch (Exception e)
+        {
+            return EncryptionDataResponse.makeError(EncryptionStatus.ENCRYPTION_FAILURE);
+        }
+    }
+
+
+    static EncryptionDataResponse encryptData(EncryptionDataRequest request, KeyContainer keys, IdentityScope identityScope) {
         if (request.getData() == null) {
             throw new IllegalArgumentException("data to encrypt must not be null");
         }
@@ -231,7 +266,7 @@ class UID2Encryption {
         }
     }
 
-    static DecryptionDataResponse decryptData(byte[] encryptedBytes, IKeyContainer keys, IdentityScope identityScope) throws Exception {
+    static DecryptionDataResponse decryptData(byte[] encryptedBytes, KeyContainer keys, IdentityScope identityScope) throws Exception {
         if ((encryptedBytes[0] & 224) == (int)PayloadType.ENCRYPTED_DATA_V3.value)
         {
             return decryptDataV3(encryptedBytes, keys, identityScope);
@@ -242,7 +277,7 @@ class UID2Encryption {
         }
     }
 
-    static DecryptionDataResponse decryptDataV2(byte[] encryptedBytes, IKeyContainer keys) throws Exception {
+    static DecryptionDataResponse decryptDataV2(byte[] encryptedBytes, KeyContainer keys) throws Exception {
         ByteBuffer reader = ByteBuffer.wrap(encryptedBytes);
         if(Byte.toUnsignedInt(reader.get()) != PayloadType.ENCRYPTED_DATA.value) {
             return DecryptionDataResponse.makeError(DecryptionStatus.INVALID_PAYLOAD_TYPE);
@@ -269,7 +304,7 @@ class UID2Encryption {
         return new DecryptionDataResponse(DecryptionStatus.SUCCESS, decryptedData, encryptedAt);
     }
 
-    static DecryptionDataResponse decryptDataV3(byte[] encryptedBytes, IKeyContainer keys, IdentityScope identityScope) throws Exception {
+    static DecryptionDataResponse decryptDataV3(byte[] encryptedBytes, KeyContainer keys, IdentityScope identityScope) {
         final ByteBuffer reader = ByteBuffer.wrap(encryptedBytes);
         final IdentityScope payloadScope = decodeIdentityScopeV3(reader.get());
         if (payloadScope != identityScope)
