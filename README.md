@@ -3,7 +3,7 @@
 The UID 2 Project is subject to Tech Lab IPR’s Policy and is managed by the IAB Tech Lab Addressability Working Group and Privacy & Rearc Commit Group. Please review the governance rules [here](https://github.com/IABTechLab/uid2-core/blob/master/Software%20Development%20and%20Release%20Procedures.md).
 
 ## Who is this SDK for?
-This SDK simplifies integration with UID2 for Publishers and DSPs, as described in the [UID2 Integration Guides](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/README.md). 
+This SDK simplifies integration with UID2 for Publishers, DSPs, and UID Sharers, as described in the [UID2 Integration Guides](https://github.com/IABTechLab/uid2docs/blob/main/api/v2/guides/summary-guides.md). 
 
 ## Requirements
 
@@ -19,7 +19,7 @@ Add this dependency to your project's POM:
         <dependency>
             <groupId>com.uid2</groupId>
             <artifactId>uid2-client</artifactId>
-            <version>4.0.0</version>
+            <version>4.1.2</version>
         </dependency>
 ```
 
@@ -120,3 +120,26 @@ If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs
 
    `TokenRefreshResponse tokenRefreshResponse = PublisherUid2Helper.createTokenRefreshResponse({response body}, identity);`
 6. You should then store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method will return null, indicating that the user's identity should be removed from their session. (Optout can be confirmed via `tokenRefreshResponse.isOptout()`.)
+
+## Usage for UID Sharers
+
+A UID Sharer is a participant that wants to share UID2s or EUIDs with another participant. Raw UIDs must be encrypted into UID tokens before sending them to another participant. See com.uid2.client.test.IntegrationExamples (runSharingExample method) for an example usage.
+
+1. Use UID2ClientFactory.create() to create an IUID2Client reference.
+ 
+   `private final IUID2Client client = UID2ClientFactory.create(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);`
+2. Call IUID2Client.refresh: once at startup, and then periodically (eg every hour):
+   `client.refresh();`
+3. Senders call: 
+   1. `EncryptionDataResponse encrypted = client.encrypt(rawUid);`
+   2. If encryption succeeded, send the UID token to the receiver:
+    
+      `if (encrypted.isSuccess()) {` send `encrypted.getEncryptedData()` to receiver`} else {`check `encrypted.getStatus()` for the failure reason} 
+4. Receivers call: 
+   1. `DecryptionResponse decrypted = client.decrypt(uidToken);`
+   2. If decryption succeeded, use the raw UID:
+    
+      `if (decrypted.isSuccess()) {`use `decrypted.getUid() } else {`check `decrypted.getStatus()` for the failure reason `}`
+
+
+
