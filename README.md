@@ -35,7 +35,7 @@ Add this dependency to your project's POM:
 
 ## Usage for DSPs
 
-For example usage for DSPs, see com.uid2.client.test.IntegrationExamples.**(gwh/JN_01 where is this? Can we link?)**
+For an example of usage for DSPs, see [com.uid2.client.test.IntegrationExamples](https://github.com/IABTechLab/uid2-client-java/blob/master/src/test/java/com/uid2/client/test/IntegrationExamples.java).
 
 ## Usage for Publishers
 
@@ -53,46 +53,44 @@ If you're using the SDK's HTTP implementation, follow these steps.
  
    `private final PublisherUid2Client publisherUid2Client = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);`
 
-2. When a user authenticates and authorizes the creation of a UID2: **(gwh/JN_02 action? Does the user have to do something here?)**
+2. When the user has authenticated, and has authorized the creation of a UID2, generate the UID2 token **(gwh/JN_02 to do what? I guessed)**
  
    `IdentityTokens identity = publisherUid2Client.generateToken(TokenGenerateInput.fromEmail(emailAddress));`
  
 #### Standard Integration
 
-If you're using [standard (client and server) integration](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/publisher-client-side.md), follow these steps. **(gwh/JN_03 definitely only one step?)**
+If you're using [standard (client and server) integration](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/publisher-client-side.md), follow this step:
 
-1. Send this identity as a JSON string back to the client (to use in the [identity field](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/sdks/client-side-identity.md#initopts-object-void)) using: `identity.getJsonString()`
+* Send this identity as a JSON string back to the client (to use in the [identity field](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/sdks/client-side-identity.md#initopts-object-void)) using: `identity.getJsonString()`
 
 #### Server-Only Integration
 
 If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/custom-publisher-integration.md):
 
-1. Store this identity as a JSON string in the user's session, using: `identity.getJsonString()`
-2. To use the user's UID2 token, use `identity.getAdvertisingToken()`
-
+1. Store this identity as a JSON string in the user's session, using the `identity.getJsonString()` function.
+2. To use the user's UID2 token, use the `identity.getAdvertisingToken()` function.
 3. When the user accesses another page, or on a timer, determine whether a refresh is needed:
-   1. Retrieve the identity JSON string from the user's session, then call: **(gwh/JN_04 should this be two steps?)**
+   1. Retrieve the identity JSON string from the user's session, then call: **(gwh/JN_04 can we say what this code is doing?)**
 
       `IdentityTokens identity = IdentityTokens.fromJsonString(identityJsonString);`
-   2. Determine if the identity is refreshable (that is, the refresh token hasn't expired):
+   2. Determine if the identity can be refreshed (that is, the refresh token hasn't expired):
 
       ` if (identity == null || !identity.isRefreshable()) { we must no longer use this identity (for example, remove this identity from the user's session) }`
    3. Determine if a refresh is needed:
 
       `if (identity.isDueForRefresh()) {..}`
-4. If a refresh is needed, call: **(gwh/JN_05 can we state what this is doing? Initiate token refresh?)**
+4. If a refresh is needed, call the `POST token/refresh endpoint` (see [Refresh Tokens](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/custom-publisher-integration.md#refresh-tokens)): **(gwh/JN_05 please check)**
  
    `TokenRefreshResponse tokenRefreshResponse = publisherUid2Client.refreshToken(identity);`
  
 5. You should then store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method will return null, indicating that the user's identity should be removed from their session. (Optout can be confirmed via `tokenRefreshResponse.isOptout()`.)
-
 
 ### Advanced Usage
 
 1. Create an instance of PublisherUid2Helper as an instance variable:
 
     `private final PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);`
-2. When a user authenticates and authorizes the creation of a UID2: **(gwh/JN_06 can we state what this is doing?)**
+2. When the user has authenticated, and has authorized the creation of a UID2: **(gwh/JN_06 can we say what the below step is doing? Creating a secure value to send to POST token/generate?)**
 
     `EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail(emailAddress));`
 3. Using an HTTP client library of your choice, post this envelope to the [/v2/token/generate](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md) endpoint, including headers and body: **(gwh/JN_07 just noting that URLs to endpoints doc will need to be updated when the new site goes live.)**
@@ -101,7 +99,7 @@ If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs
       `.putHeader("Authorization", "Bearer " + UID2_API_KEY)`  
       `.putHeader("X-UID2-Client-Version", PublisherUid2Helper.getVersionHeader())`
    2. Body: `envelope.getEnvelope()`
-4. If the HTTP response status code is _not_ 200, see [Response Status Codes](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md#response-status-codes) to determine next steps. Otherwise: **(gwh/JN_08 can we state what the below line of code is doing?)**
+4. If the HTTP response status code is _not_ 200, see [Response Status Codes](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md#response-status-codes) to determine next steps. Otherwise, convert the UID2 identity response content into an `IdentityTokens` object:
 
    `IdentityTokens identity = publisherUid2Helper.createIdentityfromTokenGenerateResponse({response body}, envelope);`
 
@@ -121,13 +119,13 @@ If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs
    1. Retrieve the identity JSON string from the user's session, then call:
    
        `IdentityTokens identity = IdentityTokens.fromJsonString(identityJsonString);`
-   2. Determine if the identity is refreshable (that is, the refresh token hasn't expired): 
+   2. Determine if the identity can be refreshed (that is, the refresh token hasn't expired): 
     
       ` if (identity == null || !identity.isRefreshable()) { we must no longer use this identity (for example, remove this identity from the user's session) }`
    3. Determine if a refresh is needed:
    
       `if (identity.isDueForRefresh()) {..}`
-4. If a refresh is needed, post to the [/v2/token/refresh](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-refresh.md) endpoint, with:
+4. If a refresh is needed, call the [POST token/refresh](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-refresh.md) endpoint, with:
    1. Headers (depending on your HTTP library, this might look something like):
     
       `.putHeader("Authorization", "Bearer " + UID2_API_KEY)`  
@@ -140,20 +138,25 @@ If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs
 
 ## Usage for UID Sharers
 
-A UID2 Sharer is a participant that wants to share UID2s or EUIDs with another participant. Raw UIDs must be encrypted into UID tokens before sending them to another participant. See com.uid2.client.test.IntegrationExamples (runSharingExample method) for an example usage. **(gwh/JN_09 can we link to this?)**
+A UID2 Sharer is a participant that wants to share UID2s or EUIDs with another participant. Raw UIDs must be encrypted into UID tokens before sending them to another participant. For an example of usage, see [com.uid2.client.test.IntegrationExamples](https://github.com/IABTechLab/uid2-client-java/blob/master/src/test/java/com/uid2/client/test/IntegrationExamples.java) (runSharingExample method).
 
-1. Use UID2ClientFactory.create() to create an IUID2Client reference.
+1. Use UID2ClientFactory.create() to create an IUID2Client reference:
  
    `private final IUID2Client client = UID2ClientFactory.create(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);`
-2. Call IUID2Client.refresh: once at startup, and then periodically (for example, every hour):
+2. Call IUID2Client.refresh once at startup, and then periodically (for example, every hour):
+
    `client.refresh();`
-3. Senders call: 
-   1. `EncryptionDataResponse encrypted = client.encrypt(rawUid);`
-   2. If encryption succeeded, send the UID token to the receiver:
-    
+3. Senders: 
+   1. Call the following:
+
+      `EncryptionDataResponse encrypted = client.encrypt(rawUid);`
+   2. If encryption succeeded, send the UID token to the receiver:   
+
       `if (encrypted.isSuccess()) {` send `encrypted.getEncryptedData()` to receiver`} else {`check `encrypted.getStatus()` for the failure reason} 
-4. Receivers call: 
-   1. `DecryptionResponse decrypted = client.decrypt(uidToken);`
+4. Receivers: 
+   1. Call the following:
+
+      `DecryptionResponse decrypted = client.decrypt(uidToken);`
    2. If decryption succeeded, use the raw UID:
     
       `if (decrypted.isSuccess()) {`use `decrypted.getUid() } else {`check `decrypted.getStatus()` for the failure reason `}`
