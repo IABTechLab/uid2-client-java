@@ -12,7 +12,6 @@ This document includes:
    - [Advanced Usage](#advanced-usage)
 * [## Usage for UID Sharers](#usage-for-uid-sharers)
 
-
 ## Who is this SDK for?
 This SDK simplifies integration with UID2 for Publishers, DSPs, and UID Sharers, as described in the [UID2 Integration Guides](https://github.com/IABTechLab/uid2docs/blob/main/api/v2/guides/summary-guides.md). 
 
@@ -23,7 +22,6 @@ This SDK simplifies integration with UID2 for Publishers, DSPs, and UID Sharers,
 ## Installation
 
 Add this dependency to your project's POM:
-
 
 ```
         <dependency>
@@ -79,11 +77,11 @@ If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs
    3. Determine if a refresh is needed:
 
       `if (identity.isDueForRefresh()) {..}`
-4. If a refresh is needed, run the following function that calls the POST token/refresh endpoint to generate a new [refresh token](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/custom-publisher-integration.md#refresh-tokens):
+4. If needed, refresh the token and associated values:
  
    `TokenRefreshResponse tokenRefreshResponse = publisherUid2Client.refreshToken(identity);`
  
-5. You should then store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method will return null, indicating that the user's identity should be removed from their session. (Optout can be confirmed via `tokenRefreshResponse.isOptout()`.)
+5. You should then store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method returns null, indicating that the user's identity should be removed from their session. (Optout can be confirmed via `tokenRefreshResponse.isOptout()`.)
 
 ### Advanced Usage
 
@@ -134,7 +132,7 @@ If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs
 5. If the refresh HTTP response status code is 200:
 
    `TokenRefreshResponse tokenRefreshResponse = PublisherUid2Helper.createTokenRefreshResponse({response body}, identity);`
-6. You should then store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method will return null, indicating that the user's identity should be removed from their session. (Optout can be confirmed via `tokenRefreshResponse.isOptout()`.)
+6. You should then store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method returns null, indicating that the user's identity should be removed from their session (you can confirm user opt-out with the `tokenRefreshResponse.isOptout()` function).
 
 ## Usage for UID Sharers
 
