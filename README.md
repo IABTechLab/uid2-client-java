@@ -53,7 +53,7 @@ If you're using the SDK's HTTP implementation, follow these steps.
  
    `private final PublisherUid2Client publisherUid2Client = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);`
 
-2. When the user has authenticated, and has authorized the creation of a UID2, generate the UID2 token **(gwh/JN_02 to do what? I guessed)**
+2. When the user has authenticated, and has authorized the creation of a UID2, run a function that takes the user's email address or phone number as input and generates an `IdentityTokens` object. The following example uses an email address:
  
    `IdentityTokens identity = publisherUid2Client.generateToken(TokenGenerateInput.fromEmail(emailAddress));`
  
@@ -70,7 +70,7 @@ If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs
 1. Store this identity as a JSON string in the user's session, using the `identity.getJsonString()` function.
 2. To use the user's UID2 token, use the `identity.getAdvertisingToken()` function.
 3. When the user accesses another page, or on a timer, determine whether a refresh is needed:
-   1. Retrieve the identity JSON string from the user's session, then call: **(gwh/JN_04 can we say what this code is doing?)**
+   1. Retrieve the identity JSON string from the user's session, and then call the following function that takes the identity information as input and generates an `IdentityTokens` object:
 
       `IdentityTokens identity = IdentityTokens.fromJsonString(identityJsonString);`
    2. Determine if the identity can be refreshed (that is, the refresh token hasn't expired):
@@ -79,7 +79,7 @@ If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs
    3. Determine if a refresh is needed:
 
       `if (identity.isDueForRefresh()) {..}`
-4. If a refresh is needed, call the `POST token/refresh endpoint` (see [Refresh Tokens](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/custom-publisher-integration.md#refresh-tokens)): **(gwh/JN_05 please check)**
+4. If a refresh is needed, run the following function that calls the POST token/refresh endpoint to generate a new [refresh token](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/custom-publisher-integration.md#refresh-tokens):
  
    `TokenRefreshResponse tokenRefreshResponse = publisherUid2Client.refreshToken(identity);`
  
@@ -90,10 +90,10 @@ If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs
 1. Create an instance of PublisherUid2Helper as an instance variable:
 
     `private final PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);`
-2. When the user has authenticated, and has authorized the creation of a UID2: **(gwh/JN_06 can we say what the below step is doing? Creating a secure value to send to POST token/generate?)**
+2. When the user has authenticated, and has authorized the creation of a UID2, run a function that takes the user's email address or phone number as input and creates a secure request data envelope. See [Encrypting requests](https://github.com/IABTechLab/uid2docs/blob/main/api/v2/getting-started/gs-encryption-decryption.md#encrypting-requests). The following example uses an email address:
 
     `EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail(emailAddress));`
-3. Using an HTTP client library of your choice, post this envelope to the [/v2/token/generate](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md) endpoint, including headers and body: **(gwh/JN_07 just noting that URLs to endpoints doc will need to be updated when the new site goes live.)**
+3. Using an HTTP client library of your choice, post this envelope to the [/v2/token/generate](https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md) endpoint, including headers and body:
    1. Headers: Depending on your HTTP library, this might look something like the following:  
     
       `.putHeader("Authorization", "Bearer " + UID2_API_KEY)`  
@@ -116,7 +116,7 @@ If you're using [server-only integration](https://github.com/UnifiedID2/uid2docs
 2. To use the user's UID2 token, use `identity.getAdvertisingToken()`
 
 3. When the user accesses another page, or on a timer, determine whether a refresh is needed:
-   1. Retrieve the identity JSON string from the user's session, then call:
+   1. Retrieve the identity JSON string from the user's session, and then call the following function that generates an `IdentityTokens` object:
    
        `IdentityTokens identity = IdentityTokens.fromJsonString(identityJsonString);`
    2. Determine if the identity can be refreshed (that is, the refresh token hasn't expired): 
