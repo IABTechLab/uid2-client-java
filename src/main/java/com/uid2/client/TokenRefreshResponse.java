@@ -21,7 +21,7 @@ public class TokenRefreshResponse {
     }
 
     /**
-     * @return whether the user has opted out. See <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-refresh.md#optout">Optout</a>
+     * @return whether the user has opted out. See <a href="https://unifiedid.com/docs/endpoints/post-token-refresh#optout">Optout</a>
      */
     public boolean isOptout() {
         return "optout".equals(status);

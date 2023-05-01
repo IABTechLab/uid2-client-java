@@ -8,8 +8,8 @@ public class EnvelopeV2 {
   }
 
   /**
-   * @return an encrypted request envelope which can be used in the POST body of a <a href="https://github.com/UnifiedID2/uid2docs/tree/main/api/v2/endpoints">UID2 endpoint</a>.
-   * See <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/encryption-decryption.md#encrypted-request-envelope">Encrypted Request Envelope</a>
+   * @return an encrypted request envelope which can be used in the POST body of a <a href="https://unifiedid.com/docs/endpoints/summary-endpoints">UID2 endpoint</a>.
+   * See <a href="https://unifiedid.com/docs/getting-started/gs-encryption-decryption#encrypted-request-envelope">Encrypted Request Envelope</a>
    */
   public String getEnvelope() { return envelope; }
   byte[] getNonce() { return nonce;}
