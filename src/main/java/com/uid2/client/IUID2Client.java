@@ -9,6 +9,14 @@ public interface IUID2Client {
      */
     void refresh() throws UID2ClientException;
 
+    /**
+     * Maps a set of PII or hashed PII to a UID.
+     * @param request An object with the PII or hashed PII to be mapped
+     * @return A payload with a list of mapped PII and their original identifiers, or the mappings that failed
+     *         and the reasons for their failure.
+     */
+    MappingResponse mapIdentity(MappingRequest request) throws UID2ClientException;
+
     DecryptionResponse decrypt(String token, Instant now) throws UID2ClientException;
 
     /**

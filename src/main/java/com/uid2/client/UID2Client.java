@@ -12,6 +12,9 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.google.gson.Gson;
+import com.uid2.client.PayloadHelper.Tuple;
+
 public class UID2Client implements IUID2Client {
 
     private final AtomicReference<KeyContainer> container;
@@ -61,6 +64,87 @@ public class UID2Client implements IUID2Client {
         } catch (IOException e) {
             throw new UID2ClientException("error communicating with api endpoint: " + endpoint, e);
         }
+    }
+
+    private <T> T sendPostRequest(final String path, byte[] data, Class<T> classOfT) throws
+        UID2ClientException
+    {
+        PayloadHelper helper = new PayloadHelper(this.secretKey);
+        Tuple<byte[], byte[]> unencryptedRequestEnvelope;
+        byte[] nonce;
+        try {
+            unencryptedRequestEnvelope = helper
+                .createUnencryptedRequestEnvelope(data);
+            
+        }catch(Exception e) {
+            throw new UID2ClientException(
+                "Failed to create unencrypted request envelope. Got" +
+                e.getMessage()
+            );
+        }
+        
+        byte[] encryptedRequestEnvelope;
+        try {
+            encryptedRequestEnvelope = helper
+                .createEncryptedRequestEnvelope(
+                    unencryptedRequestEnvelope.getFirst()
+                );
+        }catch(Exception e){
+            throw new UID2ClientException(
+                "Failed to encrypt request envelope. Got " +
+                e.getMessage()
+            );
+        }
+
+        byte[] postBody = Base64
+            .getEncoder()
+            .encode(encryptedRequestEnvelope);
+
+        byte[] encryptedResponseEnvelope;
+        try {
+            URL url = new URL(endpoint + path);
+            URLConnection conn = url.openConnection();
+            HttpURLConnection httpsConnection = (HttpURLConnection) conn;
+            httpsConnection.setRequestMethod("POST");
+            httpsConnection.setDoInput(true);
+            httpsConnection.setDoOutput(true);
+            httpsConnection.setRequestProperty(
+                "Authorization",
+                "Bearer " + this.authKey
+            );
+            httpsConnection.setRequestProperty(
+                "X-UID2-Client-Version",
+                "java-" + PublisherUid2Helper.getArtifactAndVersion());
+
+            try(OutputStream os = httpsConnection.getOutputStream()) {
+                os.write(postBody);
+            }
+            int statusCode = httpsConnection.getResponseCode();
+
+            if (statusCode == 401) {
+                throw new UID2ClientException(
+                    "remote service returns 401 Unauthorized, check your api-key"
+                );
+            } else if (statusCode < 200 || statusCode >= 300) {
+                throw new UID2ClientException(
+                    "unexpected status code: " + statusCode
+                );
+            }
+
+            encryptedResponseEnvelope =
+                httpsConnection.getInputStream().readAllBytes();
+            
+        }catch(Exception e){
+            throw new UID2ClientException(
+                "Failed to make HTTP request. Got " + e.getMessage()
+            );
+        }
+
+        return helper.parseResponse(
+            encryptedResponseEnvelope,
+            unencryptedRequestEnvelope.getSecond(),
+            classOfT
+        );
     }
 
     public void refreshJson(String json) {
@@ -162,5 +246,11 @@ public class UID2Client implements IUID2Client {
             this.envelope = envelope;
             this.nonce = nonce;
         }
+    }
+
+    @Override
+    public MappingResponse mapIdentity(MappingRequest request) throws UID2ClientException {
+        String json = new Gson().toJson(request);
+        return sendPostRequest("/v2/identity/map", json.getBytes(StandardCharsets.UTF_8), MappingResponse.class);        
     }
 }
