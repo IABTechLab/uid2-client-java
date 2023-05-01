@@ -13,7 +13,7 @@ class MappingTests {
         UID2Client client = new UID2Client("https://prod.uidapi.com", apiKey, secret, IdentityScope.UID2);
         MappingResponse response;
         try {
-            response = client.mapIdentity(new MappingRequest().email("collin.d.oswalt@gmail.com"));
+            response = client.mapIdentity(new MappingRequest().email("fake.email@uid2implementation.com"));
         }catch(Exception e){
             fail(e.getMessage());
             return;
