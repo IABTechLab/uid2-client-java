@@ -214,7 +214,7 @@ class PublisherTests {
     }
 
     @Test
-    public void hashedEmail() { //https://github.com/UnifiedID2/uid2docs/blob/main/api/README.md#email-address-hash-encoding
+    public void hashedEmail() { //https://unifiedid.com/docs/getting-started/gs-normalization-encoding#email-address-hash-encoding
         final String envelope = createEnvelopeString(IdentityType.Email, "user@example.com", null, true);
         final String expectedEnvelope = "Acw8ysqYieqzgA54fifdV1TB6V+da8p/AFc8Ju/IYrD77pL7WNFKiMt7QbM9mWHZwOWPyVTqSnDVNzhXRdcmIkV0ODOdll2inDo9iIZQ5oV2NvSUSWG5j6ACiXKH0JxiTPzs716eIH7P1Q==";
 
@@ -224,7 +224,7 @@ class PublisherTests {
     }
 
     @Test
-    public void hashedGmail() { //https://github.com/UnifiedID2/uid2docs/blob/main/api/README.md#email-address-hash-encoding
+    public void hashedGmail() { //hhttps://unifiedid.com/docs/getting-started/gs-normalization-encoding#email-address-hash-encoding
         final String envelope = createEnvelopeString(IdentityType.Email, "janedoe@gmail.com", null, true);
         final String expectedEnvelope = "Acw8ysqYieqzgA54fifdV1TB6V+da8p/AFc8Ju/IYrD77pL7WNFKiMt7QbN4vErK69qumy3EXliuNSZ0a/4mTht7DyqMjF20oUECkYNZvtJhGo+wfXSDj6ACEfrViY4lnt1KEUjC4JlDaQ==";
 
@@ -243,7 +243,7 @@ class PublisherTests {
     }
 
     @Test
-    public void hashedPhone() { //https://github.com/UnifiedID2/uid2docs/blob/main/api/README.md#phone-number-hash-encoding
+    public void hashedPhone() { //https://unifiedid.com/docs/getting-started/gs-normalization-encoding#phone-number-hash-encoding
         final String envelope = createEnvelopeString(IdentityType.Phone, "+12345678901", null, true);
         assertEquals("Acw8ysqYieqzgA54fifdV1TB6V+da8p/AFc8Ju/IYqX+4JXyWNFKiMt7QbMMm27H3fmEq2zPRUnXdFpLTdVdc0RNWxOruBaarHYQksdqpbkVFa+walbcj6AClILBJjbDMl1IoeqJVG2fyw==", envelope);
     }

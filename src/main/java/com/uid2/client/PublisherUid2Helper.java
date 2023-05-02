@@ -23,8 +23,8 @@ public class PublisherUid2Helper {
     }
 
     /**
-     * @param tokenGenerateInput represents the input required for <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md#unencrypted-json-body-parameters">/token/generate</a>
-     * @return an EnvelopeV2 instance to use in the POST body of <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md">/token/generate</a>
+     * @param tokenGenerateInput represents the input required for <a href="https://unifiedid.com/docs/endpoints/post-token-generate#unencrypted-json-body-parameters">/token/generate</a>
+     * @return an EnvelopeV2 instance to use in the POST body of <a href="https://unifiedid.com/docs/endpoints/post-token-generate">/token/generate</a>
      */
     public EnvelopeV2 createEnvelopeForTokenGenerateRequest(TokenGenerateInput tokenGenerateInput) {
         final int nonceLength = 8;
@@ -34,7 +34,7 @@ public class PublisherUid2Helper {
     }
 
     /**
-     * @param response the response body returned by a call to <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-generate.md">/token/generate</a>
+     * @param response the response body returned by a call to <a href="https://unifiedid.com/docs/endpoints/post-token-generate">/token/generate</a>
      * @param envelope the EnvelopeV2 instance returned by {@link #createEnvelopeForTokenGenerateRequest}
      * @return an IdentityTokens instance
      * @throws Uid2Exception if the response did not contain a "success" status
@@ -51,7 +51,7 @@ public class PublisherUid2Helper {
     }
 
     /**
-     * @param encryptedResponse the response body returned by a call to <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-refresh.md">/token/refresh</a>
+     * @param encryptedResponse the response body returned by a call to <a href="https://unifiedid.com/docs/endpoints/post-token-refresh">/token/refresh</a>
      * @param currentIdentity the current IdentityTokens instance, typically retrieved from a user's session
      * @return the refreshed IdentityTokens instance (with a new advertising token and updated expiry times). Typically, this will be used to replace the current identity in the user's session
      */

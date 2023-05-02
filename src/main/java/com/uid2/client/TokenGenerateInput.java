@@ -14,7 +14,7 @@ public class TokenGenerateInput {
     }
 
     /**
-     * @param phone a <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/README.md#phone-number-normalization">normalized</a> phone number
+     * @param phone a <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#phone-number-normalization">normalized</a> phone number
      * @return a TokenGenerateInput instance, to be used in {@link PublisherUid2Helper#createEnvelopeForTokenGenerateRequest}
      */
     public static TokenGenerateInput fromPhone(String phone) {
