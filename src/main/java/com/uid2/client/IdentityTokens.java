@@ -27,7 +27,7 @@ public class IdentityTokens {
   }
 
   /**
-   * @return whether this identity is due to be refreshed. If true, a call to <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-refresh.md">/token/refresh</a> is due.
+   * @return whether this identity is due to be refreshed. If true, a call to <a href="https://unifiedid.com/docs/endpoints/post-token-refresh">/token/refresh</a> is due.
    */
   public boolean isDueForRefresh() {
     return isDueForRefreshImpl(Instant.now());
@@ -39,13 +39,13 @@ public class IdentityTokens {
   public String getAdvertisingToken() { return advertisingToken; }
 
   /**
-   * @return the refresh token. This is used as the POST body in <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/endpoints/post-token-refresh.md">/token/refresh</a>
+   * @return the refresh token. This is used as the POST body in <a href="https://unifiedid.com/docs/endpoints/post-token-refresh">/token/refresh</a>
    */
   public String getRefreshToken() { return refreshToken; }
 
   /**
-   * @return the identity as represented by a JSON string. This should be sent back to the client if using <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/publisher-client-side.md">standard integration</a>,
-   * or stored in the user's session if using <a href="https://github.com/UnifiedID2/uid2docs/blob/main/api/v2/guides/custom-publisher-integration.md">Server-Only integration.</a>
+   * @return the identity as represented by a JSON string. This should be sent back to the client if using <a href="https://unifiedid.com/docs/guides/publisher-client-side">standard integration</a>,
+   * or stored in the user's session if using <a href="https://unifiedid.com/docs/guides/custom-publisher-integration">Server-Only integration.</a>
    */
   public String getJsonString() {return jsonString;} //this ensures we make newly added fields available, even before this class is updated.
 
