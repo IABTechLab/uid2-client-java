@@ -3,6 +3,8 @@ package com.uid2.client;
 import okhttp3.*;
 
 import java.io.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 
 public class PublisherUid2Client {
@@ -31,7 +33,6 @@ public class PublisherUid2Client {
                 .post(RequestBody.create(envelope.getEnvelope(), FORM))
                 .build();
 
-
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new Uid2Exception("Unexpected code " + response);
@@ -42,6 +43,22 @@ public class PublisherUid2Client {
         } catch (IOException e) {
             throw new Uid2Exception("error communicating with api endpoint", e);
         }
+    }
+
+    /**
+     * @param tokenGenerateInput represents the input required for <a href="https://unifiedid.com/docs/endpoints/post-token-generate#unencrypted-json-body-parameters">/token/generate</a>
+     * @return a CompletableFuture of IdentityTokens instance. Completes exceptionally if the response did not contain a "success" status, or the response code was not 200, or there was an error communicating with the provided UID2 Base URL
+     */
+    public CompletableFuture<IdentityTokens> generateTokenAsync(TokenGenerateInput tokenGenerateInput) {
+        EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(tokenGenerateInput);
+
+        Request request = new Request.Builder()
+                .url(uid2BaseUrl + "/v2/token/generate")
+                .headers(headers)
+                .post(RequestBody.create(envelope.getEnvelope(), FORM))
+                .build();
+
+        return makeAsyncCall(request, responseString -> publisherUid2Helper.createIdentityfromTokenGenerateResponse(responseString, envelope));
     }
 
     /**
@@ -67,6 +84,48 @@ public class PublisherUid2Client {
             throw new Uid2Exception("error communicating with api endpoint", e);
         }
     }
+
+    /**
+     * @param currentIdentity the current IdentityTokens instance, typically retrieved from a user's session
+     * @return the refreshed IdentityTokens instance (with a new advertising token and updated expiry times). Typically, this will be used to replace the current identity in the user's session
+     */
+    public CompletableFuture<TokenRefreshResponse> refreshTokenAsync(IdentityTokens currentIdentity) {
+        Request request = new Request.Builder()
+                .url(uid2BaseUrl + "/v2/token/refresh")
+                .headers(headers)
+                .post(RequestBody.create(currentIdentity.getRefreshToken(), FORM))
+                .build();
+
+        return makeAsyncCall(request, (responseString) -> PublisherUid2Helper.createTokenRefreshResponse(responseString, currentIdentity));
+    }
+
+    private <T> CompletableFuture<T> makeAsyncCall(Request request, Function<String, T> mappingFunction) {
+        CompletableFuture<T> responseCompletableFuture = new CompletableFuture<>();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                responseCompletableFuture.completeExceptionally(new Uid2Exception("Error communication with API endpoint", e));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    final String responseString = response.body() != null ? response.body().string() : "";
+                    if (!response.isSuccessful()) {
+                        responseCompletableFuture.completeExceptionally(new Uid2Exception("Unexpected code " + response + " " + responseString));
+                    } else {
+                        responseCompletableFuture.complete(mappingFunction.apply(responseString));
+                    }
+                } catch (Exception e){
+                    responseCompletableFuture.completeExceptionally(new Uid2Exception("Error communication with API endpoint", e));
+                } finally {
+                    response.close();
+                }
+            }
+        });
+        return responseCompletableFuture;
+    }
+
 
     private static Headers getHeaders(String clientApiKey) {
         return new Headers.Builder()

@@ -1,12 +1,15 @@
 package com.uid2.client;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import java.time.Instant;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @EnabledIfEnvironmentVariable(named = "UID2_BASE_URL", matches = "\\S+")
 class PublisherIntegrationTests {
@@ -23,6 +26,31 @@ class PublisherIntegrationTests {
         assertTrue(identity.isRefreshable());
 
         TokenRefreshResponse tokenRefreshResponse = publisherUid2Client.refreshToken(identity);
+        assertTrue(tokenRefreshResponse.isSuccess());
+        assertFalse(tokenRefreshResponse.isOptout());
+        assertNotNull(tokenRefreshResponse.getIdentityJsonString());
+
+        IdentityTokens refreshedIdentity = tokenRefreshResponse.getIdentity();
+        assertNotNull(refreshedIdentity);
+        assertFalse(refreshedIdentity.isDueForRefresh());
+        assertNotNull(refreshedIdentity.getAdvertisingToken());
+        assertNotNull(refreshedIdentity.getRefreshToken());
+        assertNotNull(refreshedIdentity.getJsonString());
+        assertTrue(identity.isRefreshable());
+    }
+
+    @Test //this test requires these env vars to be configured: UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY
+    public void integrationGenerateAndRefreshAsync() throws Exception {
+        TokenGenerateInput input = TokenGenerateInput.fromEmail("test@example.com");
+        IdentityTokens identity = publisherUid2Client.generateTokenAsync(input).get(10, TimeUnit.SECONDS);
+        assertNotNull(identity);
+        assertFalse(identity.isDueForRefresh());
+        assertNotNull(identity.getAdvertisingToken());
+        assertNotNull(identity.getRefreshToken());
+        assertNotNull(identity.getJsonString());
+        assertTrue(identity.isRefreshable());
+
+        TokenRefreshResponse tokenRefreshResponse = publisherUid2Client.refreshTokenAsync(identity).get(10, TimeUnit.SECONDS);
         assertTrue(tokenRefreshResponse.isSuccess());
         assertFalse(tokenRefreshResponse.isOptout());
         assertNotNull(tokenRefreshResponse.getIdentityJsonString());
@@ -114,6 +142,20 @@ class PublisherIntegrationTests {
         PublisherUid2Client invalidSecretKey = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, "incorrectSecretKey");
         Uid2Exception invalidSecretKeyException = assertThrows(Uid2Exception.class, () -> invalidSecretKey.generateToken(TokenGenerateInput.fromEmail("test@example.com")));
         assertTrue(invalidSecretKeyException.getMessage().contains("400"));
+    }
+
+    @Test //this test requires these env vars to be configured: UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY
+    public void integrationBadRequestsAsync() {
+        final String UID2_BASE_URL = System.getenv("UID2_BASE_URL");
+        final String UID2_API_KEY =  System.getenv("UID2_API_KEY");
+        final String UID2_SECRET_KEY = System.getenv("UID2_SECRET_KEY");
+        PublisherUid2Client badUrlClient = new PublisherUid2Client("https://www.example.com/", UID2_API_KEY, UID2_SECRET_KEY);
+        ExecutionException ex = assertThrows(ExecutionException.class, () -> badUrlClient.generateTokenAsync(TokenGenerateInput.fromEmail("test@example.com")).get(10, TimeUnit.SECONDS));
+        assertEquals(Uid2Exception.class, ex.getCause().getClass());
+
+        PublisherUid2Client badApiKey = new PublisherUid2Client(UID2_BASE_URL, "bad api key", UID2_SECRET_KEY);
+        ExecutionException badApiKeyException = assertThrows(ExecutionException.class, () -> badApiKey.generateTokenAsync(TokenGenerateInput.fromEmail("test@example.com")).get(10, TimeUnit.SECONDS));
+        assertTrue(badApiKeyException.getCause().getMessage().contains("401"));
     }
 
     @Test //this test requires these env vars to be configured: EUID_BASE_URL, EUID_API_KEY, EUID_SECRET_KEY
