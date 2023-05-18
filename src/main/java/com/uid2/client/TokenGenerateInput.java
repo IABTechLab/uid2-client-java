@@ -10,7 +10,7 @@ public class TokenGenerateInput {
      * @return a TokenGenerateInput instance, to be used in {@link PublisherUid2Helper#createEnvelopeForTokenGenerateRequest}
      */
     public static TokenGenerateInput fromEmail(String email) {
-        return new TokenGenerateInput(IdentityType.Email, email, true);
+        return new TokenGenerateInput(IdentityType.Email, email, true, false);
     }
 
     /**
@@ -18,7 +18,23 @@ public class TokenGenerateInput {
      * @return a TokenGenerateInput instance, to be used in {@link PublisherUid2Helper#createEnvelopeForTokenGenerateRequest}
      */
     public static TokenGenerateInput fromPhone(String phone) {
-        return new TokenGenerateInput(IdentityType.Phone, phone, true);
+        return new TokenGenerateInput(IdentityType.Phone, phone, true, false);
+    }
+
+    /**
+     * @param hashedEmail a <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#email-address-normalization">normalized</a> and <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#email-address-hash-encoding">hashed</a> email address
+     * @return a TokenGenerateInput instance, to be used in {@link PublisherUid2Helper#createEnvelopeForTokenGenerateRequest}
+     */
+    public static TokenGenerateInput fromHashedEmail(String hashedEmail) {
+        return new TokenGenerateInput(IdentityType.Email, hashedEmail, false, true);
+    }
+
+    /**
+     * @param phone a <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#phone-number-normalization">normalized</a> and <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#phone-number-hash-encoding">hashed</a> phone number
+     * @return a TokenGenerateInput instance, to be used in {@link PublisherUid2Helper#createEnvelopeForTokenGenerateRequest}
+     */
+    public static TokenGenerateInput fromHashedPhone(String phone) {
+        return new TokenGenerateInput(IdentityType.Phone, phone, false, true);
     }
 
     /**
@@ -36,32 +52,22 @@ public class TokenGenerateInput {
     }
 
     String getAsJsonString() {
-        if (needHash) {
+        if (alreadyHashed) {
+            return createAlreadyHashedJsonRequestForGenerateToken(identityType, emailOrPhone, transparencyAndConsentString);
+        } else if (needHash) {
             return createHashedJsonRequestForGenerateToken(identityType, emailOrPhone, transparencyAndConsentString);
         } else {
             return createJsonRequestForGenerateToken(identityType, emailOrPhone, transparencyAndConsentString);
         }
     }
 
-    private TokenGenerateInput(IdentityType identityType, String emailOrPhone, boolean needHash) {
+    private TokenGenerateInput(IdentityType identityType, String emailOrPhone, boolean needHash, boolean alreadyHashed) {
         this.identityType = identityType;
         this.emailOrPhone = emailOrPhone;
         this.needHash = needHash;
+        this.alreadyHashed = alreadyHashed;
     }
 
-    private static String getBase64EncodedHash(String input) {
-        return InputUtil.byteArrayToBase64(getSha256Bytes(input));
-    }
-
-    private static byte[] getSha256Bytes(String input) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            md.update(input.getBytes());
-            return md.digest();
-        } catch (Exception e) {
-            throw new Uid2Exception("Trouble Generating SHA256", e);
-        }
-    }
 
 
     private static String createJsonRequestForGenerateToken(IdentityType identityType, String value, String tcString) {
@@ -86,20 +92,31 @@ public class TokenGenerateInput {
             if (normalizedEmail == null) {
                 throw new IllegalArgumentException("invalid email address");
             }
-            String hashedNormalizedEmail = getBase64EncodedHash(normalizedEmail);
+            String hashedNormalizedEmail = InputUtil.getBase64EncodedHash(normalizedEmail);
             return createJsonRequestForGenerateToken("email_hash", hashedNormalizedEmail, tcString);
         } else {  //phone
             if (!InputUtil.isPhoneNumberNormalized(unhashedValue)) {
                 throw new IllegalArgumentException("phone number is not normalized");
             }
 
-            String hashedNormalizedPhone = getBase64EncodedHash(unhashedValue);
+            String hashedNormalizedPhone = InputUtil.getBase64EncodedHash(unhashedValue);
             return createJsonRequestForGenerateToken("phone_hash", hashedNormalizedPhone, tcString);
+        }
+    }
+
+    static String createAlreadyHashedJsonRequestForGenerateToken(IdentityType identityType, String hashedValue, String tcString) {
+        if (identityType == IdentityType.Email) {
+            return createJsonRequestForGenerateToken("email_hash", hashedValue, tcString);
+        } else {  //phone
+            return createJsonRequestForGenerateToken("phone_hash", hashedValue, tcString);
         }
     }
 
     private final IdentityType identityType;
     private final String emailOrPhone;
     private boolean needHash;
+    private boolean alreadyHashed;
     private String transparencyAndConsentString;
+
+
 }

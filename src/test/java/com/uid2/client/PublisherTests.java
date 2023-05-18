@@ -189,6 +189,18 @@ class PublisherTests {
         return envelope;
     }
 
+    private EnvelopeV2 createEnvelopeFromHashedValue(IdentityType identityType, String value, String tcString) {
+        TokenGenerateInput tokenGenerateInput;
+        if (identityType == IdentityType.Email) {
+            tokenGenerateInput = TokenGenerateInput.fromHashedEmail(value).withTransparencyAndConsentString(tcString);
+        } else {
+            tokenGenerateInput = TokenGenerateInput.fromHashedPhone(value).withTransparencyAndConsentString(tcString);
+        }
+        final EnvelopeV2 envelope = createEnvelopeFromIdentityInput(tokenGenerateInput);
+        assertEquals(nonce, envelope.getNonce());
+        return envelope;
+    }
+
     private String createEnvelopeString(IdentityType identityType, String value, String tcString, boolean hash) {
         return createEnvelopeForTokenGenerateRequest(identityType, value, tcString, hash).getEnvelope();
     }
@@ -224,6 +236,15 @@ class PublisherTests {
     }
 
     @Test
+    public void alreadyHashedEmail() { //https://unifiedid.com/docs/getting-started/gs-normalization-encoding#email-address-hash-encoding
+        String normalizedEmail = "user@example.com";
+        final String expectedEnvelope = createEnvelopeString(IdentityType.Email, normalizedEmail, null, true);
+        final String envelope = createEnvelopeFromHashedValue(IdentityType.Email, InputUtil.getBase64EncodedHash(normalizedEmail), null).getEnvelope();
+        assertEquals(expectedEnvelope, envelope);
+    }
+
+
+    @Test
     public void hashedGmail() { //hhttps://unifiedid.com/docs/getting-started/gs-normalization-encoding#email-address-hash-encoding
         final String envelope = createEnvelopeString(IdentityType.Email, "janedoe@gmail.com", null, true);
         final String expectedEnvelope = "Acw8ysqYieqzgA54fifdV1TB6V+da8p/AFc8Ju/IYrD77pL7WNFKiMt7QbN4vErK69qumy3EXliuNSZ0a/4mTht7DyqMjF20oUECkYNZvtJhGo+wfXSDj6ACEfrViY4lnt1KEUjC4JlDaQ==";
@@ -246,6 +267,14 @@ class PublisherTests {
     public void hashedPhone() { //https://unifiedid.com/docs/getting-started/gs-normalization-encoding#phone-number-hash-encoding
         final String envelope = createEnvelopeString(IdentityType.Phone, "+12345678901", null, true);
         assertEquals("Acw8ysqYieqzgA54fifdV1TB6V+da8p/AFc8Ju/IYqX+4JXyWNFKiMt7QbMMm27H3fmEq2zPRUnXdFpLTdVdc0RNWxOruBaarHYQksdqpbkVFa+walbcj6AClILBJjbDMl1IoeqJVG2fyw==", envelope);
+    }
+
+    @Test
+    public void alreadyHashedPhone() { //https://unifiedid.com/docs/getting-started/gs-normalization-encoding#phone-number-hash-encoding
+        String normalizedPhone = "+12345678901";
+        final String expectedEnvelope = createEnvelopeString(IdentityType.Phone, normalizedPhone, null, true);
+        final String envelope = createEnvelopeFromHashedValue(IdentityType.Phone, InputUtil.getBase64EncodedHash(normalizedPhone), null).getEnvelope();
+        assertEquals(expectedEnvelope, envelope);
     }
 
     @Test
@@ -348,7 +377,6 @@ class PublisherTests {
                 () -> IdentityTokens.fromJsonString("this is not a json string"));
     }
 
-    @Test
     public void handleMissingIdentityFields() {
         //todo - change to parameterized test after we migrate to JUnit 5
         String[] expectedFields = {"advertising_token", "refresh_token", "identity_expires", "refresh_expires", "refresh_from"};
