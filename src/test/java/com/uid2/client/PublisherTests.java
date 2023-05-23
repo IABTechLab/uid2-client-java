@@ -469,4 +469,12 @@ class PublisherTests {
                 () -> PublisherUid2Helper.createTokenRefreshResponse("this is not an encrypted response", identity));
     }
 
+    @Test
+    public void requestToNotGenerateTokensForOptedOutUsers() {
+        TokenGenerateInput input = TokenGenerateInput.fromEmail("test@example.com").doNotGenerateTokensForOptedOut();
+
+        JsonObject json = new Gson().fromJson(input.getAsJsonString(), JsonObject.class);
+        assertEquals(1, json.get("policy").getAsInt());
+    }
+
 }
