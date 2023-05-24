@@ -66,7 +66,7 @@ If you're using standard integration (client and server) (see [Client-Side JavaS
 
 #### Server-Only Integration
 
-If your integration does not include a client-side SDK (see [Publisher Integration Guide, Server-Only (Without SDK)](https://unifiedid.com/docs/guides/custom-publisher-integration)):
+If your integration does not include a client-side SDK (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
 1. Store this identity as a JSON string in the user's session, using the `identity.getJsonString()` function.
 2. To use the user's UID2 token, use the `identity.getAdvertisingToken()` function.
@@ -114,7 +114,7 @@ If you're using standard integration (client and server) (see [Client-Side JavaS
 
 #### Server-Only Integration
 
-If your integration does not include a client-side SDK (see [Publisher Integration Guide, Server-Only (Without SDK)](https://unifiedid.com/docs/guides/custom-publisher-integration)):
+If your integration does not include a client-side SDK (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
 1. Store this identity as a JSON string in the user's session, using: `identity.getJsonString()`.
 2. To use the user's UID2 token, use `identity.getAdvertisingToken()`.
