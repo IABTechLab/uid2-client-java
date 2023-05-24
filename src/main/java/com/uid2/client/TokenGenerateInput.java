@@ -30,11 +30,11 @@ public class TokenGenerateInput {
     }
 
     /**
-     * @param phone a <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#phone-number-normalization">normalized</a> and <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#phone-number-hash-encoding">hashed</a> phone number
+     * @param hashedPhone a <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#phone-number-normalization">normalized</a> and <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#phone-number-hash-encoding">hashed</a> phone number
      * @return a TokenGenerateInput instance, to be used in {@link PublisherUid2Helper#createEnvelopeForTokenGenerateRequest}
      */
-    public static TokenGenerateInput fromHashedPhone(String phone) {
-        return new TokenGenerateInput(IdentityType.Phone, phone, false, true);
+    public static TokenGenerateInput fromHashedPhone(String hashedPhone) {
+        return new TokenGenerateInput(IdentityType.Phone, hashedPhone, false, true);
     }
 
     /**

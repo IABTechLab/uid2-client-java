@@ -377,6 +377,7 @@ class PublisherTests {
                 () -> IdentityTokens.fromJsonString("this is not a json string"));
     }
 
+    @Test
     public void handleMissingIdentityFields() {
         //todo - change to parameterized test after we migrate to JUnit 5
         String[] expectedFields = {"advertising_token", "refresh_token", "identity_expires", "refresh_expires", "refresh_from"};
