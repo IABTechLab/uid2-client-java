@@ -1,5 +1,6 @@
 package com.uid2.client;
 
+import java.security.MessageDigest;
 import java.util.Base64;
 
 public class InputUtil { //from https://github.com/IABTechLab/uid2-operator/blob/master/src/main/java/com/uid2/operator/service/InputUtil.java
@@ -122,6 +123,21 @@ public class InputUtil { //from https://github.com/IABTechLab/uid2-operator/blob
 
   static byte[] base64ToByteArray(String str) { return Base64.getDecoder().decode(str); }
   static String byteArrayToBase64(byte[] b) { return Base64.getEncoder().encodeToString(b); }
+
+
+  static String getBase64EncodedHash(String input) {
+    return byteArrayToBase64(getSha256Bytes(input));
+  }
+
+  static byte[] getSha256Bytes(String input) {
+    try {
+      MessageDigest md = MessageDigest.getInstance("SHA-256");
+      md.update(input.getBytes());
+      return md.digest();
+    } catch (Exception e) {
+      throw new Uid2Exception("Trouble Generating SHA256", e);
+    }
+  }
 }
 
 
