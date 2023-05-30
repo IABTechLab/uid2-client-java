@@ -115,7 +115,7 @@ class PublisherIntegrationTests {
         PublisherUid2Client invalidSecretKey = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, "invalidSecretKey");
         assertThrows(RuntimeException.class, () -> invalidSecretKey.generateToken(TokenGenerateInput.fromEmail("test@example.com")));
 
-        PublisherUid2Client incorrectSecretKey = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, PublisherTests.UID2_SECRET_KEY);
+        PublisherUid2Client incorrectSecretKey = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, PublisherTests.UID2_SECRET_KEY); //PublisherTests.UID2_SECRET_KEY is an incorrect key because it's not a client secret for UID2_API_KEY (UID2_SECRET_KEY is the correct secret)
         Uid2Exception incorrectSecretKeyException = assertThrows(Uid2Exception.class, () -> incorrectSecretKey.generateToken(TokenGenerateInput.fromEmail("test@example.com")));
         assertTrue(incorrectSecretKeyException.getMessage().contains("400"));
     }
