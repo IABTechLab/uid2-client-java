@@ -93,7 +93,8 @@ class PublisherIntegrationTests {
         IdentityTokens currentIdentity = IdentityTokens.fromJsonString(PublisherTests.expectedDecryptedJsonForTokenGenerateResponse);
         Uid2Exception exception = assertThrows(Uid2Exception.class, //expired token
                 () -> publisherUid2Client.refreshToken(currentIdentity));
-        assertTrue(exception.getMessage().contains("expired"));
+        //We no longer assert on what the exception contains - since an expired key is later deleted, and deleted keys give a different error
+        //Previous code: assertTrue(exception.getMessage().contains("expired"));
 
 
         assertThrows(NullPointerException.class, () -> publisherUid2Client.generateToken(TokenGenerateInput.fromEmail(null)));
@@ -111,9 +112,12 @@ class PublisherIntegrationTests {
 
         assertThrows(IllegalArgumentException.class, () -> new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, "bad secret key"));
 
-        PublisherUid2Client invalidSecretKey = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, "incorrectSecretKey");
-        Uid2Exception invalidSecretKeyException = assertThrows(Uid2Exception.class, () -> invalidSecretKey.generateToken(TokenGenerateInput.fromEmail("test@example.com")));
-        assertTrue(invalidSecretKeyException.getMessage().contains("400"));
+        PublisherUid2Client invalidSecretKey = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, "invalidSecretKey");
+        assertThrows(RuntimeException.class, () -> invalidSecretKey.generateToken(TokenGenerateInput.fromEmail("test@example.com")));
+
+        PublisherUid2Client incorrectSecretKey = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, PublisherTests.UID2_SECRET_KEY);
+        Uid2Exception incorrectSecretKeyException = assertThrows(Uid2Exception.class, () -> incorrectSecretKey.generateToken(TokenGenerateInput.fromEmail("test@example.com")));
+        assertTrue(incorrectSecretKeyException.getMessage().contains("400"));
     }
 
     @Test //this test requires these env vars to be configured: EUID_BASE_URL, EUID_API_KEY, EUID_SECRET_KEY
@@ -159,7 +163,7 @@ class PublisherTests {
         return data;
     }
 
-    private final static String UID2_SECRET_KEY = "ioG3wKxAokmp+rERx6A4kM/13qhyolUXIu14WN16Spo=";
+    public final static String UID2_SECRET_KEY = "ioG3wKxAokmp+rERx6A4kM/13qhyolUXIu14WN16Spo=";
     private final PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);
     private final byte[] nonce = hexStringToByteArray("312fe5aa08b2a049");
 
