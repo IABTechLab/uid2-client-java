@@ -2,7 +2,7 @@ package com.uid2.client;
 
 import okhttp3.*;
 
-import java.io.*;
+import java.io.IOException;
 
 
 public class PublisherUid2Client {
@@ -21,7 +21,9 @@ public class PublisherUid2Client {
      * @param tokenGenerateInput represents the input required for <a href="https://unifiedid.com/docs/endpoints/post-token-generate#unencrypted-json-body-parameters">/token/generate</a>
      * @return an IdentityTokens instance
      * @throws Uid2Exception if the response did not contain a "success" status, or the response code was not 200, or there was an error communicating with the provided UID2 Base URL
+     * @deprecated Use {@link PublisherUid2Client#generateTokenResponse}
      */
+    @Deprecated
     public IdentityTokens generateToken(TokenGenerateInput tokenGenerateInput) {
         EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(tokenGenerateInput);
 
@@ -41,6 +43,33 @@ public class PublisherUid2Client {
             return publisherUid2Helper.createIdentityfromTokenGenerateResponse(responseString, envelope);
         } catch (IOException e) {
             throw new Uid2Exception("error communicating with api endpoint", e);
+        }
+    }
+
+    /**
+     * @param tokenGenerateInput represents the input required for <a href="https://unifiedid.com/docs/endpoints/post-token-generate#unencrypted-json-body-parameters">/token/generate</a>
+     * @return an IdentityTokens instance
+     * @throws Uid2Exception if the response did not contain a "success" status, or the response code was not 200, or there was an error communicating with the provided UID2 Base URL
+     */
+    public TokenGenerateResponse generateTokenResponse(TokenGenerateInput tokenGenerateInput) {
+        EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(tokenGenerateInput);
+
+        Request request = new Request.Builder()
+                .url(uid2BaseUrl + "/v2/token/generate")
+                .headers(headers)
+                .post(RequestBody.create(envelope.getEnvelope(), FORM))
+                .build();
+
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new Uid2Exception("Unexpected code " + response);
+            }
+
+            String responseString = response.body() != null ? response.body().string() : "";
+            return publisherUid2Helper.createTokenGenerateResponse(responseString, envelope);
+        } catch (IOException e) {
+            throw new Uid2Exception("Error communicating with api endpoint", e);
         }
     }
 

@@ -34,11 +34,13 @@ public class PublisherUid2Helper {
     }
 
     /**
+     * @deprecated Use {@link PublisherUid2Helper#createTokenGenerateResponse}
      * @param response the response body returned by a call to <a href="https://unifiedid.com/docs/endpoints/post-token-generate">/token/generate</a>
      * @param envelope the EnvelopeV2 instance returned by {@link #createEnvelopeForTokenGenerateRequest}
      * @return an IdentityTokens instance
      * @throws Uid2Exception if the response did not contain a "success" status
      */
+    @Deprecated
     public IdentityTokens createIdentityfromTokenGenerateResponse(String response, EnvelopeV2 envelope) {
         String identityJsonString = decrypt(response, secretKey, false, envelope.getNonce());
         JsonObject responseJson = new Gson().fromJson(identityJsonString, JsonObject.class);
@@ -48,6 +50,18 @@ public class PublisherUid2Helper {
         }
 
         return IdentityTokens.fromJson(TokenRefreshResponse.getBodyAsJson(responseJson));
+    }
+
+    /**
+     * @param response the response body returned by a call to <a href="https://unifiedid.com/docs/endpoints/post-token-generate">/token/generate</a>
+     * @param envelope the EnvelopeV2 instance returned by {@link #createEnvelopeForTokenGenerateRequest}
+     * @return an TokenGenerateResponse instance
+     * @throws Uid2Exception if the response did not contain a "success" or "optout" status
+     */
+    public TokenGenerateResponse createTokenGenerateResponse(String response, EnvelopeV2 envelope) {
+        String identityJsonString = decrypt(response, secretKey, false, envelope.getNonce());
+
+        return new TokenGenerateResponse(identityJsonString);
     }
 
     /**
