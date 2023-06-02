@@ -10,7 +10,7 @@ This document includes:
 * [Usage for Publishers](#usage-for-publishers)
    - [Basic Usage](#basic-usage)
    - [Advanced Usage](#advanced-usage)
-* [## Usage for UID2 Sharers](#usage-for-uid2-sharers)
+* [Usage for UID2 Sharers](#usage-for-uid2-sharers)
 
 ## Who Is this SDK for?
 
@@ -66,7 +66,7 @@ If you're using standard integration (client and server) (see [Client-Side JavaS
 
 #### Server-Only Integration
 
-If you're using server-only integration (see [Publisher Integration Guide, Server-Only (Without SDK)](https://unifiedid.com/docs/guides/custom-publisher-integration)):
+If you're using server-only integration (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
 1. Store this identity as a JSON string in the user's session, using the `identity.getJsonString()` function.
 2. To use the user's UID2 token, use the `identity.getAdvertisingToken()` function.
@@ -113,7 +113,8 @@ If you're using standard integration (client and server) (see [Client-Side JavaS
     `identity.getJsonString()`
 
 #### Server-Only Integration
-If you're using server-only integration (see [Publisher Integration Guide, Server-Only (Without SDK)](https://unifiedid.com/docs/guides/custom-publisher-integration)):
+
+If you're using server-only integration (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
 1. Store this identity as a JSON string in the user's session, using: `identity.getJsonString()`.
 2. To use the user's UID2 token, use `identity.getAdvertisingToken()`.

@@ -102,7 +102,8 @@ class PublisherIntegrationTests {
         IdentityTokens currentIdentity = IdentityTokens.fromJsonString(PublisherTests.expectedDecryptedJsonForTokenGenerateResponse);
         Uid2Exception exception = assertThrows(Uid2Exception.class, //expired token
                 () -> publisherUid2Client.refreshToken(currentIdentity));
-        assertTrue(exception.getMessage().contains("expired"));
+        //We no longer assert on what the exception contains - since an expired key is later deleted, and deleted keys give a different error
+        //Previous code: assertTrue(exception.getMessage().contains("expired"));
 
 
         assertThrows(NullPointerException.class, () -> publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail(null)));
@@ -120,9 +121,12 @@ class PublisherIntegrationTests {
 
         assertThrows(IllegalArgumentException.class, () -> new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, "bad secret key"));
 
-        PublisherUid2Client invalidSecretKey = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, "incorrectSecretKey");
-        Uid2Exception invalidSecretKeyException = assertThrows(Uid2Exception.class, () -> invalidSecretKey.generateTokenResponse(TokenGenerateInput.fromEmail("test@example.com")));
-        assertTrue(invalidSecretKeyException.getMessage().contains("400"));
+        PublisherUid2Client invalidSecretKey = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, "invalidSecretKey");
+        assertThrows(RuntimeException.class, () -> invalidSecretKey.generateTokenResponse(TokenGenerateInput.fromEmail("test@example.com")));
+
+        PublisherUid2Client incorrectSecretKey = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, PublisherTests.UID2_SECRET_KEY); //PublisherTests.UID2_SECRET_KEY is an incorrect key because it's not a client secret for UID2_API_KEY (UID2_SECRET_KEY is the correct secret)
+        Uid2Exception incorrectSecretKeyException = assertThrows(Uid2Exception.class, () -> incorrectSecretKey.generateTokenResponse(TokenGenerateInput.fromEmail("test@example.com")));
+        assertTrue(incorrectSecretKeyException.getMessage().contains("400"));
     }
 
     @Test //this test requires these env vars to be configured: EUID_BASE_URL, EUID_API_KEY, EUID_SECRET_KEY
@@ -171,10 +175,10 @@ class PublisherTests {
         return data;
     }
 
-    private final static String UID2_SECRET_KEY = "ioG3wKxAokmp+rERx6A4kM/13qhyolUXIu14WN16Spo=";
-    private final static PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);
-    private final static byte[] nonce = hexStringToByteArray("312fe5aa08b2a049");
-    private final static byte[] IV = hexStringToByteArray("cc3ccaca9889eab3800e787e");
+    public final static String UID2_SECRET_KEY = "ioG3wKxAokmp+rERx6A4kM/13qhyolUXIu14WN16Spo=";
+    private final PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);
+    private final byte[] nonce = hexStringToByteArray("312fe5aa08b2a049");
+    private final byte[] IV = hexStringToByteArray("cc3ccaca9889eab3800e787e");
 
     final static String expectedDecryptedJsonForTokenGenerateResponse = "{\"advertising_token\":\"AgAAAAN6QZRCFTau+sfOlMMUY2ftElFMq2TCrcu1EAaD9WmEfoT2BWm2ZKz1tumbT00tWLffRDQ/9POXfA0O/Ljszn7FLtG5EzTBM3HYs4f5irkqeEvu38DhVCxUEpI+gZZZkynRap1oYx6AmC/ip3rk+7pmqa3r3saDs1mPRSSTm+Nh6A==\",\"user_token\":\"AgAAAAL6aleYI4BubI5ZXMBshqmMEfCkbCJF4fLeg1sdI0BTLzj9sXsSISjkG0lMC743diC2NVy3ElkbO1lLysd+Lm6alkqevPrcuWDisQ1939YdoH6LqpwBH3FNSE4/xa3Q+94=\",\"refresh_token\":\"AAAAAARomrP3NjjH+8mt5djfTHbmRZXjOMnAN8WpjJoe30AhUCvYksO/xoDSj77GzWv4M99DhnPl2cVco8CZFTcE10nauXI4Barr890ILnH0IIacOei5Zjwh6DycFkoXkAAuHY1zjmxb7niGLfSP2RctWkZdRVGWQv/UW/grw6+paU9bnKEWPzVvLwwdW2NgjDKu+szE6A+b5hkY+I3voKoaz8/kLDmX8ddJGLy/YOh/LIveBspSAvEg+v89OuUCwAqm8L3Rt8PxDzDnt0U4Na+AUawvvfsIhmsn/zMpRRks6GHhIAB/EQUHID8TedU8Hv1WFRsiraG9Dfn1Kc5/uYnDJhEagWc+7RgTGT+U5GqI6+afrAl5091eBLbmvXnXn9ts\",\"identity_expires\":1668059799628,\"refresh_expires\":1668142599628,\"refresh_from\":1668056202628,\"refresh_response_key\":\"P941vVeuyjaDRVnFQ8DPd0AZnW4bPeiJPXER2K9QXcU=\"}";
 
