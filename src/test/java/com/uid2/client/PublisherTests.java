@@ -435,9 +435,8 @@ class PublisherTests {
     @Test
     public void optOutGenerateTokenResponse() {
         EnvelopeV2 envelope = createEnvelopeForTokenGenerateRequest(IdentityType.Email, "optout@email.com", null, true);
-        final String encryptedRefreshOptOutResponse = encrypt("{\"status\":\"optout\"}"); //derived by sending a refresh request using the refresh token from the generate request above
-
-        TokenGenerateResponse tokenGenerateResponse = publisherUid2Helper.createTokenGenerateResponse(encryptedRefreshOptOutResponse, envelope);
+        final String encryptedOptOutResponse = encrypt("{\"status\":\"optout\"}");
+        TokenGenerateResponse tokenGenerateResponse = publisherUid2Helper.createTokenGenerateResponse(encryptedOptOutResponse, envelope);
         assertTrue(tokenGenerateResponse.isOptout());
         assertFalse(tokenGenerateResponse.isSuccess());
         assertNull(tokenGenerateResponse.getIdentityJsonString());
