@@ -161,6 +161,24 @@ class PublisherIntegrationTests {
         Uid2Exception exception = assertThrows(Uid2Exception.class, () -> client.generateTokenResponse(TokenGenerateInput.fromEmail("user@example.com").withTransparencyAndConsentString(tcString)));
         assertTrue(exception.getMessage().contains("insufficient_user_consent"));
     }
+
+    @Test //this test requires these env vars to be configured: EUID_BASE_URL, EUID_API_KEY, EUID_SECRET_KEY
+    public void integrationOptoutGenerateToken() {
+        final String EUID_BASE_URL = System.getenv("EUID_BASE_URL");
+        final String EUID_API_KEY = System.getenv("EUID_API_KEY");
+        final String EUID_SECRET_KEY = System.getenv("EUID_SECRET_KEY");
+
+        PublisherUid2Client client = new PublisherUid2Client(EUID_BASE_URL, EUID_API_KEY, EUID_SECRET_KEY);
+
+        final String tcString = "CPhJRpMPhJRpMABAMBFRACBoALAAAEJAAIYgAKwAQAKgArABAAqAAA";
+        TokenGenerateInput input = TokenGenerateInput.fromEmail("optout@example.com")
+                .doNotGenerateTokensForOptedOut()
+                .withTransparencyAndConsentString(tcString);
+        TokenGenerateResponse tokenGenerateResponse = client.generateTokenResponse(input);
+        assertTrue(tokenGenerateResponse.isOptout());
+        assertFalse(tokenGenerateResponse.isSuccess());
+        assertNull(tokenGenerateResponse.getIdentity());
+    }
 }
 
 class PublisherTests {
