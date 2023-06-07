@@ -79,11 +79,20 @@ public class IdentityTokens {
 
   String getRefreshResponseKey() { return refreshResponseKey; }
 
-  Instant getIdentityExpires() { return identityExpires; } //indicates when the advertising token expires
+  /**
+   * @return Instant that indicated when the advertising token expires
+   */
+  public Instant getIdentityExpires() { return identityExpires; }
 
-  Instant getRefreshExpires() { return refreshExpires; } //indicates when the refresh token expires
+  /**
+   * @return Instant that indicates when the refresh token expires
+   */
+  public Instant getRefreshExpires() { return refreshExpires; } //indicates when the refresh token expires
 
-  Instant getRefreshFrom() { return refreshFrom; }
+  /**
+   * @return Instant that indicated when identity is due for refresh
+   */
+  public Instant getRefreshFrom() { return refreshFrom; }
 
 
   private IdentityTokens(String advertisingToken, String refreshToken, String refreshResponseKey, Instant identityExpires,
