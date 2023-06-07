@@ -51,13 +51,18 @@ public class TokenGenerateInput {
         return this;
     }
 
+    public TokenGenerateInput doNotGenerateTokensForOptedOut() {
+        generateForOptedOut = false;
+        return this;
+    }
+
     String getAsJsonString() {
         if (alreadyHashed) {
-            return createAlreadyHashedJsonRequestForGenerateToken(identityType, emailOrPhone, transparencyAndConsentString);
+            return createAlreadyHashedJsonRequestForGenerateToken(identityType, emailOrPhone, transparencyAndConsentString, generateForOptedOut);
         } else if (needHash) {
-            return createHashedJsonRequestForGenerateToken(identityType, emailOrPhone, transparencyAndConsentString);
+            return createHashedJsonRequestForGenerateToken(identityType, emailOrPhone, transparencyAndConsentString, generateForOptedOut);
         } else {
-            return createJsonRequestForGenerateToken(identityType, emailOrPhone, transparencyAndConsentString);
+            return createJsonRequestForGenerateToken(identityType, emailOrPhone, transparencyAndConsentString, generateForOptedOut);
         }
     }
 
@@ -70,52 +75,55 @@ public class TokenGenerateInput {
 
 
 
-    private static String createJsonRequestForGenerateToken(IdentityType identityType, String value, String tcString) {
+    private static String createJsonRequestForGenerateToken(IdentityType identityType, String value, String tcString, boolean generateForOptedOut) {
         final String property = (identityType == IdentityType.Email) ? "email" : "phone";
-        return createJsonRequestForGenerateToken(property, value, tcString);
+        return createJsonRequestForGenerateToken(property, value, tcString, generateForOptedOut);
     }
 
-    private static String createJsonRequestForGenerateToken(String property, String value, String tcString) {
+    private static String createJsonRequestForGenerateToken(String property, String value, String tcString, boolean generateForOptedOut) {
         JsonObject json = new JsonObject();
 
         json.addProperty(property, value);
         if (tcString != null) {
             json.addProperty("tcf_consent_string", tcString);
         }
-
+        if(!generateForOptedOut){
+            json.addProperty("policy", 1);
+        }
         return json.toString();
     }
 
-    static String createHashedJsonRequestForGenerateToken(IdentityType identityType, String unhashedValue, String tcString) {
+    static String createHashedJsonRequestForGenerateToken(IdentityType identityType, String unhashedValue, String tcString, boolean generateForOptedOut) {
         if (identityType == IdentityType.Email) {
             String normalizedEmail = InputUtil.normalizeEmailString(unhashedValue);
             if (normalizedEmail == null) {
                 throw new IllegalArgumentException("invalid email address");
             }
             String hashedNormalizedEmail = InputUtil.getBase64EncodedHash(normalizedEmail);
-            return createJsonRequestForGenerateToken("email_hash", hashedNormalizedEmail, tcString);
+            return createJsonRequestForGenerateToken("email_hash", hashedNormalizedEmail, tcString, generateForOptedOut);
         } else {  //phone
             if (!InputUtil.isPhoneNumberNormalized(unhashedValue)) {
                 throw new IllegalArgumentException("phone number is not normalized");
             }
 
             String hashedNormalizedPhone = InputUtil.getBase64EncodedHash(unhashedValue);
-            return createJsonRequestForGenerateToken("phone_hash", hashedNormalizedPhone, tcString);
+            return createJsonRequestForGenerateToken("phone_hash", hashedNormalizedPhone, tcString, generateForOptedOut);
         }
     }
 
-    static String createAlreadyHashedJsonRequestForGenerateToken(IdentityType identityType, String hashedValue, String tcString) {
+    static String createAlreadyHashedJsonRequestForGenerateToken(IdentityType identityType, String hashedValue, String tcString, boolean generateForOptedOut) {
         if (identityType == IdentityType.Email) {
-            return createJsonRequestForGenerateToken("email_hash", hashedValue, tcString);
+            return createJsonRequestForGenerateToken("email_hash", hashedValue, tcString, generateForOptedOut);
         } else {  //phone
-            return createJsonRequestForGenerateToken("phone_hash", hashedValue, tcString);
+            return createJsonRequestForGenerateToken("phone_hash", hashedValue, tcString, generateForOptedOut);
         }
     }
 
     private final IdentityType identityType;
     private final String emailOrPhone;
     private boolean needHash;
-    private boolean alreadyHashed;
+    private final boolean alreadyHashed;
+    private boolean generateForOptedOut = true;
     private String transparencyAndConsentString;
 
 
