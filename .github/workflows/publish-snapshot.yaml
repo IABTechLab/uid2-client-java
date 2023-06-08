@@ -15,4 +15,4 @@ jobs:
         with:
           needs_snapshot: 'true'
       - name: Deploy Snapshot
-        run: mvn -B -Drepo.id=ossrh -Drepo.login=uidadmin -Drepo.pwd="${{ secrets.SONATYPE_REPO_PASSWORD }}" -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}" clean deploy
+        run: mvn -B -Drepo.id=ossrh -Drepo.login="{{ secrets.SONATYPE_REPO_ACCOUNT }}" -Drepo.pwd="${{ secrets.SONATYPE_REPO_PASSWORD }}" -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}" clean deploy
