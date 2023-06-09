@@ -1,4 +1,4 @@
-name: Publish Snapshot Package
+name: Publish Major Package
 on:
   workflow_dispatch:
     inputs:
@@ -11,6 +11,6 @@ jobs:
   build-publish-package:
     uses: IABTechLab/uid2-shared-actions/.github/workflows/shared-java-publish-versioned-package.yaml@main
     with: 
-      release_type: 'Snapshot'
+      release_type: 'Major'
       publish_to_maven: ${{ inputs.publish_to_maven }}
     secrets: inherit
