@@ -28,7 +28,7 @@ To install the SDK, add this dependency to your project's `pom.xml` file:
         <dependency>
             <groupId>com.uid2</groupId>
             <artifactId>uid2-client</artifactId>
-            <version>4.1.2</version>
+            <version>4.2.4-dcf7ac1ce6</version>
         </dependency>
 ```
 
