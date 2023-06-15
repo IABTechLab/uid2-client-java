@@ -22,15 +22,7 @@ This SDK requires Java version 1.8 or later.
 
 ## Install
 
-To install the SDK, add this dependency to your project's `pom.xml` file:
-
-```
-        <dependency>
-            <groupId>com.uid2</groupId>
-            <artifactId>uid2-client</artifactId>
-            <version>4.2.4-dcf7ac1ce6</version>
-        </dependency>
-```
+To install the SDK, add the `uid2-client` dependency to your project's `pom.xml` file [as shown here](https://central.sonatype.com/artifact/com.uid2/uid2-client).
 
 ## Usage for DSPs
 
