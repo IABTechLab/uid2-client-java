@@ -44,9 +44,9 @@ If you're using the SDK's HTTP implementation, follow these steps.
  
    `private final PublisherUid2Client publisherUid2Client = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);`
 
-2. When the user has authenticated, and has authorized the creation of a UID2, call a function that takes the user's email address or phone number as input and generates an `IdentityTokens` object. The following example uses an email address:
+2. When the user has authenticated, and has authorized the creation of a UID2, call a function that takes the user's email address or phone number as input and generates a `TokenGenerateResponse` object. The following example uses an email address:
  
-   `IdentityTokens identity = publisherUid2Client.generateToken(TokenGenerateInput.fromEmail(emailAddress));`
+   `TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail(emailAddress).doNotGenerateTokensForOptedOut());`
  
 #### Standard Integration
 
@@ -54,13 +54,13 @@ If you're using standard integration (client and server) (see [Client-Side JavaS
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
-    `identity.getJsonString()`
+    `tokenGenerateResponse.getIdentityJsonString()` //Note: this method will return null if the user has opted out, so be sure to handle that case.
 
 #### Server-Only Integration
 
 If you're using server-only integration (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
-1. Store this identity as a JSON string in the user's session, using the `identity.getJsonString()` function.
+1. Store this identity as a JSON string in the user's session, using the `tokenGenerateResponse.getIdentityJsonString()` function. This method will return null if the user has opted out, so be sure to handle that case.
 2. To use the user's UID2 token, use the `identity.getAdvertisingToken()` function.
 3. When the user accesses another page, or on a timer, determine whether a refresh is needed:
    1. Retrieve the identity JSON string from the user's session, and then call the following function that takes the identity information as input and generates an `IdentityTokens` object:
@@ -92,9 +92,9 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
       `.putHeader("Authorization", "Bearer " + UID2_API_KEY)`  
       `.putHeader("X-UID2-Client-Version", PublisherUid2Helper.getVersionHeader())`
    2. Body: `envelope.getEnvelope()`
-4. If the HTTP response status code is _not_ 200, see [Response Status Codes](https://unifiedid.com/docs/endpoints/post-token-generate#response-status-codes) to determine next steps. Otherwise, convert the UID2 identity response content into an `IdentityTokens` object:
+4. If the HTTP response status code is _not_ 200, see [Response Status Codes](https://unifiedid.com/docs/endpoints/post-token-generate#response-status-codes) to determine next steps. Otherwise, convert the UID2 identity response content into a `TokenGenerateResponse` object:
 
-   `IdentityTokens identity = publisherUid2Helper.createIdentityfromTokenGenerateResponse({response body}, envelope);`
+   `TokenGenerateResponse tokenGenerateResponse = publisherUid2Helper.createTokenGenerateResponse({response body}, envelope);`
 
 #### Standard Integration
 
@@ -102,14 +102,14 @@ If you're using standard integration (client and server) (see [Client-Side JavaS
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
-    `identity.getJsonString()`
+    `tokenGenerateResponse.getIdentityJsonString()` //Note: this method will return null if the user has opted out, so be sure to handle that case.
 
 #### Server-Only Integration
 
 If you're using server-only integration (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
-1. Store this identity as a JSON string in the user's session, using: `identity.getJsonString()`.
-2. To use the user's UID2 token, use `identity.getAdvertisingToken()`.
+1. Store this identity as a JSON string in the user's session, using: `tokenGenerateResponse.getIdentityJsonString()`. This method will return null if the user has opted out, so be sure to handle that case.
+2. To use the user's UID2 token, use `IdentityTokens identity = tokenGenerateResponse.getIdentity()` followed by `identity.getAdvertisingToken()`.
 
 3. When the user accesses another page, or on a timer, determine whether a refresh is needed:
    1. Retrieve the identity JSON string from the user's session, and then call the following function that generates an `IdentityTokens` object:
