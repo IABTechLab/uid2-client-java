@@ -54,15 +54,20 @@ If you're using standard integration (client and server) (see [Client-Side JavaS
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
-    `tokenGenerateResponse.getIdentityJsonString()` //Note: this method will return null if the user has opted out, so be sure to handle that case.
+    `tokenGenerateResponse.getIdentityJsonString()` //Note: this method returns null if the user has opted out, so be sure to handle that case.
 
 #### Server-Only Integration
 
 If you're using server-only integration (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
-1. Store this identity as a JSON string in the user's session, using the `tokenGenerateResponse.getIdentityJsonString()` function. This method will return null if the user has opted out, so be sure to handle that case.
-2. To use the user's UID2 token, use `IdentityTokens identity = tokenGenerateResponse.getIdentity()` followed by `identity.getAdvertisingToken()`.
-3. When the user accesses another page, or on a timer, determine whether a refresh is needed:
+1. Store this identity as a JSON string in the user's session, using the `tokenGenerateResponse.getIdentityJsonString()` function. This method returns null if the user has opted out, so be sure to handle that case.
+2. To retrieve the user's UID2 token, use:
+
+   ```
+   IdentityTokens identity = tokenGenerateResponse.getIdentity();
+   if (identity != null) { String advertisingToken = identity.getAdvertisingToken(); }
+   ```
+4. When the user accesses another page, or on a timer, determine whether a refresh is needed:
    1. Retrieve the identity JSON string from the user's session, and then call the following function that takes the identity information as input and generates an `IdentityTokens` object:
 
       `IdentityTokens identity = IdentityTokens.fromJsonString(identityJsonString);`
@@ -72,11 +77,11 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
    3. Determine if a refresh is needed:
 
       `if (identity.isDueForRefresh()) {..}`
-4. If needed, refresh the token and associated values:
+5. If needed, refresh the token and associated values:
  
    `TokenRefreshResponse tokenRefreshResponse = publisherUid2Client.refreshToken(identity);`
  
-5. Store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method returns null, indicating that the user's identity should be removed from the session. To confirm optout, you can use the `tokenRefreshResponse.isOptout()` function.
+6. Store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method returns null, indicating that the user's identity should be removed from the session. To confirm optout, you can use the `tokenRefreshResponse.isOptout()` function.
 
 ### Advanced Usage
 
@@ -109,7 +114,12 @@ If you're using standard integration (client and server) (see [Client-Side JavaS
 If you're using server-only integration (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
 1. Store this identity as a JSON string in the user's session, using: `tokenGenerateResponse.getIdentityJsonString()`. This method will return null if the user has opted out, so be sure to handle that case.
-2. To use the user's UID2 token, use `IdentityTokens identity = tokenGenerateResponse.getIdentity()` followed by `identity.getAdvertisingToken()`.
+2. To retrieve the user's UID2 token, use:
+
+   ```
+   IdentityTokens identity = tokenGenerateResponse.getIdentity();
+   if (identity != null) { String advertisingToken = identity.getAdvertisingToken(); }
+   ```
 
 3. When the user accesses another page, or on a timer, determine whether a refresh is needed:
    1. Retrieve the identity JSON string from the user's session, and then call the following function that generates an `IdentityTokens` object:
