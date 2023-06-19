@@ -44,7 +44,7 @@ If you're using the SDK's HTTP implementation, follow these steps.
  
    `private final PublisherUid2Client publisherUid2Client = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);`
 
-2. Next, call a function that takes the user's email address or phone number as input and generates a `TokenGenerateResponse` object. The following example uses an email address:
+2. Call a function that takes the user's email address or phone number as input and generates a `TokenGenerateResponse` object. The following example uses an email address:
  
    `TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail(emailAddress).doNotGenerateTokensForOptedOut());`
 
@@ -91,7 +91,7 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
 1. Create an instance of PublisherUid2Helper as an instance variable:
 
     `private final PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);`
-2. When the user has authenticated, and has authorized the creation of a UID2, call a function that takes the user's email address or phone number as input and creates a secure request data envelope. See [Encrypting requests](https://unifiedid.com/docs/getting-started/gs-encryption-decryption#encrypting-requests). The following example uses an email address:
+2. Call a function that takes the user's email address or phone number as input and creates a secure request data envelope. See [Encrypting requests](https://unifiedid.com/docs/getting-started/gs-encryption-decryption#encrypting-requests). The following example uses an email address:
 
     `EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail(emailAddress).doNotGenerateTokensForOptedOut());`
 3. Using an HTTP client library of your choice, post this envelope to the [POST token/generate](https://unifiedid.com/docs/endpoints/post-token-generate) endpoint, including headers and body:
