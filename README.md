@@ -114,7 +114,7 @@ If you're using standard integration (client and server) (see [Client-Side JavaS
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
-    `tokenGenerateResponse.getIdentityJsonString()` //Note: this method will return null if the user has opted out, so be sure to handle that case.
+    `tokenGenerateResponse.getIdentityJsonString()` //Note: this method returns null if the user has opted out, so be sure to handle that case.
 
 #### Server-Only Integration
 
