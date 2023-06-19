@@ -48,22 +48,22 @@ If you're using the SDK's HTTP implementation, follow these steps.
  
    `TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail(emailAddress).doNotGenerateTokensForOptedOut());`
 
-   >IMPORTANT: Be sure to call this function only when you have obtained legal basis to convert the user’s [directly Identifying information (DII)](../ref-info/glossary-uid.md#gl-dii) to UID2 tokens for targeted advertising.
+   >IMPORTANT: Be sure to call this function only when you have obtained legal basis to convert the user’s [Directly Identifying Information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
    
-   >`doNotGenerateTokensForOptedOut` applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Without this, `policy` is omitted due to backwards compatibility.
+   >`doNotGenerateTokensForOptedOut()` applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Without this, `policy` is omitted to maintain backwards compatibility.
 #### Standard Integration
 
 If you're using standard integration (client and server) (see [Client-Side JavaScript SDK Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)), follow this step:
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
-    `tokenGenerateResponse.getIdentityJsonString()` //Note: this method returns null if the user has opted out, so be sure to handle that case.
+    `tokenGenerateResponse.getIdentityJsonString()` //Note: this method returns `null` if the user has opted out, so be sure to handle that case.
 
 #### Server-Only Integration
 
 If you're using server-only integration (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
-1. Store this identity as a JSON string in the user's session, using the `tokenGenerateResponse.getIdentityJsonString()` function. This method returns null if the user has opted out, so be sure to handle that case.
+1. Store this identity as a JSON string in the user's session, using the `tokenGenerateResponse.getIdentityJsonString()` function. This method returns `null` if the user has opted out, so be sure to handle that case.
 2. To retrieve the user's UID2 token, use:
 
    ```
@@ -84,7 +84,7 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
  
    `TokenRefreshResponse tokenRefreshResponse = publisherUid2Client.refreshToken(identity);`
  
-6. Store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method returns null, indicating that the user's identity should be removed from the session. To confirm optout, you can use the `tokenRefreshResponse.isOptout()` function.
+6. Store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method returns `null`, indicating that the user's identity should be removed from the session. To confirm optout, you can use the `tokenRefreshResponse.isOptout()` function.
 
 ### Advanced Usage
 
@@ -100,9 +100,9 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
       `.putHeader("Authorization", "Bearer " + UID2_API_KEY)`  
       `.putHeader("X-UID2-Client-Version", PublisherUid2Helper.getVersionHeader())`
    2. Body: `envelope.getEnvelope()`
-   >IMPORTANT: Be sure to call this endpoint only when you have obtained legal basis to convert the user’s [directly Identifying information (DII)](../ref-info/glossary-uid.md#gl-dii) to UID2 tokens for targeted advertising.
-      
-   >`doNotGenerateTokensForOptedOut` applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Without this, `policy` is omitted due to backwards compatibility.
+   >IMPORTANT: Be sure to call this endpoint only when you have obtained legal basis to convert the user’s [Directly Identifying Information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
+
+   >`doNotGenerateTokensForOptedOut()` applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Without this, `policy` is omitted to maintain backwards compatibility.
 
 4. If the HTTP response status code is _not_ 200, see [Response Status Codes](https://unifiedid.com/docs/endpoints/post-token-generate#response-status-codes) to determine next steps. Otherwise, convert the UID2 identity response content into a `TokenGenerateResponse` object:
 
@@ -114,13 +114,13 @@ If you're using standard integration (client and server) (see [Client-Side JavaS
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
-    `tokenGenerateResponse.getIdentityJsonString()` //Note: this method returns null if the user has opted out, so be sure to handle that case.
+    `tokenGenerateResponse.getIdentityJsonString() //Note: this method returns null if the user has opted out, so be sure to handle that case.`
 
 #### Server-Only Integration
 
 If you're using server-only integration (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
-1. Store this identity as a JSON string in the user's session, using: `tokenGenerateResponse.getIdentityJsonString()`. This method will return null if the user has opted out, so be sure to handle that case.
+1. Store this identity as a JSON string in the user's session, using: `tokenGenerateResponse.getIdentityJsonString()`. This method returns null if the user has opted out, so be sure to handle that case.
 2. To retrieve the user's UID2 token, use:
 
    ```
