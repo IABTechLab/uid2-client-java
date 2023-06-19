@@ -44,10 +44,13 @@ If you're using the SDK's HTTP implementation, follow these steps.
  
    `private final PublisherUid2Client publisherUid2Client = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);`
 
-2. When the user has authenticated, and has authorized the creation of a UID2, call a function that takes the user's email address or phone number as input and generates a `TokenGenerateResponse` object. The following example uses an email address:
+2. Next, call a function that takes the user's email address or phone number as input and generates a `TokenGenerateResponse` object. The following example uses an email address:
  
    `TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail(emailAddress).doNotGenerateTokensForOptedOut());`
- 
+
+   >IMPORTANT: Be sure to call this function only when you have obtained legal basis to convert the user’s [directly Identifying information (DII)](../ref-info/glossary-uid.md#gl-dii) to UID2 tokens for targeted advertising.
+   
+   >`doNotGenerateTokensForOptedOut` applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Without this, `policy` is omitted due to backwards compatibility.
 #### Standard Integration
 
 If you're using standard integration (client and server) (see [Client-Side JavaScript SDK Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)), follow this step:
@@ -90,13 +93,17 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
     `private final PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);`
 2. When the user has authenticated, and has authorized the creation of a UID2, call a function that takes the user's email address or phone number as input and creates a secure request data envelope. See [Encrypting requests](https://unifiedid.com/docs/getting-started/gs-encryption-decryption#encrypting-requests). The following example uses an email address:
 
-    `EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail(emailAddress));`
+    `EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail(emailAddress).doNotGenerateTokensForOptedOut());`
 3. Using an HTTP client library of your choice, post this envelope to the [POST token/generate](https://unifiedid.com/docs/endpoints/post-token-generate) endpoint, including headers and body:
    1. Headers: Depending on your HTTP library, this might look something like the following:  
     
       `.putHeader("Authorization", "Bearer " + UID2_API_KEY)`  
       `.putHeader("X-UID2-Client-Version", PublisherUid2Helper.getVersionHeader())`
    2. Body: `envelope.getEnvelope()`
+   >IMPORTANT: Be sure to call this endpoint only when you have obtained legal basis to convert the user’s [directly Identifying information (DII)](../ref-info/glossary-uid.md#gl-dii) to UID2 tokens for targeted advertising.
+      
+   >`doNotGenerateTokensForOptedOut` applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Without this, `policy` is omitted due to backwards compatibility.
+
 4. If the HTTP response status code is _not_ 200, see [Response Status Codes](https://unifiedid.com/docs/endpoints/post-token-generate#response-status-codes) to determine next steps. Otherwise, convert the UID2 identity response content into a `TokenGenerateResponse` object:
 
    `TokenGenerateResponse tokenGenerateResponse = publisherUid2Helper.createTokenGenerateResponse({response body}, envelope);`
