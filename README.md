@@ -44,25 +44,33 @@ If you're using the SDK's HTTP implementation, follow these steps.
  
    `private final PublisherUid2Client publisherUid2Client = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);`
 
-2. When the user has authenticated, and has authorized the creation of a UID2, call a function that takes the user's email address or phone number as input and generates an `IdentityTokens` object. The following example uses an email address:
+2. Call a function that takes the user's email address or phone number as input and generates a `TokenGenerateResponse` object. The following example uses an email address:
  
-   `IdentityTokens identity = publisherUid2Client.generateToken(TokenGenerateInput.fromEmail(emailAddress));`
- 
+   `TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail(emailAddress).doNotGenerateTokensForOptedOut());`
+
+   >IMPORTANT: Be sure to call this function only when you have obtained legal basis to convert the user’s [directly identifying information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
+   
+   >`doNotGenerateTokensForOptedOut()` applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Without this, `policy` is omitted to maintain backwards compatibility.
 #### Standard Integration
 
-If you're using standard integration (client and server) (see [Client-Side JavaScript SDK Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)), follow this step:
+If you're using standard integration (client and server) (see [UID2 SDK for JavaScript Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)), follow this step:
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
-    `identity.getJsonString()`
+    `tokenGenerateResponse.getIdentityJsonString()` //Note: this method returns `null` if the user has opted out, so be sure to handle that case.
 
 #### Server-Only Integration
 
 If you're using server-only integration (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
-1. Store this identity as a JSON string in the user's session, using the `identity.getJsonString()` function.
-2. To use the user's UID2 token, use the `identity.getAdvertisingToken()` function.
-3. When the user accesses another page, or on a timer, determine whether a refresh is needed:
+1. Store this identity as a JSON string in the user's session, using the `tokenGenerateResponse.getIdentityJsonString()` function. This method returns `null` if the user has opted out, so be sure to handle that case.
+2. To retrieve the user's UID2 token, use:
+
+   ```
+   IdentityTokens identity = tokenGenerateResponse.getIdentity();
+   if (identity != null) { String advertisingToken = identity.getAdvertisingToken(); }
+   ```
+4. When the user accesses another page, or on a timer, determine whether a refresh is needed:
    1. Retrieve the identity JSON string from the user's session, and then call the following function that takes the identity information as input and generates an `IdentityTokens` object:
 
       `IdentityTokens identity = IdentityTokens.fromJsonString(identityJsonString);`
@@ -72,44 +80,53 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
    3. Determine if a refresh is needed:
 
       `if (identity.isDueForRefresh()) {..}`
-4. If needed, refresh the token and associated values:
+5. If needed, refresh the token and associated values:
  
    `TokenRefreshResponse tokenRefreshResponse = publisherUid2Client.refreshToken(identity);`
  
-5. Store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method returns null, indicating that the user's identity should be removed from the session. To confirm optout, you can use the `tokenRefreshResponse.isOptout()` function.
+6. Store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method returns `null`, indicating that the user's identity should be removed from the session. To confirm optout, you can use the `tokenRefreshResponse.isOptout()` function.
 
 ### Advanced Usage
 
 1. Create an instance of PublisherUid2Helper as an instance variable:
 
     `private final PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);`
-2. When the user has authenticated, and has authorized the creation of a UID2, call a function that takes the user's email address or phone number as input and creates a secure request data envelope. See [Encrypting requests](https://unifiedid.com/docs/getting-started/gs-encryption-decryption#encrypting-requests). The following example uses an email address:
+2. Call a function that takes the user's email address or phone number as input and creates a secure request data envelope. See [Encrypting requests](https://unifiedid.com/docs/getting-started/gs-encryption-decryption#encrypting-requests). The following example uses an email address:
 
-    `EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail(emailAddress));`
+    `EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail(emailAddress).doNotGenerateTokensForOptedOut());`
 3. Using an HTTP client library of your choice, post this envelope to the [POST token/generate](https://unifiedid.com/docs/endpoints/post-token-generate) endpoint, including headers and body:
    1. Headers: Depending on your HTTP library, this might look something like the following:  
     
       `.putHeader("Authorization", "Bearer " + UID2_API_KEY)`  
       `.putHeader("X-UID2-Client-Version", PublisherUid2Helper.getVersionHeader())`
    2. Body: `envelope.getEnvelope()`
-4. If the HTTP response status code is _not_ 200, see [Response Status Codes](https://unifiedid.com/docs/endpoints/post-token-generate#response-status-codes) to determine next steps. Otherwise, convert the UID2 identity response content into an `IdentityTokens` object:
+   >IMPORTANT: Be sure to call this endpoint only when you have obtained legal basis to convert the user’s [directly identifying information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
 
-   `IdentityTokens identity = publisherUid2Helper.createIdentityfromTokenGenerateResponse({response body}, envelope);`
+   >`doNotGenerateTokensForOptedOut()` applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Without this, `policy` is omitted to maintain backwards compatibility.
+
+4. If the HTTP response status code is _not_ 200, see [Response Status Codes](https://unifiedid.com/docs/endpoints/post-token-generate#response-status-codes) to determine next steps. Otherwise, convert the UID2 identity response content into a `TokenGenerateResponse` object:
+
+   `TokenGenerateResponse tokenGenerateResponse = publisherUid2Helper.createTokenGenerateResponse({response body}, envelope);`
 
 #### Standard Integration
 
-If you're using standard integration (client and server) (see [Client-Side JavaScript SDK Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)):
+If you're using standard integration (client and server) (see [UID2 SDK for JavaScript Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)):
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
-    `identity.getJsonString()`
+    `tokenGenerateResponse.getIdentityJsonString() //Note: this method returns null if the user has opted out, so be sure to handle that case.`
 
 #### Server-Only Integration
 
 If you're using server-only integration (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
-1. Store this identity as a JSON string in the user's session, using: `identity.getJsonString()`.
-2. To use the user's UID2 token, use `identity.getAdvertisingToken()`.
+1. Store this identity as a JSON string in the user's session, using: `tokenGenerateResponse.getIdentityJsonString()`. This method returns null if the user has opted out, so be sure to handle that case.
+2. To retrieve the user's UID2 token, use:
+
+   ```
+   IdentityTokens identity = tokenGenerateResponse.getIdentity();
+   if (identity != null) { String advertisingToken = identity.getAdvertisingToken(); }
+   ```
 
 3. When the user accesses another page, or on a timer, determine whether a refresh is needed:
    1. Retrieve the identity JSON string from the user's session, and then call the following function that generates an `IdentityTokens` object:
