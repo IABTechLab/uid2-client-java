@@ -53,7 +53,7 @@ If you're using the SDK's HTTP implementation, follow these steps.
    >`doNotGenerateTokensForOptedOut()` applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Without this, `policy` is omitted to maintain backwards compatibility.
 #### Standard Integration
 
-If you're using standard integration (client and server) (see [Client-Side JavaScript SDK Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)), follow this step:
+If you're using standard integration (client and server) (see [UID2 SDK for JavaScript Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)), follow this step:
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
@@ -110,7 +110,7 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
 
 #### Standard Integration
 
-If you're using standard integration (client and server) (see [Client-Side JavaScript SDK Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)):
+If you're using standard integration (client and server) (see [UID2 SDK for JavaScript Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)):
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
