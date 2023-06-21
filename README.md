@@ -48,7 +48,7 @@ If you're using the SDK's HTTP implementation, follow these steps.
  
    `TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail(emailAddress).doNotGenerateTokensForOptedOut());`
 
-   >IMPORTANT: Be sure to call this function only when you have obtained legal basis to convert the user’s [Directly Identifying Information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
+   >IMPORTANT: Be sure to call this function only when you have obtained legal basis to convert the user’s [directly identifying information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
    
    >`doNotGenerateTokensForOptedOut()` applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Without this, `policy` is omitted to maintain backwards compatibility.
 #### Standard Integration
@@ -100,7 +100,7 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
       `.putHeader("Authorization", "Bearer " + UID2_API_KEY)`  
       `.putHeader("X-UID2-Client-Version", PublisherUid2Helper.getVersionHeader())`
    2. Body: `envelope.getEnvelope()`
-   >IMPORTANT: Be sure to call this endpoint only when you have obtained legal basis to convert the user’s [Directly Identifying Information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
+   >IMPORTANT: Be sure to call this endpoint only when you have obtained legal basis to convert the user’s [directly identifying information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
 
    >`doNotGenerateTokensForOptedOut()` applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Without this, `policy` is omitted to maintain backwards compatibility.
 
