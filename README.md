@@ -1,5 +1,7 @@
 # UID2 SDK for Java
 
+Testing email PR notification. Ignore this change!!!!!!!!!!!!!!!!!!!!!
+
 The UID 2 Project is subject to the IAB Tech Lab Intellectual Property Rights (IPR) Policy, and is managed by the IAB Tech Lab Addressability Working Group and [Privacy & Rearc Commit Group](https://iabtechlab.com/working-groups/privacy-rearc-commit-group/). Please review the [governance rules](https://github.com/IABTechLab/uid2-core/blob/master/Software%20Development%20and%20Release%20Procedures.md).
 
 This document includes:

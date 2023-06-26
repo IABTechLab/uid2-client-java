@@ -115,7 +115,6 @@ class Uid2TokenGenerator {
 
         if (adTokenVersion == AdvertisingTokenVersion.V4) {
             return Uid2Base64UrlCoder.encode(rootWriter.array());
-
         }
         else {
             return Base64.getEncoder().encodeToString(rootWriter.array());
