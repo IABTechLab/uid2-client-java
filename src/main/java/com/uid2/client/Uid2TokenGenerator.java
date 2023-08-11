@@ -108,7 +108,7 @@ class Uid2TokenGenerator {
         char firstChar = uid.charAt(0);
         IdentityType identityType = (firstChar == 'F' || firstChar == 'B') ? IdentityType.Phone : IdentityType.Email; //see UID2-79+Token+and+ID+format+v3
 
-        rootWriter.put((byte)((params.identityScope << 4) | (identityType.value << 2)));
+        rootWriter.put((byte)((params.identityScope << 4) | (identityType.value << 2) | 3));
         rootWriter.put((byte)adTokenVersion.value());
         rootWriter.putInt((int)masterKey.getId());
         rootWriter.put(encryptedMasterPayload);
