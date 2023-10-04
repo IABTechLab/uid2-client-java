@@ -40,7 +40,7 @@ class KeyParser {
                 tokenExpirySeconds = defaultTokenExpiryDays * 24 * 60 * 60;
             }
 
-            JsonArray keysJson = body.get("keys").getAsJsonArray();
+            JsonArray keysJson = isNull(body.get("keys")) ? new JsonArray() : body.get("keys").getAsJsonArray();
 
             List<Key> keys = new ArrayList<>();
             for (JsonElement element : keysJson) {
@@ -62,10 +62,15 @@ class KeyParser {
 
     static private int getAsInt(JsonObject body, String memberName) {
         JsonElement element = body.get(memberName);
-        return element == null ? 0 : element.getAsInt();
+        return isNull(element) ? 0 : element.getAsInt();
     }
+
     static private long getAsLong(JsonObject body, String memberName) {
         JsonElement element = body.get(memberName);
-        return element == null ? 0 : element.getAsLong();
+        return isNull(element) ? 0 : element.getAsLong();
+    }
+
+    static private boolean isNull(JsonElement jo) {
+        return jo == null || jo.isJsonNull();
     }
 }
