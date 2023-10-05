@@ -81,7 +81,7 @@ public class KeyParserTests {
     }
 
     @Test
-    public void parseWithNullField() {
+    public void parseWithNullTokenExpirySecondField() {
         String s = "{ \"body\": { " +
                 "\"caller_site_id\": 11, " +
                 "\"token_expiry_seconds\": null " +
@@ -95,7 +95,7 @@ public class KeyParserTests {
     }
 
     @Test
-    public void parseWithMissingField() {
+    public void parseWithMissingTokenExpirySecondField() {
         String s = "{ \"body\": { " +
                 "\"caller_site_id\": 11 " +
                 "}, " +
