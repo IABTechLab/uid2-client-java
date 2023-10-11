@@ -88,7 +88,7 @@ public class TokenGenerateInput {
             json.addProperty("tcf_consent_string", tcString);
         }
         if(!generateForOptedOut){
-            json.addProperty("policy", 1);
+            json.addProperty("optout_check", 1);
         }
         return json.toString();
     }

@@ -50,7 +50,7 @@ If you're using the SDK's HTTP implementation, follow these steps.
 
    >IMPORTANT: Be sure to call this function only when you have obtained legal basis to convert the user’s [directly identifying information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
    
-   >`doNotGenerateTokensForOptedOut()` applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Without this, `policy` is omitted to maintain backwards compatibility.
+   >`doNotGenerateTokensForOptedOut()` applies `optout_check=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate) call. Without this, `optout_check` is omitted to maintain backwards compatibility.
 #### Standard Integration
 
 If you're using standard integration (client and server) (see [UID2 SDK for JavaScript Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)), follow this step:
@@ -102,7 +102,7 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
    2. Body: `envelope.getEnvelope()`
    >IMPORTANT: Be sure to call this endpoint only when you have obtained legal basis to convert the user’s [directly identifying information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
 
-   >`doNotGenerateTokensForOptedOut()` applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Without this, `policy` is omitted to maintain backwards compatibility.
+   >`doNotGenerateTokensForOptedOut()` applies `optout_check=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate) call. Without this, `optout_check` is omitted to maintain backwards compatibility.
 
 4. If the HTTP response status code is _not_ 200, see [Response Status Codes](https://unifiedid.com/docs/endpoints/post-token-generate#response-status-codes) to determine next steps. Otherwise, convert the UID2 identity response content into a `TokenGenerateResponse` object:
 
