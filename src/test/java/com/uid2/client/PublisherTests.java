@@ -43,7 +43,7 @@ class PublisherIntegrationTests {
 
     @Test //this test requires these env vars to be configured: UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY
     public void integrationOptOut() {
-        TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail("optout@email.com"));
+        TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail("refresh-optout@example.com"));
         assertFalse(tokenGenerateResponse.isOptout());
         IdentityTokens identity = tokenGenerateResponse.getIdentity();
         assertNotNull(identity);
@@ -435,7 +435,7 @@ class PublisherTests {
 
     @Test
     public void optOutRefreshResponse() {
-        final String refreshResponseKey = "WL0AYr41Db9m6dCIPtQlTz2kE4NMx3nLmloGHkQPGSQ="; //derived by sending "optout@email.com" in a token generate request
+        final String refreshResponseKey = "WL0AYr41Db9m6dCIPtQlTz2kE4NMx3nLmloGHkQPGSQ="; //derived by sending "refresh-optout@example.com" in a token generate request
         final String encryptedRefreshOptOutResponse = "d9I6qCdlJ6mkWYLyw2iGnCnJ5OocyQDtbbvW6YXAYKpxTXaOePQzPPJIrHnI7Io="; //derived by sending a refresh request using the refresh token from the generate request above
 
         JsonObject json = new Gson().fromJson(expectedDecryptedJsonForTokenGenerateResponse, JsonObject.class);
@@ -452,7 +452,7 @@ class PublisherTests {
 
     @Test
     public void optOutGenerateTokenResponse() {
-        EnvelopeV2 envelope = createEnvelopeForTokenGenerateRequest(IdentityType.Email, "optout@email.com", null, true);
+        EnvelopeV2 envelope = createEnvelopeForTokenGenerateRequest(IdentityType.Email, "refresh-optout@example.com", null, true);
         final String encryptedOptOutResponse = encrypt("{\"status\":\"optout\"}");
         TokenGenerateResponse tokenGenerateResponse = publisherUid2Helper.createTokenGenerateResponse(encryptedOptOutResponse, envelope);
         assertTrue(tokenGenerateResponse.isOptout());
