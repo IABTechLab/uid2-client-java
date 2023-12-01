@@ -518,7 +518,7 @@ class PublisherTests {
         TokenGenerateInput input = TokenGenerateInput.fromEmail("test@example.com").doNotGenerateTokensForOptedOut();
 
         JsonObject json = new Gson().fromJson(input.getAsJsonString(), JsonObject.class);
-        assertEquals(1, json.get("policy").getAsInt());
+        assertEquals(1, json.get("optout_check").getAsInt());
     }
 
     private String encrypt(String body) {
