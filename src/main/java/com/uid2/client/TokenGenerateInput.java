@@ -51,6 +51,7 @@ public class TokenGenerateInput {
         return this;
     }
 
+    // Always use .doNotGenerateTokensForOptedOut(), which applies policy=1. Support for policy=0 will be removed soon.
     public TokenGenerateInput doNotGenerateTokensForOptedOut() {
         generateForOptedOut = false;
         return this;
