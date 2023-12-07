@@ -75,7 +75,10 @@ public class PublisherUid2Client {
     
     private static String getResponse(Response response) {
         try {
-            return response.body() != null ? response.body().string() : "";
+            if(response == null) {
+                return "empty response";
+            }
+            return response.body() != null ? response.body().string() : response.toString();
         } catch (IOException e) {
             throw new Uid2Exception("Error communicating with api endpoint", e);
         }
