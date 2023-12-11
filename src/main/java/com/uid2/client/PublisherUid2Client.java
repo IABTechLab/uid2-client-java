@@ -70,7 +70,7 @@ public class PublisherUid2Client {
 
         try {
             if(response == null) {
-                responseString = "empty response";
+                throw new Uid2Exception("Response is null");
             }
             else {
                 responseString = response.body() != null ? response.body().string() : response.toString();
