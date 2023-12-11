@@ -35,10 +35,6 @@ public class PublisherUid2Client {
 
         try (Response response = client.newCall(request).execute()) {
             final String responseString = getResponse(response);
-            if (!response.isSuccessful()) {
-                throw new Uid2Exception("Unexpected code " + responseString);
-            }
-            
             return publisherUid2Helper.createIdentityfromTokenGenerateResponse(responseString, envelope);
         } catch (IOException e) {
             throw new Uid2Exception("error communicating with api endpoint", e);
@@ -62,11 +58,6 @@ public class PublisherUid2Client {
 
         try (Response response = client.newCall(request).execute()) {
             final String responseString = getResponse(response);
-            
-            if (!response.isSuccessful()) {
-                throw new Uid2Exception("Unexpected code " + responseString);
-            }
-            
             return publisherUid2Helper.createTokenGenerateResponse(responseString, envelope);
         } catch (IOException e) {
             throw new Uid2Exception("Error communicating with api endpoint", e);
@@ -74,11 +65,20 @@ public class PublisherUid2Client {
     }
     
     private static String getResponse(Response response) {
+
+        String responseString = "";
+
         try {
             if(response == null) {
-                return "empty response";
+                responseString = "empty response";
             }
-            return response.body() != null ? response.body().string() : response.toString();
+            else {
+                responseString = response.body() != null ? response.body().string() : response.toString();
+                if (!response.isSuccessful()) {
+                    throw new Uid2Exception("Unexpected code " + responseString);
+                }
+            }
+            return responseString;
         } catch (IOException e) {
             throw new Uid2Exception("Error communicating with api endpoint", e);
         }
@@ -98,9 +98,7 @@ public class PublisherUid2Client {
 
         try (Response response = client.newCall(request).execute()) {
             final String responseString = getResponse(response);
-            if (!response.isSuccessful()) {
-                throw new Uid2Exception("Unexpected code " + response + " " + responseString);
-            }
+
 
             return PublisherUid2Helper.createTokenRefreshResponse(responseString, currentIdentity);
         } catch (IOException e) {
