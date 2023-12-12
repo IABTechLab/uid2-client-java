@@ -33,13 +33,8 @@ public class PublisherUid2Client {
                 .post(RequestBody.create(envelope.getEnvelope(), FORM))
                 .build();
 
-
         try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                throw new Uid2Exception("Unexpected code " + response);
-            }
-
-            String responseString = response.body().string();
+            final String responseString = getResponse(response);
             return publisherUid2Helper.createIdentityfromTokenGenerateResponse(responseString, envelope);
         } catch (IOException e) {
             throw new Uid2Exception("error communicating with api endpoint", e);
@@ -62,16 +57,32 @@ public class PublisherUid2Client {
 
 
         try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                throw new Uid2Exception("Unexpected code " + response);
-            }
-
-            String responseString = response.body() != null ? response.body().string() : "";
+            final String responseString = getResponse(response);
             return publisherUid2Helper.createTokenGenerateResponse(responseString, envelope);
         } catch (IOException e) {
             throw new Uid2Exception("Error communicating with api endpoint", e);
         }
     }
+    
+    private static String getResponse(Response response) {
+
+        String responseString = "";
+
+        try {
+            if(response == null) {
+                throw new Uid2Exception("Response is null");
+            }
+            else {
+                responseString = response.body() != null ? response.body().string() : response.toString();
+                if (!response.isSuccessful()) {
+                    throw new Uid2Exception("Unexpected code " + responseString);
+                }
+            }
+            return responseString;
+        } catch (IOException e) {
+            throw new Uid2Exception("Error communicating with api endpoint", e);
+        }
+    } 
 
     /**
      * @param currentIdentity the current IdentityTokens instance, typically retrieved from a user's session
@@ -86,10 +97,8 @@ public class PublisherUid2Client {
 
 
         try (Response response = client.newCall(request).execute()) {
-            final String responseString = response.body() != null ? response.body().string() : "";
-            if (!response.isSuccessful()) {
-                throw new Uid2Exception("Unexpected code " + response + " " + responseString);
-            }
+            final String responseString = getResponse(response);
+
 
             return PublisherUid2Helper.createTokenRefreshResponse(responseString, currentIdentity);
         } catch (IOException e) {
