@@ -21,7 +21,6 @@ on:
       publish_vulnerabilities:
         type: string
         default: 'true'
-  pull_request:
 
 jobs:
   build-and-pubish:
