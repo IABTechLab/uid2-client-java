@@ -50,10 +50,11 @@ If you're using the SDK's HTTP implementation, follow these steps.
 
    >IMPORTANT: Be sure to call this function only when you have obtained legal basis to convert the user’s [directly identifying information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
    
-   >IMPORTANT: Always apply `doNotGenerateTokensForOptedOut()`. This applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Support for `policy=0` will be removed soon.
+   >IMPORTANT: Always apply `doNotGenerateTokensForOptedOut()`. This applies a parameter similar to setting `optout_check=1` in the call to the POST /token/generate endpoint (see [Unencrypted JSON Body Parameters](https://unifiedid.com/docs/endpoints/post-token-generate#unencrypted-json-body-parameters)).
+
 #### Standard Integration
 
-If you're using standard integration (client and server) (see [UID2 SDK for JavaScript Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)), follow this step:
+If you're using standard integration (client and server) (see [JavaScript Standard Integration Guide](https://unifiedid.com/docs/guides/integration-javascript-standard)), follow this step:
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
@@ -110,7 +111,7 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
    2. Body: `envelope.getEnvelope()`
    >IMPORTANT: Be sure to call this endpoint only when you have obtained legal basis to convert the user’s [directly identifying information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
 
-   >IMPORTANT: Always apply `doNotGenerateTokensForOptedOut()`. This applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Support for `policy=0` will be removed soon.
+   >IMPORTANT: Always apply `doNotGenerateTokensForOptedOut()`. This applies a parameter similar to setting `optout_check=1` in the call to the POST /token/generate endpoint (see [Unencrypted JSON Body Parameters](https://unifiedid.com/docs/endpoints/post-token-generate#unencrypted-json-body-parameters)).
 
 4. If the HTTP response status code is _not_ 200, see [Response Status Codes](https://unifiedid.com/docs/endpoints/post-token-generate#response-status-codes) to determine next steps. Otherwise, convert the UID2 identity response content into a `TokenGenerateResponse` object:
 
@@ -118,7 +119,7 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
 
 #### Standard Integration
 
-If you're using standard integration (client and server) (see [UID2 SDK for JavaScript Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)):
+If you're using standard integration (client and server) (see [JavaScript Standard Integration Guide](https://unifiedid.com/docs/guides/integration-javascript-standard)):
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
