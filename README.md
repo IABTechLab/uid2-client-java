@@ -50,20 +50,27 @@ If you're using the SDK's HTTP implementation, follow these steps.
 
    >IMPORTANT: Be sure to call this function only when you have obtained legal basis to convert the user’s [directly identifying information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
    
-   >IMPORTANT: Always apply `doNotGenerateTokensForOptedOut()`. This applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Support for `policy=0` will be removed soon.
+   >IMPORTANT: Always apply `doNotGenerateTokensForOptedOut()`. This applies a parameter similar to setting `optout_check=1` in the call to the POST /token/generate endpoint (see [Unencrypted JSON Body Parameters](https://unifiedid.com/docs/endpoints/post-token-generate#unencrypted-json-body-parameters)).
+
 #### Standard Integration
 
-If you're using standard integration (client and server) (see [UID2 SDK for JavaScript Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)), follow this step:
+If you're using standard integration (client and server) (see [JavaScript Standard Integration Guide](https://unifiedid.com/docs/guides/integration-javascript-standard)), follow this step:
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
-    `tokenGenerateResponse.getIdentityJsonString()` //Note: this method returns `null` if the user has opted out, so be sure to handle that case.
+    ```
+    tokenGenerateResponse.getIdentityJsonString()
+    ```
+        
+    >NOTE: If the user has opted out, this method returns `null`, so be sure to handle that case.
 
 #### Server-Only Integration
 
 If you're using server-only integration (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
-1. Store this identity as a JSON string in the user's session, using the `tokenGenerateResponse.getIdentityJsonString()` function. This method returns `null` if the user has opted out, so be sure to handle that case.
+1. Store this identity as a JSON string in the user's session, using the `tokenGenerateResponse.getIdentityJsonString()` function.
+
+   If the user has opted out, this method returns `null`, so be sure to handle that case.
 2. To retrieve the user's UID2 token, use:
 
    ```
@@ -84,7 +91,9 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
  
    `TokenRefreshResponse tokenRefreshResponse = publisherUid2Client.refreshToken(identity);`
  
-6. Store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method returns `null`, indicating that the user's identity should be removed from the session. To confirm optout, you can use the `tokenRefreshResponse.isOptout()` function.
+6. Store `tokenRefreshResponse.getIdentityJsonString()` in the user's session.
+
+   If the user has opted out, this method returns `null`, indicating that the user's identity should be removed from the session. To confirm optout, you can use the `tokenRefreshResponse.isOptout()` function.
 
 ### Advanced Usage
 
@@ -102,7 +111,7 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
    2. Body: `envelope.getEnvelope()`
    >IMPORTANT: Be sure to call this endpoint only when you have obtained legal basis to convert the user’s [directly identifying information (DII)](https://unifiedid.com/docs/ref-info/glossary-uid#gl-dii) to UID2 tokens for targeted advertising.
 
-   >IMPORTANT: Always apply `doNotGenerateTokensForOptedOut()`. This applies `policy=1` in the [/token/generate](https://unifiedid.com/docs/endpoints/post-token-generate#token-generation-policy) call. Support for `policy=0` will be removed soon.
+   >IMPORTANT: Always apply `doNotGenerateTokensForOptedOut()`. This applies a parameter similar to setting `optout_check=1` in the call to the POST /token/generate endpoint (see [Unencrypted JSON Body Parameters](https://unifiedid.com/docs/endpoints/post-token-generate#unencrypted-json-body-parameters)).
 
 4. If the HTTP response status code is _not_ 200, see [Response Status Codes](https://unifiedid.com/docs/endpoints/post-token-generate#response-status-codes) to determine next steps. Otherwise, convert the UID2 identity response content into a `TokenGenerateResponse` object:
 
@@ -110,17 +119,23 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
 
 #### Standard Integration
 
-If you're using standard integration (client and server) (see [UID2 SDK for JavaScript Integration Guide](https://unifiedid.com/docs/guides/publisher-client-side)):
+If you're using standard integration (client and server) (see [JavaScript Standard Integration Guide](https://unifiedid.com/docs/guides/integration-javascript-standard)):
 
 * Send this identity as a JSON string back to the client (to use in the [identity field](https://unifiedid.com/docs/sdks/client-side-identity#initopts-object-void)) using the following:
 
-    `tokenGenerateResponse.getIdentityJsonString() //Note: this method returns null if the user has opted out, so be sure to handle that case.`
+    ```
+    tokenGenerateResponse.getIdentityJsonString()
+    ```
+
+    >NOTE: If the user has opted out, this method returns `null`, so be sure to handle that case.
 
 #### Server-Only Integration
 
 If you're using server-only integration (see [Publisher Integration Guide, Server-Only](https://unifiedid.com/docs/guides/custom-publisher-integration)):
 
-1. Store this identity as a JSON string in the user's session, using: `tokenGenerateResponse.getIdentityJsonString()`. This method returns null if the user has opted out, so be sure to handle that case.
+1. Store this identity as a JSON string in the user's session, using: `tokenGenerateResponse.getIdentityJsonString()`.
+
+   If the user has opted out, this method returns null, so be sure to handle that case.
 2. To retrieve the user's UID2 token, use:
 
    ```
@@ -131,13 +146,22 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
 3. When the user accesses another page, or on a timer, determine whether a refresh is needed:
    1. Retrieve the identity JSON string from the user's session, and then call the following function that generates an `IdentityTokens` object:
    
-       `IdentityTokens identity = IdentityTokens.fromJsonString(identityJsonString);`
+       ```
+       IdentityTokens identity = IdentityTokens.fromJsonString(identityJsonString);
+       ```
+   
    2. Determine if the identity can be refreshed (that is, the refresh token hasn't expired): 
-    
-      ` if (identity == null || !identity.isRefreshable()) { we must no longer use this identity (for example, remove this identity from the user's session) }`
+   
+       ```
+       if (identity == null || !identity.isRefreshable()) { we must no longer use this identity (for example, remove this identity from the user's session) }
+       ```
+   
    3. Determine if a refresh is needed:
    
-      `if (identity.isDueForRefresh()) {..}`
+       ```
+       if (identity.isDueForRefresh()) {..}
+       ```
+   
 4. If a refresh is needed, call the [POST token/refresh](https://unifiedid.com/docs/endpoints/post-token-refresh) endpoint, with:
    1. Headers (depending on your HTTP library, this might look something like):
     
@@ -146,8 +170,13 @@ If you're using server-only integration (see [Publisher Integration Guide, Serve
    2. Body: `identity.getRefreshToken()`
 5. If the refresh HTTP response status code is 200:
 
-   `TokenRefreshResponse tokenRefreshResponse = PublisherUid2Helper.createTokenRefreshResponse({response body}, identity);`
-6. Store `tokenRefreshResponse.getIdentityJsonString()` in the user's session. If the user has opted out, this method returns null, indicating that the user's identity should be removed from the session. To confirm optout, you can use the `tokenRefreshResponse.isOptout()` function.
+   ```
+   TokenRefreshResponse tokenRefreshResponse = PublisherUid2Helper.createTokenRefreshResponse({response body}, identity);
+   ```
+
+6. Store `tokenRefreshResponse.getIdentityJsonString()` in the user's session.
+
+   If the user has opted out, this method returns null, indicating that the user's identity should be removed from the session. To confirm optout, you can use the `tokenRefreshResponse.isOptout()` function.
 
 ## Usage for UID2 Sharers
 
@@ -155,21 +184,38 @@ A UID2 sharer is a participant that wants to share UID2s or EUIDs with another p
 
 1. Use UID2ClientFactory.create() to create an IUID2Client reference:
  
-   `private final IUID2Client client = UID2ClientFactory.create(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);`
+   ```
+   private final IUID2Client client = UID2ClientFactory.create(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);
+   ```
+
 2. Call IUID2Client.refresh once at startup, and then periodically (for example, every hour):
 
-   `client.refresh();`
+   ```
+   client.refresh();
+   ```
+
 3. Senders: 
    1. Call the following:
 
-      `EncryptionDataResponse encrypted = client.encrypt(rawUid);`
+      ```
+      EncryptionDataResponse encrypted = client.encrypt(rawUid);
+      ```
+   
    2. If encryption succeeded, send the UID2 token to the receiver:   
 
-      `if (encrypted.isSuccess()) {` send `encrypted.getEncryptedData()` to receiver`} else {`check `encrypted.getStatus()` for the failure reason} 
+      ```
+      if (encrypted.isSuccess()) {` send `encrypted.getEncryptedData()` to receiver`} else {`check `encrypted.getStatus()` for the failure reason}
+      ```
+
 4. Receivers: 
    1. Call the following:
 
-      `DecryptionResponse decrypted = client.decrypt(uidToken);`
+      ```
+      DecryptionResponse decrypted = client.decrypt(uidToken);
+      ```
+   
    2. If decryption succeeded, use the raw UID2:
     
-      `if (decrypted.isSuccess()) {`use `decrypted.getUid() } else {`check `decrypted.getStatus()` for the failure reason `}`
+      ```
+      if (decrypted.isSuccess()) {`use `decrypted.getUid() } else {`check `decrypted.getStatus()` for the failure reason `}
+      ```
