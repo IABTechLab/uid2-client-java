@@ -39,7 +39,7 @@ public class UID2Client implements IUID2Client {
             httpsConnection.setDoInput(true);
             httpsConnection.setDoOutput(true);
             httpsConnection.setRequestProperty("Authorization", "Bearer " + this.authKey);
-            httpsConnection.setRequestProperty("X-UID2-Client-Version", "java-" + PublisherUid2Helper.getArtifactAndVersion());
+            httpsConnection.setRequestProperty("X-UID2-Client-Version", "java-" + Uid2Helper.getArtifactAndVersion());
 
             try(OutputStream os = httpsConnection.getOutputStream()) {
                 os.write(request.envelope);
