@@ -34,12 +34,30 @@ public class Uid2ClientHelper {
                 throw new Uid2Exception("Unexpected code " + response);
             }
 
-            return response.body().string();
+            return getResponse(response);
         } catch (IOException e) {
             throw new Uid2Exception("error communicating with api endpoint", e);
         }
     }
 
+    private static String getResponse(Response response) {
+        String responseString;
+
+        try {
+            if(response == null) {
+                throw new Uid2Exception("Response is null");
+            }
+            else {
+                responseString = response.body() != null ? response.body().string() : response.toString();
+                if (!response.isSuccessful()) {
+                    throw new Uid2Exception("Unexpected code " + responseString);
+                }
+            }
+            return responseString;
+        } catch (IOException e) {
+            throw new Uid2Exception("Error communicating with api endpoint", e);
+        }
+    }
 
     private final OkHttpClient client = new OkHttpClient();
     private final String uid2BaseUrl;
