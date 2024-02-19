@@ -4,12 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 public class IdentityMapResponse {
-    IdentityMapResponse(String response) {
+    IdentityMapResponse(String response, IdentityMapInput identityMapInput) {
         JsonObject responseJson = new Gson().fromJson(response, JsonObject.class);
         status = responseJson.get("status").getAsString();
 
@@ -22,13 +20,17 @@ public class IdentityMapResponse {
         JsonArray mapped = body.get("mapped").getAsJsonArray();
         for (JsonElement identity  : mapped) {
             JsonObject identityObject = identity.getAsJsonObject();
-            mappedIdentities.add(new MappedIdentity(getJsonString(identityObject, "identifier"), getJsonString(identityObject, "advertising_id"), getJsonString(identityObject, "bucket_id")));
+            String identifier = getJsonString(identityObject, "identifier");
+            String rawDii = identityMapInput.getRawDii(identifier);
+            mappedIdentities.put(rawDii, new MappedIdentity(getJsonString(identityObject, "advertising_id"), getJsonString(identityObject, "bucket_id")));
         }
 
         JsonArray unmapped = body.get("unmapped").getAsJsonArray();
         for (JsonElement identity  : unmapped) {
             JsonObject identityObject = identity.getAsJsonObject();
-            unmappedIdentities.add(new UnmappedIdentity(getJsonString(identityObject, "identifier"), getJsonString(identityObject, "reason")));
+            String identifier = getJsonString(identityObject, "identifier");
+            String rawDii = identityMapInput.getRawDii(identifier);
+            unmappedIdentities.put(rawDii, new UnmappedIdentity(getJsonString(identityObject, "reason")));
         }
 
     }
@@ -41,31 +43,25 @@ public class IdentityMapResponse {
     }
 
     static public class MappedIdentity {
-        public MappedIdentity(String identifier, String rawUid, String bucketId) {
-            this.identifier = identifier;
+        public MappedIdentity(String rawUid, String bucketId) {
             this.rawUid = rawUid;
             this.bucketId = bucketId;
         }
 
-        public String getIdentifier() {return identifier;}
         public String getRawUid() {return rawUid;}
         public String getBucketId() {return bucketId;}
 
-        private final String identifier;
         private final String rawUid;
         private final String bucketId;
     }
 
     static public class UnmappedIdentity {
-        public UnmappedIdentity(String identifier, String reason) {
-            this.identifier = identifier;
+        public UnmappedIdentity(String reason) {
             this.reason = reason;
         }
 
-        public String getIdentifier() {return identifier;}
         public String getReason() {return reason;}
 
-        private final String identifier;
         private final String reason;
     }
 
@@ -74,15 +70,15 @@ public class IdentityMapResponse {
         return keyElem.getAsString();
     }
 
-    public List<MappedIdentity> getMappedIdentities() {
+    public HashMap<String, MappedIdentity> getMappedIdentities() {
         return mappedIdentities;
     }
 
-    public List<UnmappedIdentity> getUnmappedIdentities() {
+    public HashMap<String, UnmappedIdentity> getUnmappedIdentities() {
         return unmappedIdentities;
     }
 
     private final String status;
-    private final List<MappedIdentity> mappedIdentities = new ArrayList<>();
-    private final List<UnmappedIdentity> unmappedIdentities = new ArrayList<>();
+    private final HashMap<String, MappedIdentity> mappedIdentities = new HashMap<>();
+    private final HashMap<String, UnmappedIdentity> unmappedIdentities = new HashMap<>();
 }

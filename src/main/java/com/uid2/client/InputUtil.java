@@ -33,6 +33,15 @@ public class InputUtil { //from https://github.com/IABTechLab/uid2-operator/blob
     return totalDigits >= MIN_PHONENUMBER_DIGITS && totalDigits <= MAX_PHONENUMBER_DIGITS;
   }
 
+  public static String normalizeAndHashEmail(String unnormalizedEmail) {
+    String normalizedEmail = InputUtil.normalizeEmailString(unnormalizedEmail);
+    if (normalizedEmail == null) {
+      throw new IllegalArgumentException("invalid email address: " + unnormalizedEmail);
+    }
+    return InputUtil.getBase64EncodedHash(normalizedEmail);
+  }
+
+
   static String normalizeEmailString(String email) {
     final StringBuilder preSb = new StringBuilder();
     final StringBuilder preSbSpecialized = new StringBuilder();
