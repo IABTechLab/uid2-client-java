@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 //most tests in this class require these env vars to be configured: UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY
 @EnabledIfEnvironmentVariable(named = "UID2_BASE_URL", matches = "\\S+")
 public class IdentityMapIntegrationTests {
-    final IdentityMapClient identityMapClient = new IdentityMapClient(System.getenv("UID2_BASE_URL"), System.getenv("UID2_API_KEY"), System.getenv("UID2_SECRET_KEY"));
+    final private IdentityMapClient identityMapClient = new IdentityMapClient(System.getenv("UID2_BASE_URL"), System.getenv("UID2_API_KEY"), System.getenv("UID2_SECRET_KEY"));
 
     @Test
     public void identityMapEmails() {
@@ -157,4 +157,24 @@ public class IdentityMapIntegrationTests {
         }
     }
 
+    @Test
+    public void identityMapBadUrl() {
+         IdentityMapClient identityMapClient = new IdentityMapClient("https://operator-bad-url.uidapi.com", System.getenv("UID2_API_KEY"), System.getenv("UID2_SECRET_KEY"));
+         IdentityMapInput identityMapInput = IdentityMapInput.fromEmails(Collections.singletonList("email@example.com"));
+         assertThrows(Uid2Exception.class, () -> identityMapClient.generateIdentityMap(identityMapInput));
+    }
+
+    @Test
+    public void identityMapBadApiKey() {
+        IdentityMapClient identityMapClient = new IdentityMapClient(System.getenv("UID2_BASE_URL"), "bad-api-key", System.getenv("UID2_SECRET_KEY"));
+        IdentityMapInput identityMapInput = IdentityMapInput.fromEmails(Collections.singletonList("email@example.com"));
+        assertThrows(Uid2Exception.class, () -> identityMapClient.generateIdentityMap(identityMapInput));
+    }
+
+    @Test
+    public void identityMapBadSecret() {
+        IdentityMapClient identityMapClient = new IdentityMapClient(System.getenv("UID2_BASE_URL"), System.getenv("UID2_API_KEY"), "wJ0hP19QU4hmpB64Y3fV2dAed8t/mupw3sjN5jNRFzg=");
+        IdentityMapInput identityMapInput = IdentityMapInput.fromEmails(Collections.singletonList("email@example.com"));
+        assertThrows(Uid2Exception.class, () -> identityMapClient.generateIdentityMap(identityMapInput));
+    }
 }

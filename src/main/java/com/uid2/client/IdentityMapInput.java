@@ -10,7 +10,7 @@ import java.util.List;
 public class IdentityMapInput {
     /**
      * @param emails a list of normalized or unnormalized email addresses
-     * @return a IdentityMapInput instance, to be used in {@link PublisherUid2Helper#createEnvelopeForTokenGenerateRequest}
+     * @return a IdentityMapInput instance, to be used in {@link IdentityMapHelper#createEnvelopeForIdentityMapRequest}
      */
     public static IdentityMapInput fromEmails(Iterable<String> emails) {
         return new IdentityMapInput(IdentityType.Email, emails, false);
@@ -18,7 +18,7 @@ public class IdentityMapInput {
 
     /**
      * @param phones a <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#phone-number-normalization">normalized</a> phone number
-     * @return a IdentityMapInput instance, to be used in {@link PublisherUid2Helper#createEnvelopeForTokenGenerateRequest}
+     * @return an IdentityMapInput instance
      */
     public static IdentityMapInput fromPhones(Iterable<String> phones) {
         return new IdentityMapInput(IdentityType.Phone, phones, false);
@@ -26,7 +26,7 @@ public class IdentityMapInput {
 
     /**
      * @param hashedEmails a <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#email-address-normalization">normalized</a> and <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#email-address-hash-encoding">hashed</a> email address
-     * @return a IdentityMapInput instance, to be used in {@link PublisherUid2Helper#createEnvelopeForTokenGenerateRequest}
+     * @return an IdentityMapInput instance
      */
     public static IdentityMapInput fromHashedEmails(Iterable<String> hashedEmails) {
         return new IdentityMapInput(IdentityType.Email, hashedEmails, true);
@@ -34,7 +34,7 @@ public class IdentityMapInput {
 
     /**
      * @param hashedPhones a <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#phone-number-normalization">normalized</a> and <a href="https://unifiedid.com/docs/getting-started/gs-normalization-encoding#phone-number-hash-encoding">hashed</a> phone number
-     * @return a IdentityMapInput instance, to be used in {@link PublisherUid2Helper#createEnvelopeForTokenGenerateRequest}
+     * @return an IdentityMapInput instance
      */
     public static IdentityMapInput fromHashedPhones(Iterable<String> hashedPhones) {
         return new IdentityMapInput(IdentityType.Phone, hashedPhones, true);
@@ -48,7 +48,7 @@ public class IdentityMapInput {
         }
     }
 
-        private IdentityMapInput(IdentityType identityType, Iterable<String> emailsOrPhones, boolean alreadyHashed) {
+    private IdentityMapInput(IdentityType identityType, Iterable<String> emailsOrPhones, boolean alreadyHashed) {
         this.identityType = identityType;
         this.emailsOrPhones = emailsOrPhones;
         this.alreadyHashed = alreadyHashed;
