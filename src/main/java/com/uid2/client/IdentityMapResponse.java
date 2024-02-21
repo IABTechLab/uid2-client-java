@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.annotations.SerializedName;
+
 import java.util.HashMap;
 
 public class IdentityMapResponse {
@@ -15,24 +17,25 @@ public class IdentityMapResponse {
             throw new Uid2Exception("Got unexpected identity map status: " + status);
         }
 
+        Gson gson = new Gson();
         JsonObject body = getBodyAsJson(responseJson);
 
         JsonArray mapped = body.get("mapped").getAsJsonArray();
         for (JsonElement identity  : mapped) {
-            JsonObject identityObject = identity.getAsJsonObject();
-            String identifier = getJsonString(identityObject, "identifier");
-            String rawDii = identityMapInput.getRawDii(identifier);
-            mappedIdentities.put(rawDii, new MappedIdentity(getJsonString(identityObject, "advertising_id"), getJsonString(identityObject, "bucket_id")));
+            String rawDii = getRawDii(identity, identityMapInput);
+            mappedIdentities.put(rawDii, gson.fromJson(identity, MappedIdentity.class));
         }
 
         JsonArray unmapped = body.get("unmapped").getAsJsonArray();
         for (JsonElement identity  : unmapped) {
-            JsonObject identityObject = identity.getAsJsonObject();
-            String identifier = getJsonString(identityObject, "identifier");
-            String rawDii = identityMapInput.getRawDii(identifier);
-            unmappedIdentities.put(rawDii, new UnmappedIdentity(getJsonString(identityObject, "reason")));
+            String rawDii = getRawDii(identity, identityMapInput);
+            unmappedIdentities.put(rawDii, gson.fromJson(identity, UnmappedIdentity.class));
         }
+    }
 
+    private String getRawDii(JsonElement identity, IdentityMapInput identityMapInput) {
+        String identifier = identity.getAsJsonObject().get("identifier").getAsString();
+        return identityMapInput.getRawDii(identifier);
     }
 
     public boolean isSuccess() {
@@ -51,7 +54,9 @@ public class IdentityMapResponse {
         public String getRawUid() {return rawUid;}
         public String getBucketId() {return bucketId;}
 
+        @SerializedName("advertising_id")
         private final String rawUid;
+        @SerializedName("bucket_id")
         private final String bucketId;
     }
 
@@ -63,11 +68,6 @@ public class IdentityMapResponse {
         public String getReason() {return reason;}
 
         private final String reason;
-    }
-
-    static private String getJsonString(JsonObject json, String key) {
-        JsonElement keyElem = json.get(key);
-        return keyElem.getAsString();
     }
 
     public HashMap<String, MappedIdentity> getMappedIdentities() {

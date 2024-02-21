@@ -1,5 +1,7 @@
 package com.uid2.client;
 
+import com.google.gson.Gson;
+
 import java.nio.charset.StandardCharsets;
 
 public class IdentityMapHelper {
@@ -13,7 +15,7 @@ public class IdentityMapHelper {
      * @return an EnvelopeV2 instance to use in the POST body of <a href="https://unifiedid.com/docs/endpoints/post-identity-map">/identity/map</a>
      */
     public EnvelopeV2 createEnvelopeForIdentityMapRequest(IdentityMapInput identityMapInput) {
-        byte[] jsonBytes = identityMapInput.getAsJsonString().getBytes(StandardCharsets.UTF_8);
+        byte[] jsonBytes = new Gson().toJson(identityMapInput).getBytes(StandardCharsets.UTF_8);
         return uid2Helper.createEnvelopeV2(jsonBytes);
     }
 

@@ -1,8 +1,6 @@
 package com.uid2.client;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-
+import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,73 +38,51 @@ public class IdentityMapInput {
         return new IdentityMapInput(IdentityType.Phone, hashedPhones, true);
     }
 
-    String getAsJsonString() {
-        if (alreadyHashed) {
-            return createAlreadyHashedJsonRequestForIdentityMap(identityType, emailsOrPhones);
-        } else {
-            return createHashedJsonRequestForIdentityMap(identityType, emailsOrPhones);
-        }
-    }
-
     private IdentityMapInput(IdentityType identityType, Iterable<String> emailsOrPhones, boolean alreadyHashed) {
-        this.identityType = identityType;
-        this.emailsOrPhones = emailsOrPhones;
-        this.alreadyHashed = alreadyHashed;
-    }
-
-
-    private static String createJsonRequestForIdentityMap(String property, Iterable<String> values) {
-        JsonObject json = new JsonObject();
-
-        JsonArray jsonArray = new JsonArray();
-        for (String value : values) {
-            jsonArray.add(value);
-        }
-
-        json.add(property, jsonArray);
-        return json.toString();
-    }
-
-    private String createHashedJsonRequestForIdentityMap(IdentityType identityType, Iterable<String> unhashedValues) {
         if (identityType == IdentityType.Email) {
-            List<String> hashedNormalizedEmails = new ArrayList<>();
-            for (String unnormalizedEmail : unhashedValues) {
-                String hashedEmail = InputUtil.normalizeAndHashEmail(unnormalizedEmail);
-                hashedNormalizedEmails.add(hashedEmail);
-                hashedDiiToRawDii.put(hashedEmail, unnormalizedEmail);
-            }
-            return createJsonRequestForIdentityMap("email_hash", hashedNormalizedEmails);
-        } else {  //phone
-            List<String> hashedNormalizedPhones = new ArrayList<>();
-            for (String phone : unhashedValues) {
-                if (!InputUtil.isPhoneNumberNormalized(phone)) {
-                    throw new IllegalArgumentException("phone number is not normalized: " + phone);
+            hashedNormalizedEmails = new ArrayList<>();
+            for (String email : emailsOrPhones) {
+                if (alreadyHashed) {
+                    hashedNormalizedEmails.add(email);
+                } else {
+                    String hashedEmail = InputUtil.normalizeAndHashEmail(email);
+                    hashedNormalizedEmails.add(hashedEmail);
+                    hashedDiiToRawDii.put(hashedEmail, email);
                 }
-
-                String hashedNormalizedPhone = InputUtil.getBase64EncodedHash(phone);
-                hashedDiiToRawDii.put(hashedNormalizedPhone, phone);
-                hashedNormalizedPhones.add(hashedNormalizedPhone);
             }
-            return createJsonRequestForIdentityMap("phone_hash", hashedNormalizedPhones);
+        } else {  //phone
+            hashedNormalizedPhones = new ArrayList<>();
+            for (String phone : emailsOrPhones) {
+                if (alreadyHashed) {
+                    hashedNormalizedPhones.add(phone);
+                } else {
+                    if (!InputUtil.isPhoneNumberNormalized(phone)) {
+                        throw new IllegalArgumentException("phone number is not normalized: " + phone);
+                    }
+
+                    String hashedNormalizedPhone = InputUtil.getBase64EncodedHash(phone);
+                    hashedDiiToRawDii.put(hashedNormalizedPhone, phone);
+                    hashedNormalizedPhones.add(hashedNormalizedPhone);
+                }
+            }
         }
     }
 
-    private static String createAlreadyHashedJsonRequestForIdentityMap(IdentityType identityType, Iterable<String> hashedValues) {
-        if (identityType == IdentityType.Email) {
-            return createJsonRequestForIdentityMap("email_hash", hashedValues);
-        } else {  //phone
-            return createJsonRequestForIdentityMap("phone_hash", hashedValues);
-        }
-    }
 
     String getRawDii(String identifier) {
-        if (alreadyHashed)
+        if (wasInputAlreadyHashed())
             return identifier;
         return hashedDiiToRawDii.get(identifier);
     }
 
-    private final IdentityType identityType;
-    private final Iterable<String> emailsOrPhones;
-    private final boolean alreadyHashed;
-    private final HashMap<String, String> hashedDiiToRawDii = new HashMap<>();
+    private boolean wasInputAlreadyHashed() {
+        return hashedDiiToRawDii.isEmpty();
+    }
+
+    @SerializedName("email_hash")
+    private List<String> hashedNormalizedEmails;
+    @SerializedName("phone_hash")
+    private List<String> hashedNormalizedPhones;
+
+    private final transient HashMap<String, String> hashedDiiToRawDii = new HashMap<>();
 }

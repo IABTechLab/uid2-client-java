@@ -29,17 +29,14 @@ public class IdentityMapIntegrationTests {
 
     @Test
     public void identityMapInvalidEmail() {
-        IdentityMapInput identityMapInput = IdentityMapInput.fromEmails(Arrays.asList("email@example.com", "this is not an email"));
         assertThrows(IllegalArgumentException.class,
-                () -> identityMapClient.generateIdentityMap(identityMapInput));
+                () -> IdentityMapInput.fromEmails(Arrays.asList("email@example.com", "this is not an email")));
     }
-
 
     @Test
     public void identityMapInvalidPhone() {
-        IdentityMapInput identityMapInput = IdentityMapInput.fromPhones(Arrays.asList("+12345678901", "this is not a phone number"));
         assertThrows(IllegalArgumentException.class,
-                () -> identityMapClient.generateIdentityMap(identityMapInput));
+                () -> IdentityMapInput.fromPhones(Arrays.asList("+12345678901", "this is not a phone number")));
     }
 
     @Test
