@@ -19,6 +19,7 @@ public class InputUtilTests {
         assertEmail("JANE.SAOIRSE@gmail.com", "ku4mBX7Z3qJTXWyLFB1INzkyR2WZGW4ANSJUiW21iI8=");
         assertEmail("Jane.Saoirse@gmail.com", "ku4mBX7Z3qJTXWyLFB1INzkyR2WZGW4ANSJUiW21iI8=");
         assertEmail("JaneSaoirse+UID2@gmail.com", "ku4mBX7Z3qJTXWyLFB1INzkyR2WZGW4ANSJUiW21iI8=");
+        assertEmail("janesaoirse@gmail.com", "ku4mBX7Z3qJTXWyLFB1INzkyR2WZGW4ANSJUiW21iI8=");
 
     }
 
