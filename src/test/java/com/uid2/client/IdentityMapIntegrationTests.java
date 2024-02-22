@@ -28,6 +28,24 @@ public class IdentityMapIntegrationTests {
     }
 
     @Test
+    public void identityMapNothingUnmapped() {
+        IdentityMapInput identityMapInput = IdentityMapInput.fromEmails(Arrays.asList("hopefully-not-opted-out@example.com", "somethingelse@example.com"));
+        Response response = new Response(identityMapInput);
+
+        response.assertMapped("hopefully-not-opted-out@example.com");
+        response.assertMapped("somethingelse@example.com");
+    }
+
+    @Test
+    public void identityMapNothingMapped() {
+        IdentityMapInput identityMapInput = IdentityMapInput.fromEmails(Collections.singletonList("optout@example.com"));
+        Response response = new Response(identityMapInput);
+
+        response.assertUnmapped("optout", "optout@example.com");
+    }
+
+
+    @Test
     public void identityMapInvalidEmail() {
         assertThrows(IllegalArgumentException.class,
                 () -> IdentityMapInput.fromEmails(Arrays.asList("email@example.com", "this is not an email")));

@@ -1,11 +1,11 @@
 package com.uid2.client;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Collections;
 import java.util.HashMap;
 
 public class IdentityMapResponse {
@@ -20,17 +20,25 @@ public class IdentityMapResponse {
         Gson gson = new Gson();
         JsonObject body = getBodyAsJson(responseJson);
 
-        JsonArray mapped = body.get("mapped").getAsJsonArray();
-        for (JsonElement identity  : mapped) {
+        Iterable<JsonElement> mapped = getJsonArray(body, "mapped");
+        for (JsonElement identity : mapped) {
             String rawDii = getRawDii(identity, identityMapInput);
             mappedIdentities.put(rawDii, gson.fromJson(identity, MappedIdentity.class));
         }
 
-        JsonArray unmapped = body.get("unmapped").getAsJsonArray();
-        for (JsonElement identity  : unmapped) {
+        Iterable<JsonElement> unmapped = getJsonArray(body, "unmapped");
+        for (JsonElement identity : unmapped) {
             String rawDii = getRawDii(identity, identityMapInput);
             unmappedIdentities.put(rawDii, gson.fromJson(identity, UnmappedIdentity.class));
         }
+    }
+
+    private static Iterable<JsonElement> getJsonArray(JsonObject body, String header) {
+        JsonElement jsonElement = body.get(header);
+        if (jsonElement == null) {
+            return Collections.emptyList();
+        }
+        return jsonElement.getAsJsonArray();
     }
 
     private String getRawDii(JsonElement identity, IdentityMapInput identityMapInput) {
