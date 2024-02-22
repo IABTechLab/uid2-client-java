@@ -7,6 +7,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 public class IdentityMapResponse {
     IdentityMapResponse(String response, IdentityMapInput identityMapInput) {
@@ -22,14 +23,20 @@ public class IdentityMapResponse {
 
         Iterable<JsonElement> mapped = getJsonArray(body, "mapped");
         for (JsonElement identity : mapped) {
-            String rawDii = getRawDii(identity, identityMapInput);
-            mappedIdentities.put(rawDii, gson.fromJson(identity, MappedIdentity.class));
+            List<String> rawDiis = getRawDiis(identity, identityMapInput);
+            MappedIdentity mappedIdentity = gson.fromJson(identity, MappedIdentity.class);
+            for (String rawDii : rawDiis) {
+                mappedIdentities.put(rawDii, mappedIdentity);
+            }
         }
 
         Iterable<JsonElement> unmapped = getJsonArray(body, "unmapped");
         for (JsonElement identity : unmapped) {
-            String rawDii = getRawDii(identity, identityMapInput);
-            unmappedIdentities.put(rawDii, gson.fromJson(identity, UnmappedIdentity.class));
+            List<String> rawDiis = getRawDiis(identity, identityMapInput);
+            UnmappedIdentity unmappedIdentity = gson.fromJson(identity, UnmappedIdentity.class);
+            for (String rawDii : rawDiis) {
+                unmappedIdentities.put(rawDii, unmappedIdentity);
+            }
         }
     }
 
@@ -41,9 +48,9 @@ public class IdentityMapResponse {
         return jsonElement.getAsJsonArray();
     }
 
-    private String getRawDii(JsonElement identity, IdentityMapInput identityMapInput) {
+    private List<String> getRawDiis(JsonElement identity, IdentityMapInput identityMapInput) {
         String identifier = identity.getAsJsonObject().get("identifier").getAsString();
-        return identityMapInput.getRawDii(identifier);
+        return identityMapInput.getRawDiis(identifier);
     }
 
     public boolean isSuccess() {

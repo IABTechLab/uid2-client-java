@@ -7,6 +7,7 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -90,6 +91,21 @@ public class IdentityMapIntegrationTests {
     }
 
     @Test
+    public void identityMapDuplicateEmails() {
+        IdentityMapInput identityMapInput = IdentityMapInput.fromEmails(Arrays.asList("JANE.SAOIRSE@gmail.com", "Jane.Saoirse@gmail.com", "JaneSaoirse+UID2@gmail.com", "janesaoirse@gmail.com"));
+        IdentityMapResponse identityMapResponse = identityMapClient.generateIdentityMap(identityMapInput);
+
+        HashMap<String, IdentityMapResponse.MappedIdentity> mappedIdentities = identityMapResponse.getMappedIdentities();
+        assertEquals(4, mappedIdentities.size());
+
+        String rawUid = mappedIdentities.get("JANE.SAOIRSE@gmail.com").getRawUid();
+        assertEquals(rawUid, mappedIdentities.get("Jane.Saoirse@gmail.com").getRawUid());
+        assertEquals(rawUid, mappedIdentities.get("JaneSaoirse+UID2@gmail.com").getRawUid());
+        assertEquals(rawUid, mappedIdentities.get("janesaoirse@gmail.com").getRawUid());
+    }
+
+
+        @Test
     public void identityMapDuplicateHashedEmails() {
         String hashedEmail = InputUtil.normalizeAndHashEmail("hopefully-not-opted-out@example.com");
         String duplicateHashedEmail = hashedEmail;

@@ -2,6 +2,7 @@ package com.uid2.client;
 
 import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class IdentityMapInput {
                 } else {
                     String hashedEmail = InputUtil.normalizeAndHashEmail(email);
                     hashedNormalizedEmails.add(hashedEmail);
-                    hashedDiiToRawDii.put(hashedEmail, email);
+                    addHashedToRawDiiMapping(hashedEmail, email);
                 }
             }
         } else {  //phone
@@ -61,22 +62,23 @@ public class IdentityMapInput {
                     }
 
                     String hashedNormalizedPhone = InputUtil.getBase64EncodedHash(phone);
-                    hashedDiiToRawDii.put(hashedNormalizedPhone, phone);
+                    addHashedToRawDiiMapping(hashedNormalizedPhone, phone);
                     hashedNormalizedPhones.add(hashedNormalizedPhone);
                 }
             }
         }
     }
 
-
-    String getRawDii(String identifier) {
-        if (wasInputAlreadyHashed())
-            return identifier;
-        return hashedDiiToRawDii.get(identifier);
+    private void addHashedToRawDiiMapping(String hashedDii, String rawDii) {
+        hashedDiiToRawDiis.computeIfAbsent(hashedDii, k -> new ArrayList<>()).add(rawDii);
     }
 
-    private boolean wasInputAlreadyHashed() {
-        return hashedDiiToRawDii.isEmpty();
+
+    List<String> getRawDiis(String identifier) {
+        final boolean wasInputAlreadyHashed = hashedDiiToRawDiis.isEmpty();
+        if (wasInputAlreadyHashed)
+            return Collections.singletonList(identifier);
+        return hashedDiiToRawDiis.get(identifier);
     }
 
     @SerializedName("email_hash")
@@ -84,5 +86,5 @@ public class IdentityMapInput {
     @SerializedName("phone_hash")
     private List<String> hashedNormalizedPhones;
 
-    private final transient HashMap<String, String> hashedDiiToRawDii = new HashMap<>();
+    private final transient HashMap<String, List<String>> hashedDiiToRawDiis = new HashMap<>();
 }
