@@ -92,11 +92,11 @@ public class IdentityMapIntegrationTests {
 
     @Test
     public void identityMapDuplicateEmails() {
-        IdentityMapInput identityMapInput = IdentityMapInput.fromEmails(Arrays.asList("JANE.SAOIRSE@gmail.com", "Jane.Saoirse@gmail.com", "JaneSaoirse+UID2@gmail.com", "janesaoirse@gmail.com"));
+        IdentityMapInput identityMapInput = IdentityMapInput.fromEmails(Arrays.asList("JANE.SAOIRSE@gmail.com", "Jane.Saoirse@gmail.com", "JaneSaoirse+UID2@gmail.com", "janesaoirse@gmail.com", "JANE.SAOIRSE@gmail.com"));
         IdentityMapResponse identityMapResponse = identityMapClient.generateIdentityMap(identityMapInput);
 
         HashMap<String, IdentityMapResponse.MappedIdentity> mappedIdentities = identityMapResponse.getMappedIdentities();
-        assertEquals(4, mappedIdentities.size());
+        assertEquals(4, mappedIdentities.size()); //it's not 5 because the last email is an exact match to the first email
 
         String rawUid = mappedIdentities.get("JANE.SAOIRSE@gmail.com").getRawUid();
         assertEquals(rawUid, mappedIdentities.get("Jane.Saoirse@gmail.com").getRawUid());
