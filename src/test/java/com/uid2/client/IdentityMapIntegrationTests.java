@@ -74,7 +74,6 @@ public class IdentityMapIntegrationTests {
         response.assertUnmapped("invalid identifier", "this is not a hashed phone");
     }
 
-
     @Test
     public void identityMapHashedEmails() {
         String hashedEmail1 = InputUtil.normalizeAndHashEmail("hopefully-not-opted-out@example.com");
@@ -89,6 +88,33 @@ public class IdentityMapIntegrationTests {
 
         response.assertUnmapped("optout", hashedOptedOutEmail);
     }
+
+    @Test
+    public void identityMapDuplicateHashedEmails() {
+        String hashedEmail = InputUtil.normalizeAndHashEmail("hopefully-not-opted-out@example.com");
+        String duplicateHashedEmail = hashedEmail;
+
+        String hashedOptedOutEmail = InputUtil.normalizeAndHashEmail("optout@example.com");
+        String duplicateOptedOutEmail = hashedOptedOutEmail;
+
+        IdentityMapInput identityMapInput = IdentityMapInput.fromHashedEmails(Arrays.asList(hashedEmail, duplicateHashedEmail, hashedOptedOutEmail, duplicateOptedOutEmail));
+        Response response = new Response(identityMapInput);
+
+        response.assertMapped(hashedEmail);
+        response.assertMapped(duplicateHashedEmail);
+
+        response.assertUnmapped("optout", hashedOptedOutEmail);
+        response.assertUnmapped("optout", duplicateOptedOutEmail);
+    }
+
+    @Test
+    public void identityMapEmptyInput() {
+        IdentityMapInput identityMapInput = IdentityMapInput.fromEmails(Collections.emptyList());
+        IdentityMapResponse identityMapResponse = identityMapClient.generateIdentityMap(identityMapInput);
+        assertTrue(identityMapResponse.getMappedIdentities().isEmpty());
+        assertTrue(identityMapResponse.getUnmappedIdentities().isEmpty());
+    }
+
 
     @Test
     public void identityMapPhones() {
