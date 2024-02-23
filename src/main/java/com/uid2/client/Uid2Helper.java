@@ -66,7 +66,7 @@ public class Uid2Helper {
         return nonce;
     }
 
-    static String getArtifactAndVersion() {
+    public static String getArtifactAndVersion() {
         return artifactAndVersion;
     }
 

@@ -6,7 +6,7 @@ public class IdentityMapClient {
      * @param clientApiKey      Your client API key
      * @param base64SecretKey   Your client secret key
      */
-    IdentityMapClient(String uid2BaseUrl, String clientApiKey, String base64SecretKey) {
+    public IdentityMapClient(String uid2BaseUrl, String clientApiKey, String base64SecretKey) {
         identityMapHelper = new IdentityMapHelper(base64SecretKey);
         uid2ClientHelper = new Uid2ClientHelper(uid2BaseUrl, clientApiKey);
     }
