@@ -17,7 +17,7 @@ class PublisherIntegrationTests {
 
     @Test //this test requires these env vars to be configured: UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY
     public void integrationGenerateAndRefresh() {
-        TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail("test@example.com"));
+        TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail("hopefully-not-opted-out@example.com"));
         assertFalse(tokenGenerateResponse.isOptout());
         IdentityTokens identity = tokenGenerateResponse.getIdentity();
         assertNotNull(identity);

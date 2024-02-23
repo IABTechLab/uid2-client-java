@@ -2,8 +2,6 @@ package com.uid2.client;
 
 import com.google.gson.JsonObject;
 
-import java.security.MessageDigest;
-
 public class TokenGenerateInput {
     /**
      * @param email a normalized or unnormalized email address
@@ -96,11 +94,7 @@ public class TokenGenerateInput {
 
     static String createHashedJsonRequestForGenerateToken(IdentityType identityType, String unhashedValue, String tcString, boolean generateForOptedOut) {
         if (identityType == IdentityType.Email) {
-            String normalizedEmail = InputUtil.normalizeEmailString(unhashedValue);
-            if (normalizedEmail == null) {
-                throw new IllegalArgumentException("invalid email address");
-            }
-            String hashedNormalizedEmail = InputUtil.getBase64EncodedHash(normalizedEmail);
+            String hashedNormalizedEmail = InputUtil.normalizeAndHashEmail(unhashedValue);
             return createJsonRequestForGenerateToken("email_hash", hashedNormalizedEmail, tcString, generateForOptedOut);
         } else {  //phone
             if (!InputUtil.isPhoneNumberNormalized(unhashedValue)) {
