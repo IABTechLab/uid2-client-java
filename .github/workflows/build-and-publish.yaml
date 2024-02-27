@@ -18,10 +18,10 @@ on:
         type: boolean
       java_version:
         type: string
-        default: '11'
+        default: 8
       publish_vulnerabilities:
         type: string
-        default: 'true'
+        default: true
 
 jobs:
   build-and-pubish:
