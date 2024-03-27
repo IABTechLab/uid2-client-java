@@ -13,6 +13,10 @@ class KeyContainer {
     private int masterKeysetId;
     private int defaultKeysetId;
     private long tokenExpirySeconds;
+    private IdentityScope identityScope;
+    private long maxBidstreamLifetimeSeconds;
+    private long maxSharingLifetimeSeconds;
+    private long allowClockSkewSeconds;
 
 
     KeyContainer(List<Key> keyList)
@@ -34,11 +38,15 @@ class KeyContainer {
         }
     }
 
-    KeyContainer(int callerSiteId, int masterKeysetId, int defaultKeysetId, long tokenExpirySeconds, List<Key> keyList) {
+    KeyContainer(int callerSiteId, int masterKeysetId, int defaultKeysetId, long tokenExpirySeconds, List<Key> keyList, IdentityScope identityScope, long maxBidstreamLifetimeSeconds, long maxSharingLifetimeSeconds, long allowClockSkewSeconds) {
         this.callerSiteId = callerSiteId;
         this.masterKeysetId = masterKeysetId;
         this.defaultKeysetId = defaultKeysetId;
         this.tokenExpirySeconds = tokenExpirySeconds;
+        this.identityScope = identityScope;
+        this.maxBidstreamLifetimeSeconds = maxBidstreamLifetimeSeconds;
+        this.maxSharingLifetimeSeconds = maxSharingLifetimeSeconds;
+        this.allowClockSkewSeconds = allowClockSkewSeconds;
 
         for (Key key : keyList) {
             this.keys.put(key.getId(), key);
@@ -106,5 +114,21 @@ class KeyContainer {
 
     public long getTokenExpirySeconds() {
         return tokenExpirySeconds;
+    }
+
+    public long getMaxBidstreamLifetimeSeconds() {
+        return maxBidstreamLifetimeSeconds;
+    }
+
+    public long getMaxSharingLifetimeSeconds() {
+        return maxSharingLifetimeSeconds;
+    }
+
+    public long getAllowClockSkewSeconds() {
+        return allowClockSkewSeconds;
+    }
+
+    public IdentityScope getIdentityScope() {
+        return identityScope;
     }
 }

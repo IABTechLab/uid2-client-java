@@ -12,6 +12,10 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * @deprecated Please use BidstreamClient or SharingClient instead.
+ */
+@Deprecated
 public class UID2Client implements IUID2Client {
 
     private final AtomicReference<KeyContainer> container;
@@ -80,7 +84,7 @@ public class UID2Client implements IUID2Client {
         }
 
         try {
-            return Uid2Encryption.decrypt(token, container, now, this.identityScope);
+            return Uid2Encryption.decrypt(token, container, now, this.identityScope, null, ClientType.LEGACY_WITHOUT_DOMAIN_CHECK);
         } catch (Exception e) {
             return DecryptionResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
         }
@@ -88,7 +92,7 @@ public class UID2Client implements IUID2Client {
 
     @Override
     public EncryptionDataResponse encryptData(EncryptionDataRequest request) {
-        return Uid2Encryption.encryptData(request, this.container.get(), this.identityScope);
+        return Uid2Encryption.encryptData(request, this.container.get(), this.identityScope, null, ClientType.LEGACY_WITHOUT_DOMAIN_CHECK);
     }
 
     @Override

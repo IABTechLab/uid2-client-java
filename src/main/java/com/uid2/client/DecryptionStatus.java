@@ -44,4 +44,8 @@ public enum DecryptionStatus {
       * to decrypt a UID2 token. Ensure the factory class matches the token type you are decrypting.
       */
     INVALID_IDENTITY_SCOPE,
+     /**
+      * INVALID_TOKEN_LIFETIME: If token generated timestamp > allow_clock_skew_seconds, the default value is 30 min
+      */
+    INVALID_TOKEN_LIFETIME,
 }

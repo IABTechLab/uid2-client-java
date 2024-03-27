@@ -10,6 +10,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
@@ -19,7 +20,7 @@ class Uid2Encryption {
     public static final int GCM_AUTHTAG_LENGTH = 16;
     public static final int GCM_IV_LENGTH = 12;
 
-    static DecryptionResponse decrypt(String token, KeyContainer keys, Instant now, IdentityScope identityScope) throws Exception {
+    static DecryptionResponse decrypt(String token, KeyContainer keys, Instant now, IdentityScope identityScope, String domainName, ClientType clientType) throws Exception {
 
         if(token.length() < 4)
         {
@@ -32,24 +33,24 @@ class Uid2Encryption {
 
         if (data[0] == 2)
         {
-            return decryptV2(Base64.getDecoder().decode(token), keys, now);
+            return decryptV2(Base64.getDecoder().decode(token), keys, now, domainName, clientType);
         }
         //java byte is signed so we wanna convert to unsigned before checking the enum
         int unsignedByte = ((int) data[1]) & 0xff;
         if (unsignedByte == AdvertisingTokenVersion.V3.value())
         {
-            return decryptV3(Base64.getDecoder().decode(token), keys, now, identityScope);
+            return decryptV3(Base64.getDecoder().decode(token), keys, now, identityScope, domainName, clientType);
         }
         else if (unsignedByte  == AdvertisingTokenVersion.V4.value())
         {
             //same as V3 but use Base64URL encoding
-            return decryptV3(Uid2Base64UrlCoder.decode(token), keys, now, identityScope);
+            return decryptV3(Uid2Base64UrlCoder.decode(token), keys, now, identityScope, domainName, clientType);
         }
 
         return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
     }
 
-    static DecryptionResponse decryptV2(byte[] encryptedId, KeyContainer keys, Instant now) throws Exception {
+    static DecryptionResponse decryptV2(byte[] encryptedId, KeyContainer keys, Instant now, String domainName, ClientType clientType) throws Exception {
         try {
             ByteBuffer rootReader = ByteBuffer.wrap(encryptedId);
             int version = (int) rootReader.get();
@@ -101,13 +102,17 @@ class Uid2Encryption {
                 return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId, siteKey.getSiteId());
             }
 
+            if(doesTokenHaveValidLifetime(clientType, keys, established, expiry, now)) {
+                return DecryptionResponse.makeError(DecryptionStatus.INVALID_TOKEN_LIFETIME, established, siteId, siteKey.getSiteId());
+            }
+
             return new DecryptionResponse(DecryptionStatus.SUCCESS, idString, established, siteId, siteKey.getSiteId());
         } catch (ArrayIndexOutOfBoundsException payloadEx) {
             return DecryptionResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
         }
     }
 
-    static DecryptionResponse decryptV3(byte[] encryptedId, KeyContainer keys, Instant now, IdentityScope identityScope) {
+    static DecryptionResponse decryptV3(byte[] encryptedId, KeyContainer keys, Instant now, IdentityScope identityScope, String domainName, ClientType clientType) {
         try {
             final ByteBuffer rootReader = ByteBuffer.wrap(encryptedId);
             final byte prefix = rootReader.get();
@@ -161,6 +166,10 @@ class Uid2Encryption {
                 return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId, siteKey.getSiteId());
             }
 
+            if(doesTokenHaveValidLifetime(clientType, keys, established, expiry, now)) {
+                return DecryptionResponse.makeError(DecryptionStatus.INVALID_TOKEN_LIFETIME, established, siteId, siteKey.getSiteId());
+            }
+
             return new DecryptionResponse(DecryptionStatus.SUCCESS, idString, established, siteId, siteKey.getSiteId());
         } catch (ArrayIndexOutOfBoundsException payloadEx) {
             return DecryptionResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
@@ -186,7 +195,7 @@ class Uid2Encryption {
         }
 
         Instant expiry = now.plusSeconds(keys.getTokenExpirySeconds());
-        Uid2TokenGenerator.Params encryptParams = Uid2TokenGenerator.defaultParams().withTokenExpiry(expiry);
+        Uid2TokenGenerator.Params encryptParams = Uid2TokenGenerator.defaultParams().WithTokenGenerated(Instant.now()).withTokenExpiry(expiry);
 
         try
         {
@@ -202,7 +211,7 @@ class Uid2Encryption {
     }
 
 
-    static EncryptionDataResponse encryptData(EncryptionDataRequest request, KeyContainer keys, IdentityScope identityScope) {
+    static EncryptionDataResponse encryptData(EncryptionDataRequest request, KeyContainer keys, IdentityScope identityScope, String domainName, ClientType clientType) {
         if (request.getData() == null) {
             throw new IllegalArgumentException("data to encrypt must not be null");
         }
@@ -223,7 +232,7 @@ class Uid2Encryption {
                 siteKeySiteId = siteId;
             } else {
                 try {
-                    DecryptionResponse decryptedToken = decrypt(request.getAdvertisingToken(), keys, now, identityScope);
+                    DecryptionResponse decryptedToken = decrypt(request.getAdvertisingToken(), keys, now, identityScope, domainName, clientType);
                     if (!decryptedToken.isSuccess()) {
                         return EncryptionDataResponse.makeError(EncryptionStatus.TOKEN_DECRYPT_FAILURE);
                     }
@@ -389,4 +398,30 @@ class Uid2Encryption {
             super(inner);
         }
     }
+
+    private static boolean doesTokenHaveValidLifetime(ClientType clientType, KeyContainer keys, Instant established, Instant expiry, Instant now) {
+        long maxLifetimeSeconds;
+        switch (clientType) {
+            case BIDSTREAM:
+                maxLifetimeSeconds = keys.getMaxBidstreamLifetimeSeconds();
+                break;
+            case SHARING:
+                maxLifetimeSeconds = keys.getMaxSharingLifetimeSeconds();
+                break;
+            default: //Legacy
+                return false;
+        }
+        return !doesTokenHaveValidLifetimeImpl(established, expiry, now, maxLifetimeSeconds, keys.getAllowClockSkewSeconds());
+    }
+
+
+    private static boolean doesTokenHaveValidLifetimeImpl(Instant established, Instant expiry, Instant now, long maxLifetimeSeconds, long allowClockSkewSeconds)
+    {
+        Duration lifetime = Duration.between(established, expiry);
+        if (lifetime.getSeconds() > maxLifetimeSeconds) {
+            return false;
+        }
+
+        Duration skewDuration = Duration.between(now, established);
+        return skewDuration.getSeconds() <= allowClockSkewSeconds;    }
 }

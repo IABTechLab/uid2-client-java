@@ -13,7 +13,7 @@ class KeyParser {
     static KeyContainer parse(InputStream stream) {
         JsonObject json = JsonParser.parseReader(new InputStreamReader(stream)).getAsJsonObject();
         JsonElement bodyElement = json.get("body");
-        if (bodyElement.isJsonArray()) { // key/latest response, which will become legacy
+        if (bodyElement.isJsonArray()) { // key/latest response, which is now become legacy. We can remove this block once all tests use key/sharing JSON instead
             List<Key> keys = new ArrayList<>();
             JsonArray body = json.getAsJsonArray("body");
             for (JsonElement item : body) {
@@ -34,7 +34,12 @@ class KeyParser {
             int callerSiteId = getAsInt(body,"caller_site_id");
             int masterKeysetId = getAsInt(body,"master_keyset_id");
             int defaultKeysetId = getAsInt(body,"default_keyset_id");
-            long tokenExpirySeconds = getAsLong(body,"token_expiry_seconds");
+            long maxBidstreamLifetimeSeconds = getAsLongOrDefault(body, "max_bidstream_lifetime_seconds", Long.MAX_VALUE);
+            long maxSharingLifetimeSeconds = getAsLongOrDefault(body, "max_sharing_lifetime_seconds", Long.MAX_VALUE);
+            long allowClockSkewSeconds = getAsLongOrDefault(body, "allow_clock_skew_seconds", 1800);
+            IdentityScope identityScope = body.get("identity_scope").getAsString().equals("EUID") ? IdentityScope.EUID : IdentityScope.UID2;
+
+            long tokenExpirySeconds = getAsLongOrDefault(body,"token_expiry_seconds", 0);
             if (tokenExpirySeconds == 0) {
                 final short defaultTokenExpiryDays = 30;
                 tokenExpirySeconds = defaultTokenExpiryDays * 24 * 60 * 60;
@@ -56,7 +61,7 @@ class KeyParser {
                 keys.add(key);
             }
 
-            return new KeyContainer(callerSiteId, masterKeysetId, defaultKeysetId, tokenExpirySeconds, keys);
+            return new KeyContainer(callerSiteId, masterKeysetId, defaultKeysetId, tokenExpirySeconds, keys, identityScope, maxBidstreamLifetimeSeconds, maxSharingLifetimeSeconds, allowClockSkewSeconds);
         }
     }
 
@@ -65,9 +70,9 @@ class KeyParser {
         return isNull(element) ? 0 : element.getAsInt();
     }
 
-    static private long getAsLong(JsonObject body, String memberName) {
+    static private long getAsLongOrDefault(JsonObject body, String memberName, long defaultVal) {
         JsonElement element = body.get(memberName);
-        return isNull(element) ? 0 : element.getAsLong();
+        return isNull(element) ? defaultVal : element.getAsLong();
     }
 
     static private boolean isNull(JsonElement jo) {
