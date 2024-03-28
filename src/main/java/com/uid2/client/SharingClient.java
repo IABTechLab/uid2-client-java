@@ -9,16 +9,16 @@ public class SharingClient {
         tokenHelper = new TokenHelper(uid2BaseUrl, clientApiKey, base64SecretKey);
     }
 
-    public DecryptionResponse decryptTokenIntoRawUid(String token, String domainNameFromBidRequest) {
-        return tokenHelper.decrypt(token, Instant.now(), domainNameFromBidRequest, ClientType.BIDSTREAM);
+    public DecryptionResponse decryptTokenIntoRawUid(String token) {
+        return tokenHelper.decrypt(token, Instant.now(), null, ClientType.SHARING);
     }
 
     public EncryptionDataResponse encryptRawUidIntoToken(String rawUid) {
         return tokenHelper.encryptRawUidIntoToken(rawUid, Instant.now());
     }
 
-    public void refresh() throws UID2ClientException {
-        tokenHelper.refresh("/v2/key/sharing");
+    public RefreshResponse refresh() throws UID2ClientException {
+        return tokenHelper.refresh("/v2/key/sharing");
     }
 
     public void refreshJson(String json) throws UID2ClientException {

@@ -14,8 +14,8 @@ public class BidstreamClient {
         return tokenHelper.decrypt(token, Instant.now(), domainNameFromBidRequest, ClientType.BIDSTREAM);
     }
 
-    public void refresh() throws UID2ClientException {
-        tokenHelper.refresh("/v2/key/bidstream");
+    public RefreshResponse refresh() throws UID2ClientException {
+        return tokenHelper.refresh("/v2/key/bidstream");
     }
 
     public void refreshJson(String json) throws UID2ClientException {

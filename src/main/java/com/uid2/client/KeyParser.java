@@ -37,7 +37,7 @@ class KeyParser {
             long maxBidstreamLifetimeSeconds = getAsLongOrDefault(body, "max_bidstream_lifetime_seconds", Long.MAX_VALUE);
             long maxSharingLifetimeSeconds = getAsLongOrDefault(body, "max_sharing_lifetime_seconds", Long.MAX_VALUE);
             long allowClockSkewSeconds = getAsLongOrDefault(body, "allow_clock_skew_seconds", 1800);
-            IdentityScope identityScope = body.get("identity_scope").getAsString().equals("EUID") ? IdentityScope.EUID : IdentityScope.UID2;
+            IdentityScope identityScope = getAsIdentityScopeOrDefault(body, "identity_scope", IdentityScope.UID2);
 
             long tokenExpirySeconds = getAsLongOrDefault(body,"token_expiry_seconds", 0);
             if (tokenExpirySeconds == 0) {
@@ -73,6 +73,11 @@ class KeyParser {
     static private long getAsLongOrDefault(JsonObject body, String memberName, long defaultVal) {
         JsonElement element = body.get(memberName);
         return isNull(element) ? defaultVal : element.getAsLong();
+    }
+
+    static private IdentityScope getAsIdentityScopeOrDefault(JsonObject body, String memberName, IdentityScope defaultVal) {
+        JsonElement element = body.get(memberName);
+        return isNull(element) ?  defaultVal : body.get("identity_scope").getAsString().equals("EUID") ? IdentityScope.EUID : IdentityScope.UID2;
     }
 
     static private boolean isNull(JsonElement jo) {

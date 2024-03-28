@@ -50,11 +50,16 @@ public class TokenHelper {
         return Uid2Encryption.encrypt(rawUid, keyContainer, keyContainer.getIdentityScope(), now);
     }
 
-    public void refresh(String urlSuffix) throws UID2ClientException {
-        EnvelopeV2 envelope = uid2Helper.createEnvelopeV2("".getBytes());
-        String responseString = uid2ClientHelper.makeRequest(envelope, urlSuffix);
-        byte[] response = uid2Helper.decrypt(responseString, envelope.getNonce()).getBytes();
-        this.container.set(KeyParser.parse(new ByteArrayInputStream(response)));
+    public RefreshResponse refresh(String urlSuffix) throws UID2ClientException {
+        try{
+            EnvelopeV2 envelope = uid2Helper.createEnvelopeV2("".getBytes());
+            String responseString = uid2ClientHelper.makeRequest(envelope, urlSuffix);
+            byte[] response = uid2Helper.decrypt(responseString, envelope.getNonce()).getBytes();
+            this.container.set(KeyParser.parse(new ByteArrayInputStream(response)));
+            return RefreshResponse.makeSuccess();
+        } catch (Exception ex) {
+            return RefreshResponse.makeError(ex.getMessage());
+        }
     }
 
     public void refreshJson(String json) {
