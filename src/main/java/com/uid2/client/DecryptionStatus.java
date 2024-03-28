@@ -45,7 +45,7 @@ public enum DecryptionStatus {
       */
     INVALID_IDENTITY_SCOPE,
      /**
-      * INVALID_TOKEN_LIFETIME: If token generated timestamp > allow_clock_skew_seconds, the default value is 30 min
+      * INVALID_TOKEN_LIFETIME: If token generated timestamp is longer than allow_clock_skew_seconds
       */
     INVALID_TOKEN_LIFETIME,
 }
