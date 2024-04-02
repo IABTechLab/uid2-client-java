@@ -17,7 +17,7 @@ public class SharingClient {
         return tokenHelper.encryptRawUidIntoToken(rawUid, Instant.now());
     }
 
-    public RefreshResponse refresh() throws UID2ClientException {
+    public RefreshResponse refresh() {
         return tokenHelper.refresh("/v2/key/sharing");
     }
 

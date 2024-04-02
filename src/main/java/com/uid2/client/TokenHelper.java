@@ -11,13 +11,11 @@ public class TokenHelper {
     private final Uid2Helper uid2Helper;
     private final Uid2ClientHelper uid2ClientHelper;
     private final AtomicReference<KeyContainer> container;
-    private final byte[] secretKey;
 
     public TokenHelper(String uid2BaseUrl, String clientApiKey, String base64SecretKey) {
         this.uid2ClientHelper = new Uid2ClientHelper(uid2BaseUrl, clientApiKey);
         this.container = new AtomicReference<>(null);
         this.uid2Helper = new Uid2Helper(base64SecretKey);
-        this.secretKey = Base64.getDecoder().decode(base64SecretKey);;
     }
 
     public DecryptionResponse decrypt(String token, Instant now, String domainNameFromBidRequest, ClientType clientType) {
@@ -50,7 +48,7 @@ public class TokenHelper {
         return Uid2Encryption.encrypt(rawUid, keyContainer, keyContainer.getIdentityScope(), now);
     }
 
-    public RefreshResponse refresh(String urlSuffix) throws UID2ClientException {
+    public RefreshResponse refresh(String urlSuffix) {
         try{
             EnvelopeV2 envelope = uid2Helper.createEnvelopeV2("".getBytes());
             String responseString = uid2ClientHelper.makeRequest(envelope, urlSuffix);
