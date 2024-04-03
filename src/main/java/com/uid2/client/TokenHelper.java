@@ -60,8 +60,13 @@ public class TokenHelper {
         }
     }
 
-    public void refreshJson(String json) {
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
-        this.container.set(KeyParser.parse(inputStream));
+    public RefreshResponse refreshJson(String json) {
+        try {
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
+            this.container.set(KeyParser.parse(inputStream));
+            return RefreshResponse.makeSuccess();
+        } catch (Exception ex) {
+            return RefreshResponse.makeError(ex.getMessage());
+        }
     }
 }

@@ -17,6 +17,11 @@ public class RefreshResponse {
         return new RefreshResponse(false, reason);
     }
 
+    public boolean isSuccess()
+    {
+        return success;
+    }
+
     private final boolean success;
     private final String reason;
 }

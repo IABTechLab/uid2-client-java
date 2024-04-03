@@ -41,7 +41,7 @@ class Uid2TokenGenerator {
         identityWriter.putInt(uidBytes.length);
         identityWriter.put(uidBytes);
         identityWriter.putInt(0);
-        identityWriter.putLong(params.tokenGenerated.minus(1, ChronoUnit.HOURS).toEpochMilli());
+        identityWriter.putLong(params.tokenGenerated.toEpochMilli());
         byte[] identityIv = new byte[16];
         rd.nextBytes(identityIv);
         byte[] encryptedIdentity = encrypt(identityWriter.array(), identityIv, siteKey.getSecret());
@@ -88,7 +88,7 @@ class Uid2TokenGenerator {
 
         // user identity data
         sitePayloadWriter.putInt(0); // privacy bits
-        sitePayloadWriter.putLong(params.tokenGenerated.minus(1, ChronoUnit.HOURS).toEpochMilli()); // established
+        sitePayloadWriter.putLong(params.tokenGenerated.toEpochMilli()); // established
         sitePayloadWriter.putLong(params.tokenGenerated.toEpochMilli()); // last refreshed
         sitePayloadWriter.put(Base64.getDecoder().decode(uid));
 

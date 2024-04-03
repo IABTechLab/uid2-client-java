@@ -21,7 +21,7 @@ public class SharingClient {
         return tokenHelper.refresh("/v2/key/sharing");
     }
 
-    public void refreshJson(String json) throws UID2ClientException {
-        tokenHelper.refreshJson(json);
+    public RefreshResponse refreshJson(String json) {
+        return tokenHelper.refreshJson(json);
     }
 }
