@@ -47,5 +47,5 @@ public enum DecryptionStatus {
      /**
       * INVALID_TOKEN_LIFETIME: If token generated timestamp is longer than allow_clock_skew_seconds
       */
-    INVALID_TOKEN_LIFETIME,
+    INVALID_TOKEN_LIFETIME
 }

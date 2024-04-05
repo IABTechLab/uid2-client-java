@@ -3,6 +3,7 @@ package com.uid2.client;
 import com.google.gson.stream.JsonWriter;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import static com.uid2.client.TestData.*;
 
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
@@ -13,19 +14,6 @@ import java.util.Base64;
 import java.util.stream.Collectors;
 
 public class EncryptionTestsV4 {
-
-    public static final long MASTER_KEY_ID = 164;
-    public static final long SITE_KEY_ID = 165;
-    public static final int SITE_ID = 9000;
-    public static final int SITE_ID2 = 2;
-    public static final int[] INT_MASTER_SECRET = new int[] { 139, 37, 241, 173, 18, 92, 36, 232, 165, 168, 23, 18, 38, 195, 123, 92, 160, 136, 185, 40, 91, 173, 165, 221, 168, 16, 169, 164, 38, 139, 8, 155 };
-    public static final int[] INT_SITE_SECRET = new int[] { 32, 251, 7, 194, 132, 154, 250, 86, 202, 116, 104, 29, 131, 192, 139, 215, 48, 164, 11, 65, 226, 110, 167, 14, 108, 51, 254, 125, 65, 24, 23, 133 };
-    public static final Instant NOW = Instant.now();
-    public static final Key MASTER_KEY = new Key(MASTER_KEY_ID, -1, NOW.minus(1, ChronoUnit.DAYS), NOW, NOW.plus(1, ChronoUnit.DAYS), getMasterSecret());
-    public static final Key SITE_KEY = new Key(SITE_KEY_ID, SITE_ID, NOW.minus(10, ChronoUnit.DAYS), NOW.minus(1, ChronoUnit.DAYS), NOW.plus(1, ChronoUnit.DAYS), getSiteSecret());
-    public static final String EXAMPLE_UID = "ywsvDNINiZOVSsfkHpLpSJzXzhr6Jx9Z/4Q0+lsEUvM=";
-    private static final String CLIENT_SECRET = "ioG3wKxAokmp+rERx6A4kM/13qhyolUXIu14WN16Spo=";
-
     // unit tests to ensure the base64url encoding and decoding are identical in all supported
     // uid2 client sdks in different programming languages
     @Test
@@ -104,7 +92,12 @@ public class EncryptionTestsV4 {
         assertEquals(EXAMPLE_UID, res.getUid());
     }
 
-    private static void validateAdvertisingToken(String advertisingTokenString, IdentityScope identityScope, IdentityType identityType) {
+    public static void validateAdvertisingToken(String advertisingTokenString, IdentityScope identityScope, IdentityType identityType, int tokenVersion) {
+        if (tokenVersion == 2) {
+            assertEquals("Ag", advertisingTokenString.substring(0, 2));
+            return;
+        }
+
         String firstChar = advertisingTokenString.substring(0, 1);
         if (identityScope == IdentityScope.UID2) {
             assertEquals(identityType == IdentityType.Email ? "A" : "B", firstChar);
@@ -113,17 +106,24 @@ public class EncryptionTestsV4 {
         }
 
         String secondChar = advertisingTokenString.substring(1, 2);
-        assertEquals("4", secondChar);
+        if (tokenVersion == 3)
+        {
+            assertEquals("3", secondChar);
 
-        //No URL-unfriendly characters allowed:
-        assertEquals(-1, advertisingTokenString.indexOf('='));
-        assertEquals(-1, advertisingTokenString.indexOf('+'));
-        assertEquals(-1, advertisingTokenString.indexOf('/'));
+        }
+        else
+        {
+            assertEquals("4", secondChar);
+            //No URL-unfriendly characters allowed:
+            assertEquals(-1, advertisingTokenString.indexOf('='));
+            assertEquals(-1, advertisingTokenString.indexOf('+'));
+            assertEquals(-1, advertisingTokenString.indexOf('/'));
+        }
     }
 
     private static String generateUid2TokenV4(String uid, Key masterKey, long siteId, Key siteKey, Uid2TokenGenerator.Params params) {
         String advertisingToken = Uid2TokenGenerator.generateUid2TokenV4(uid, masterKey, siteId, siteKey, params);
-        validateAdvertisingToken(advertisingToken, IdentityScope.UID2, IdentityType.Email);
+        validateAdvertisingToken(advertisingToken, IdentityScope.UID2, IdentityType.Email, 4);
         return advertisingToken;
     }
 
@@ -236,12 +236,6 @@ public class EncryptionTestsV4 {
 
     private static byte[] getSiteSecret() {
         return intArrayToByteArray(INT_SITE_SECRET);
-    }
-
-    private static byte[] getTestSecret(int value) {
-        byte[] secret = new byte[32];
-        Arrays.fill(secret, (byte)value);
-        return secret;
     }
 
     private static byte[] intArrayToByteArray(int[] intArray) {

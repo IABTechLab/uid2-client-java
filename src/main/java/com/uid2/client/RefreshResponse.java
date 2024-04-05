@@ -22,6 +22,11 @@ public class RefreshResponse {
         return success;
     }
 
+    public String getReason()
+    {
+        return reason;
+    }
+
     private final boolean success;
     private final String reason;
 }

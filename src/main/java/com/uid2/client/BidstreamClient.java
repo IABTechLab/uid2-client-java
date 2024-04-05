@@ -1,7 +1,6 @@
 package com.uid2.client;
 
 import java.time.Instant;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class BidstreamClient {
     private final TokenHelper tokenHelper;
@@ -12,6 +11,10 @@ public class BidstreamClient {
 
     public DecryptionResponse decryptTokenIntoRawUid(String token, String domainNameFromBidRequest) {
         return tokenHelper.decrypt(token, Instant.now(), domainNameFromBidRequest, ClientType.BIDSTREAM);
+    }
+
+    DecryptionResponse decryptTokenIntoRawUid(String token, String domainNameFromBidRequest, Instant now) {
+        return tokenHelper.decrypt(token, now, domainNameFromBidRequest, ClientType.BIDSTREAM);
     }
 
     public RefreshResponse refresh() {

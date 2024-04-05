@@ -20,10 +20,12 @@ class Uid2TokenGenerator {
         Instant tokenExpiry = Instant.now().plus(1, ChronoUnit.HOURS);
         public int identityScope = IdentityScope.UID2.value;
         public Instant tokenGenerated = Instant.now();
+        public int tokenPrivacyBits = 0;
 
         public Params() {}
         public Params withTokenExpiry(Instant expiry) { tokenExpiry = expiry; return this; }
         public Params WithTokenGenerated(Instant generated) { tokenGenerated = generated; return this; }
+        public Params WithPrivacyBits(int privacyBits) {  tokenPrivacyBits = privacyBits; return this; }
     }
 
     public static Params defaultParams() { return new Params(); }
@@ -40,7 +42,7 @@ class Uid2TokenGenerator {
         identityWriter.putInt((int) siteId);
         identityWriter.putInt(uidBytes.length);
         identityWriter.put(uidBytes);
-        identityWriter.putInt(0);
+        identityWriter.putInt(params.tokenPrivacyBits);
         identityWriter.putLong(params.tokenGenerated.toEpochMilli());
         byte[] identityIv = new byte[16];
         rd.nextBytes(identityIv);
@@ -87,7 +89,7 @@ class Uid2TokenGenerator {
         sitePayloadWriter.putInt(0); // client key id
 
         // user identity data
-        sitePayloadWriter.putInt(0); // privacy bits
+        sitePayloadWriter.putInt(params.tokenPrivacyBits); // privacy bits
         sitePayloadWriter.putLong(params.tokenGenerated.toEpochMilli()); // established
         sitePayloadWriter.putLong(params.tokenGenerated.toEpochMilli()); // last refreshed
         sitePayloadWriter.put(Base64.getDecoder().decode(uid));

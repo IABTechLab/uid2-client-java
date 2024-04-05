@@ -71,6 +71,22 @@ public class KeyParserTests {
     }
 
     @Test
+    public void ParseTokenExpirySecondsAsString() {
+        String s = "{ \"body\": { " +
+                "\"caller_site_id\": 11, " +
+                "\"master_keyset_id\": 1, " +
+                "\"default_keyset_id\": 99999, " +
+                "\"token_expiry_seconds\": 1728000, " +
+                "\"keys\": []}, " +
+                "\"status\": \"success\" }";
+
+        KeyContainer keyContainer = parse(s);
+
+        assertEquals(1728000, keyContainer.getTokenExpirySeconds());
+
+    }
+
+    @Test
     public void parseErrorKeyList() {
         assertThrows(Exception.class, () -> parse("{\"status\": \"error\"}"));
         assertThrows(Exception.class, () -> parse("{\"body\": \"error\"}"));

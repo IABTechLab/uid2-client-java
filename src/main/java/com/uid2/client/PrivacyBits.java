@@ -19,7 +19,6 @@ public class PrivacyBits {
             bitsAsInt >>= 1; // Right shift to get next bit
             index++;
         }
-
     }
 
     public boolean isClientSideGenerated() {
