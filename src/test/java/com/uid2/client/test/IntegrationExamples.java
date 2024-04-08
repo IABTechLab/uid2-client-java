@@ -21,6 +21,7 @@ public class IntegrationExamples {
         RefreshResponse refreshResult = client.refresh();
         if (!refreshResult.isSuccess()) {
             System.out.println("Failed to refresh keys: " + refreshResult.getReason());
+            return;
         }
         DecryptionResponse result = client.decryptTokenIntoRawUid(TEST_TOKEN, TEST_DOMAIN);
         System.out.println("DecryptedSuccess: " + result.isSuccess() + " Status: " + result.getStatus());
@@ -35,6 +36,9 @@ public class IntegrationExamples {
     @Test // - insert your API key & test uid & test domain before enabling this test
     public void ExampleAutoRefreshBidStreamClient() throws InterruptedException {
         BidstreamClient client = new BidstreamClient(TEST_ENDPOINT, TEST_API_KEY, TEST_SECRET_KEY);
+        RefreshResponse firstRefreshResult = client.refresh();
+        System.out.println("Refresh keys, success=" + firstRefreshResult.isSuccess());
+        System.out.flush();
 
         Thread refreshThread = new Thread(() -> {
             for (int i = 0; i < 8; ++i) {
@@ -51,7 +55,6 @@ public class IntegrationExamples {
         refreshThread.start();
 
         for (int i = 0; i < 5; ++i) {
-            // Since this block will run initially, it will fail at the first time. Subsequently, upon refreshing, the call should succeed.
             DecryptionResponse result = client.decryptTokenIntoRawUid(TEST_TOKEN, TEST_DOMAIN);
             System.out.println("DecryptSuccess=" + result.isSuccess() + " Status=" + result.getStatus() + " UID=" + result.getUid());
             System.out.flush();

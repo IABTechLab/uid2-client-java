@@ -8,7 +8,7 @@ public class PrivacyBits {
 
     private final BitSet bits;
 
-    public PrivacyBits(int bitsAsInt)
+    PrivacyBits(int bitsAsInt)
     {
         bits = new BitSet();
         int index = 0;
@@ -21,7 +21,7 @@ public class PrivacyBits {
         }
     }
 
-    public boolean isClientSideGenerated() {
+    boolean isClientSideGenerated() {
         return bits.get(bitClientSideGenerated);
     }
 }

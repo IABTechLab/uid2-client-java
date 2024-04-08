@@ -22,7 +22,7 @@ class Uid2Encryption {
 
     static DecryptionResponse decrypt(String token, KeyContainer keys, Instant now, IdentityScope identityScope, String domainName, ClientType clientType) throws Exception {
 
-        if(token.length() < 4)
+        if (token.length() < 4)
         {
             return DecryptionResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
         }
@@ -103,7 +103,7 @@ class Uid2Encryption {
                 return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId, siteKey.getSiteId(), null, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
             }
 
-            if(!doesTokenHaveValidLifetime(clientType, keys, established, expiry, now)) {
+            if (!doesTokenHaveValidLifetime(clientType, keys, established, expiry, now)) {
                 return DecryptionResponse.makeError(DecryptionStatus.INVALID_TOKEN_LIFETIME, established, siteId, siteKey.getSiteId(), null, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
             }
 
@@ -168,7 +168,7 @@ class Uid2Encryption {
                 return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId, siteKey.getSiteId(), identityType, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
             }
 
-            if(!doesTokenHaveValidLifetime(clientType, keys, established, expiry, now)) {
+            if (!doesTokenHaveValidLifetime(clientType, keys, established, expiry, now)) {
                 return DecryptionResponse.makeError(DecryptionStatus.INVALID_TOKEN_LIFETIME, established, siteId, siteKey.getSiteId(), identityType, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
             }
 
@@ -290,7 +290,7 @@ class Uid2Encryption {
 
     static DecryptionDataResponse decryptDataV2(byte[] encryptedBytes, KeyContainer keys) throws Exception {
         ByteBuffer reader = ByteBuffer.wrap(encryptedBytes);
-        if(Byte.toUnsignedInt(reader.get()) != PayloadType.ENCRYPTED_DATA.value) {
+        if (Byte.toUnsignedInt(reader.get()) != PayloadType.ENCRYPTED_DATA.value) {
             return DecryptionDataResponse.makeError(DecryptionStatus.INVALID_PAYLOAD_TYPE);
         } else if (reader.get() != 1) {
             return DecryptionDataResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);

@@ -13,11 +13,11 @@ class Uid2Base64UrlCoder {
         int len = encoded.length();
         for(int i = 0; i < 3; i++)
         {
-            if(len - 1 - i < 0)
+            if (len - 1 - i < 0)
             {
                 break;
             }
-            if(encoded.charAt(len - 1 - i) == '=')
+            if (encoded.charAt(len - 1 - i) == '=')
             {
                 paddingCount++;
             }
@@ -26,7 +26,7 @@ class Uid2Base64UrlCoder {
                 break;
             }
         }
-        if(paddingCount > 0)
+        if (paddingCount > 0)
         {
             //need to remove '=' padding to make it more URL friendly
             return encoded.substring(0, len - paddingCount);

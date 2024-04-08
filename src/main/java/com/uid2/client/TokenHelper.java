@@ -3,28 +3,25 @@ package com.uid2.client;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Base64;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class TokenHelper {
     private final Uid2Helper uid2Helper;
     private final Uid2ClientHelper uid2ClientHelper;
-    private final AtomicReference<KeyContainer> container;
+    private final AtomicReference<KeyContainer> container = new AtomicReference<>(null);;
 
-    public TokenHelper(String uid2BaseUrl, String clientApiKey, String base64SecretKey) {
-        this.uid2ClientHelper = new Uid2ClientHelper(uid2BaseUrl, clientApiKey);
-        this.container = new AtomicReference<>(null);
+    TokenHelper(String baseUrl, String clientApiKey, String base64SecretKey) {
+        this.uid2ClientHelper = new Uid2ClientHelper(baseUrl, clientApiKey);
         this.uid2Helper = new Uid2Helper(base64SecretKey);
     }
 
-    public DecryptionResponse decrypt(String token, Instant now, String domainNameFromBidRequest, ClientType clientType) {
+    DecryptionResponse decrypt(String token, Instant now, String domainNameFromBidRequest, ClientType clientType) {
         KeyContainer keyContainer = this.container.get();
-        if(keyContainer == null) {
+        if (keyContainer == null) {
             return DecryptionResponse.makeError(DecryptionStatus.NOT_INITIALIZED);
         }
 
-        if(!keyContainer.isValid(now)) {
+        if (!keyContainer.isValid(now)) {
             return DecryptionResponse.makeError(DecryptionStatus.KEYS_NOT_SYNCED);
         }
 
@@ -35,20 +32,20 @@ public class TokenHelper {
         }
     }
 
-    public EncryptionDataResponse encryptRawUidIntoToken(String rawUid, Instant now) {
+    EncryptionDataResponse encryptRawUidIntoToken(String rawUid, Instant now) {
         KeyContainer keyContainer = this.container.get();
-        if(keyContainer == null) {
+        if (keyContainer == null) {
             return EncryptionDataResponse.makeError(EncryptionStatus.NOT_INITIALIZED);
         }
 
-        if(!keyContainer.isValid(now)) {
+        if (!keyContainer.isValid(now)) {
             return EncryptionDataResponse.makeError(EncryptionStatus.KEYS_NOT_SYNCED);
         }
 
         return Uid2Encryption.encrypt(rawUid, keyContainer, keyContainer.getIdentityScope(), now);
     }
 
-    public RefreshResponse refresh(String urlSuffix) {
+    RefreshResponse refresh(String urlSuffix) {
         try{
             EnvelopeV2 envelope = uid2Helper.createEnvelopeV2("".getBytes());
             String responseString = uid2ClientHelper.makeRequest(envelope, urlSuffix);
@@ -60,7 +57,7 @@ public class TokenHelper {
         }
     }
 
-    public RefreshResponse refreshJson(String json) {
+    RefreshResponse refreshJson(String json) {
         try {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
             this.container.set(KeyParser.parse(inputStream));

@@ -1,6 +1,6 @@
 package com.uid2.client;
 
-public enum ClientType {
+enum ClientType {
     SHARING,
     BIDSTREAM,
     LEGACY

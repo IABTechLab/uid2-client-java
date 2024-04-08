@@ -5,8 +5,8 @@ import okhttp3.*;
 import java.io.IOException;
 
 public class Uid2ClientHelper {
-    public Uid2ClientHelper(String uid2BaseUrl, String clientApiKey) {
-        this.uid2BaseUrl = uid2BaseUrl;
+    public Uid2ClientHelper(String baseUrl, String clientApiKey) {
+        this.baseUrl = baseUrl;
         this.headers = getHeaders(clientApiKey);
     }
 
@@ -23,7 +23,7 @@ public class Uid2ClientHelper {
 
     String makeRequest(String requestBody, String urlSuffix) {
         Request request = new Request.Builder()
-                .url(uid2BaseUrl + urlSuffix)
+                .url(baseUrl + urlSuffix)
                 .headers(headers)
                 .post(RequestBody.create(requestBody, FORM))
                 .build();
@@ -44,7 +44,7 @@ public class Uid2ClientHelper {
         String responseString;
 
         try {
-            if(response == null) {
+            if (response == null) {
                 throw new Uid2Exception("Response is null");
             }
             else {
@@ -60,7 +60,7 @@ public class Uid2ClientHelper {
     }
 
     private final OkHttpClient client = new OkHttpClient();
-    private final String uid2BaseUrl;
+    private final String baseUrl;
     private final Headers headers;
     private final static MediaType FORM = MediaType.get("application/x-www-form-urlencoded");
 

@@ -75,11 +75,11 @@ public class UID2Client implements IUID2Client {
     @Override
     public DecryptionResponse decrypt(String token, Instant now) {
         KeyContainer container = this.container.get();
-        if(container == null) {
+        if (container == null) {
             return DecryptionResponse.makeError(DecryptionStatus.NOT_INITIALIZED);
         }
 
-        if(!container.isValid(now)) {
+        if (!container.isValid(now)) {
             return DecryptionResponse.makeError(DecryptionStatus.KEYS_NOT_SYNCED);
         }
 
@@ -106,11 +106,11 @@ public class UID2Client implements IUID2Client {
     @Override
     public DecryptionDataResponse decryptData(String encryptedData) {
         KeyContainer container = this.container.get();
-        if(container == null) {
+        if (container == null) {
             return DecryptionDataResponse.makeError(DecryptionStatus.NOT_INITIALIZED);
         }
 
-        if(!container.isValid(Instant.now())) {
+        if (!container.isValid(Instant.now())) {
             return DecryptionDataResponse.makeError(DecryptionStatus.KEYS_NOT_SYNCED);
         }
 

@@ -5,8 +5,8 @@ import java.time.Instant;
 public class SharingClient {
     private final TokenHelper tokenHelper;
 
-    public SharingClient(String uid2BaseUrl, String clientApiKey, String base64SecretKey) {
-        tokenHelper = new TokenHelper(uid2BaseUrl, clientApiKey, base64SecretKey);
+    public SharingClient(String baseUrl, String clientApiKey, String base64SecretKey) {
+        tokenHelper = new TokenHelper(baseUrl, clientApiKey, base64SecretKey);
     }
 
     public DecryptionResponse decryptTokenIntoRawUid(String token) {
@@ -29,7 +29,7 @@ public class SharingClient {
         return tokenHelper.refresh("/v2/key/sharing");
     }
 
-    public RefreshResponse refreshJson(String json) {
+    RefreshResponse refreshJson(String json) {
         return tokenHelper.refreshJson(json);
     }
 }

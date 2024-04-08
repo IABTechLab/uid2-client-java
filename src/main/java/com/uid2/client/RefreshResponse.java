@@ -7,12 +7,12 @@ public class RefreshResponse {
         this.reason = reason;
     }
 
-    public static RefreshResponse makeSuccess()
+    static RefreshResponse makeSuccess()
     {
         return new RefreshResponse(true, "");
     }
 
-    public static RefreshResponse makeError(String reason)
+    static RefreshResponse makeError(String reason)
     {
         return new RefreshResponse(false, reason);
     }

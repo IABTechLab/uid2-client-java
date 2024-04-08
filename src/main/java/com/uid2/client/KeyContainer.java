@@ -90,12 +90,12 @@ class KeyContainer {
 
     private Key getLatestKey(List<Key> keys, Instant now)
     {
-        if(keys == null || keys.isEmpty())
+        if (keys == null || keys.isEmpty())
             return null;
         int it = ListHelpers.upperBound(keys, now, (ts, k) -> ts.isBefore(k.getActivates()));
         while(it > 0) {
             Key key = keys.get(it-1);
-            if(key.isActive(now)) {
+            if (key.isActive(now)) {
                 return key;
             }
             --it;
