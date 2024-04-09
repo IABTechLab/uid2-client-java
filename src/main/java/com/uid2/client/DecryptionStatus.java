@@ -45,7 +45,7 @@ public enum DecryptionStatus {
       */
     INVALID_IDENTITY_SCOPE,
      /**
-      * INVALID_TOKEN_LIFETIME: If token's lifetime is longer than allow_clock_skew_seconds
+      * INVALID_TOKEN_LIFETIME: The token has invalid timestamps.
       */
     INVALID_TOKEN_LIFETIME
 }
