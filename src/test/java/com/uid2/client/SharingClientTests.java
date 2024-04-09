@@ -75,11 +75,11 @@ public class SharingClientTests {
         return keySharingResponse(identityScope, null, null, null, keys);
     }
 
-    public static String keySetToJsonForSharing(Key... keys) throws IOException {
+    static String keySetToJsonForSharing(Key... keys) throws IOException {
         return keySharingResponse(IdentityScope.UID2, SITE_ID, 99999, null, keys);
     }
 
-    public static String keySetToJsonForSharing(IdentityScope identityScope, Key... keys) throws IOException {
+    static String keySetToJsonForSharing(IdentityScope identityScope, Key... keys) throws IOException {
         return keySharingResponse(identityScope, SITE_ID, 99999, null, keys);
     }
 
@@ -105,8 +105,6 @@ public class SharingClientTests {
             "UID2, V4",
             "EUID, V4"
     })
-
-
     public void smokeTest(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
         String advertisingToken = AdvertisingTokenBuilder.builder().withScope(identityScope).withVersion(tokenVersion).build();
 

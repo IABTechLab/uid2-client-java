@@ -5,7 +5,7 @@ import okhttp3.*;
 import java.io.IOException;
 
 public class Uid2ClientHelper {
-    public Uid2ClientHelper(String baseUrl, String clientApiKey) {
+    Uid2ClientHelper(String baseUrl, String clientApiKey) {
         this.baseUrl = baseUrl;
         this.headers = getHeaders(clientApiKey);
     }

@@ -92,7 +92,7 @@ public class EncryptionTestsV4 {
         assertEquals(EXAMPLE_UID, res.getUid());
     }
 
-    public static void validateAdvertisingToken(String advertisingTokenString, IdentityScope identityScope, IdentityType identityType, TokenVersionForTesting tokenVersion) {
+    static void validateAdvertisingToken(String advertisingTokenString, IdentityScope identityScope, IdentityType identityType, TokenVersionForTesting tokenVersion) {
         if (tokenVersion == TokenVersionForTesting.V2) {
             assertEquals("Ag", advertisingTokenString.substring(0, 2));
             return;

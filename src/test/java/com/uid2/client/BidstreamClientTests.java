@@ -276,7 +276,7 @@ public class BidstreamClientTests {
         assertSuccess(response, tokenVersion);
     }
 
-    public static void assertSuccess(DecryptionResponse response, TokenVersionForTesting tokenVersion) {
+    static void assertSuccess(DecryptionResponse response, TokenVersionForTesting tokenVersion) {
         assertTrue(response.isSuccess());
         assertEquals(EXAMPLE_UID, response.getUid());
         assertEquals(tokenVersion.ordinal() + 2, response.getAdvertisingTokenVersion());
@@ -286,7 +286,7 @@ public class BidstreamClientTests {
         }
     }
 
-    public static void assertFails(DecryptionResponse response, TokenVersionForTesting tokenVersion) {
+    static void assertFails(DecryptionResponse response, TokenVersionForTesting tokenVersion) {
         assertFalse(response.isSuccess());
         assertEquals(DecryptionStatus.INVALID_TOKEN_LIFETIME, response.getStatus());
         assertEquals(tokenVersion.ordinal() + 2, response.getAdvertisingTokenVersion());
