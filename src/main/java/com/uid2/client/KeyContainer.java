@@ -116,19 +116,19 @@ class KeyContainer {
         return tokenExpirySeconds;
     }
 
-    public long getMaxBidstreamLifetimeSeconds() {
+    long getMaxBidstreamLifetimeSeconds() {
         return maxBidstreamLifetimeSeconds;
     }
 
-    public long getMaxSharingLifetimeSeconds() {
+    long getMaxSharingLifetimeSeconds() {
         return maxSharingLifetimeSeconds;
     }
 
-    public long getAllowClockSkewSeconds() {
+    long getAllowClockSkewSeconds() {
         return allowClockSkewSeconds;
     }
 
-    public IdentityScope getIdentityScope() {
+    IdentityScope getIdentityScope() {
         return identityScope;
     }
 }

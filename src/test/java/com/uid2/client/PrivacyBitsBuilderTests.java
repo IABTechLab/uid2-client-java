@@ -1,5 +1,6 @@
-package com.uid2.client.builder;
+package com.uid2.client;
 
+import com.uid2.client.PrivacyBitsBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;

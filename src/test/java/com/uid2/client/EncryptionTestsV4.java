@@ -92,8 +92,8 @@ public class EncryptionTestsV4 {
         assertEquals(EXAMPLE_UID, res.getUid());
     }
 
-    public static void validateAdvertisingToken(String advertisingTokenString, IdentityScope identityScope, IdentityType identityType, int tokenVersion) {
-        if (tokenVersion == 2) {
+    public static void validateAdvertisingToken(String advertisingTokenString, IdentityScope identityScope, IdentityType identityType, TokenVersionForTesting tokenVersion) {
+        if (tokenVersion == TokenVersionForTesting.V2) {
             assertEquals("Ag", advertisingTokenString.substring(0, 2));
             return;
         }
@@ -106,7 +106,7 @@ public class EncryptionTestsV4 {
         }
 
         String secondChar = advertisingTokenString.substring(1, 2);
-        if (tokenVersion == 3)
+        if (tokenVersion == TokenVersionForTesting.V3)
         {
             assertEquals("3", secondChar);
 
@@ -123,7 +123,7 @@ public class EncryptionTestsV4 {
 
     private static String generateUid2TokenV4(String uid, Key masterKey, long siteId, Key siteKey, Uid2TokenGenerator.Params params) {
         String advertisingToken = Uid2TokenGenerator.generateUid2TokenV4(uid, masterKey, siteId, siteKey, params);
-        validateAdvertisingToken(advertisingToken, IdentityScope.UID2, IdentityType.Email, 4);
+        validateAdvertisingToken(advertisingToken, IdentityScope.UID2, IdentityType.Email, TokenVersionForTesting.V4);
         return advertisingToken;
     }
 

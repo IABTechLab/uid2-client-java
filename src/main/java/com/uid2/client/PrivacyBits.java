@@ -2,7 +2,7 @@ package com.uid2.client;
 
 import java.util.BitSet;
 
-public class PrivacyBits {
+ class PrivacyBits {
     // Bit 0 is legacy and is no longer in use
     private final int bitClientSideGenerated = 1;
 

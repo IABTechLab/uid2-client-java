@@ -1,18 +1,18 @@
-package com.uid2.client.builder;
+package com.uid2.client;
 
 import java.util.BitSet;
 
-public class PrivacyBitsBuilder {
+class PrivacyBitsBuilder {
     private boolean legacyBit; // first bit, doesn't have a meaning any more
     private boolean isCstgDerived;
     private boolean isOptedOut;
 
-    public static PrivacyBitsBuilder Builder()
+    static PrivacyBitsBuilder Builder()
     {
         return new PrivacyBitsBuilder();
     }
 
-    public PrivacyBitsBuilder WithAllFlagsEnabled()
+    PrivacyBitsBuilder WithAllFlagsEnabled()
     {
         legacyBit = true;
         isCstgDerived = true;
@@ -21,7 +21,7 @@ public class PrivacyBitsBuilder {
         return this;
     }
 
-    public PrivacyBitsBuilder WithAllFlagsDisabled()
+    PrivacyBitsBuilder WithAllFlagsDisabled()
     {
         legacyBit = false;
         isCstgDerived = false;
@@ -30,19 +30,19 @@ public class PrivacyBitsBuilder {
         return this;
     }
 
-    public PrivacyBitsBuilder WithClientSideGenerated(boolean isCstgDerived)
+    PrivacyBitsBuilder WithClientSideGenerated(boolean isCstgDerived)
     {
         this.isCstgDerived = isCstgDerived;
         return this;
     }
 
-    public PrivacyBitsBuilder WithOptedOut(boolean isOptedOut)
+    PrivacyBitsBuilder WithOptedOut(boolean isOptedOut)
     {
         this.isOptedOut = isOptedOut;
         return this;
     }
 
-    public int Build()
+    int Build()
     {
         return FlagsToInt(new boolean[] { legacyBit, isCstgDerived, isOptedOut });
     }
@@ -58,7 +58,7 @@ public class PrivacyBitsBuilder {
         return bitSetToInt(bitSet);
     }
 
-    public static int bitSetToInt(BitSet bitSet) {
+    static int bitSetToInt(BitSet bitSet) {
         int intValue = 0;
         for (int i = 0; i < bitSet.length(); i++) {
             intValue += (bitSet.get(i) ? 1 : 0) << i;

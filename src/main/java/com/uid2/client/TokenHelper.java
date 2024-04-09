@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class TokenHelper {
+class TokenHelper {
     private final Uid2Helper uid2Helper;
     private final Uid2ClientHelper uid2ClientHelper;
     private final AtomicReference<KeyContainer> container = new AtomicReference<>(null);;

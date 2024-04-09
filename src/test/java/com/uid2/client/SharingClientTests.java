@@ -18,7 +18,7 @@ import static com.uid2.client.TestData.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SharingClientTests {
-    public static SharingClient sharingClient = new SharingClient("ap", "ak", CLIENT_SECRET);
+    private final SharingClient sharingClient = new SharingClient("ap", "ak", CLIENT_SECRET);
 
     private static String keySharingResponse(IdentityScope identityScope, Integer callerSiteId, Integer defaultKeysetId, Integer tokenExpirySeconds, Key... keys) throws IOException {
         if (callerSiteId == null) {
@@ -91,22 +91,24 @@ public class SharingClientTests {
         }
     }
 
-    private void decryptAndAssertSuccess(String advertisingToken, int tokenVersion) {
+    private void decryptAndAssertSuccess(String advertisingToken, TokenVersionForTesting tokenVersion) {
         DecryptionResponse decryptionResponse = sharingClient.decryptTokenIntoRawUid(advertisingToken);
         assertSuccess(decryptionResponse, tokenVersion);
     }
 
     @ParameterizedTest
     @CsvSource({
-            "UID2, 2",
-            "EUID, 2",
-            "UID2, 3",
-            "EUID, 3",
-            "UID2, 4",
-            "EUID, 4"
+            "UID2, V2",
+            "EUID, V2",
+            "UID2, V3",
+            "EUID, V3",
+            "UID2, V4",
+            "EUID, V4"
     })
-    public void smokeTest(IdentityScope identityScope, int tokenVersion) throws Exception {
-        String advertisingToken = getAdvertisingToken(identityScope, tokenVersion, EXAMPLE_UID, Uid2TokenGenerator.defaultParams());
+
+
+    public void smokeTest(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
+        String advertisingToken = AdvertisingTokenBuilder.builder().withScope(identityScope).withVersion(tokenVersion).build();
 
         RefreshResponse refreshResponse = sharingClient.refreshJson(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
         assertTrue(refreshResponse.isSuccess());
@@ -116,17 +118,16 @@ public class SharingClientTests {
 
     @ParameterizedTest
     @CsvSource({
-            "UID2, 2",
-            "EUID, 2",
-            "UID2, 3",
-            "EUID, 3",
-            "UID2, 4",
-            "EUID, 4"
+            "UID2, V2",
+            "EUID, V2",
+            "UID2, V3",
+            "EUID, V3",
+            "UID2, V4",
+            "EUID, V4"
     })
-    public void tokenLifetimeTooLongForSharing(IdentityScope identityScope, int tokenVersion) throws Exception {
-        Uid2TokenGenerator.Params params = Uid2TokenGenerator.defaultParams();
-        params.tokenExpiry = Instant.now().plus(30, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES);
-        String advertisingToken = getAdvertisingToken(identityScope, tokenVersion, EXAMPLE_UID, params);
+    public void tokenLifetimeTooLongForSharing(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
+        Instant tokenExpiry = Instant.now().plus(30, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES);
+        String advertisingToken = AdvertisingTokenBuilder.builder().withExpiry(tokenExpiry).withScope(identityScope).withVersion(tokenVersion).build();
         RefreshResponse refreshResponse = sharingClient.refreshJson(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
         assertTrue(refreshResponse.isSuccess());
 
@@ -136,17 +137,16 @@ public class SharingClientTests {
 
     @ParameterizedTest
     @CsvSource({
-            "UID2, 2",
-            "EUID, 2",
-            "UID2, 3",
-            "EUID, 3",
-            "UID2, 4",
-            "EUID, 4"
+            "UID2, V2",
+            "EUID, V2",
+            "UID2, V3",
+            "EUID, V3",
+            "UID2, V4",
+            "EUID, V4"
     })
-    public void tokenGeneratedInTheFutureToSimulateClockSkew(IdentityScope identityScope, int tokenVersion) throws Exception {
-        Uid2TokenGenerator.Params params = Uid2TokenGenerator.defaultParams();
-        params.tokenGenerated = Instant.now().plus(31, ChronoUnit.MINUTES);
-        String advertisingToken = getAdvertisingToken(identityScope, tokenVersion, EXAMPLE_UID, params);
+    public void tokenGeneratedInTheFutureToSimulateClockSkew(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
+        Instant tokenGenerated = Instant.now().plus(31, ChronoUnit.MINUTES);
+        String advertisingToken = AdvertisingTokenBuilder.builder().withGenerated(tokenGenerated).withScope(identityScope).withVersion(tokenVersion).build();
         RefreshResponse refreshResponse = sharingClient.refreshJson(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
         assertTrue(refreshResponse.isSuccess());
 
@@ -156,17 +156,16 @@ public class SharingClientTests {
 
     @ParameterizedTest
     @CsvSource({
-            "UID2, 2",
-            "EUID, 2",
-            "UID2, 3",
-            "EUID, 3",
-            "UID2, 4",
-            "EUID, 4"
+            "UID2, V2",
+            "EUID, V2",
+            "UID2, V3",
+            "EUID, V3",
+            "UID2, V4",
+            "EUID, V4"
     })
-    public void tokenGeneratedInTheFutureWithinAllowedClockSkew(IdentityScope identityScope, int tokenVersion) throws Exception {
-        Uid2TokenGenerator.Params params = Uid2TokenGenerator.defaultParams();
-        params.tokenGenerated = Instant.now().plus(30, ChronoUnit.MINUTES);
-        String advertisingToken = getAdvertisingToken(identityScope, tokenVersion, EXAMPLE_UID, params);
+    public void tokenGeneratedInTheFutureWithinAllowedClockSkew(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
+        Instant tokenGenerated = Instant.now().plus(30, ChronoUnit.MINUTES);
+        String advertisingToken = AdvertisingTokenBuilder.builder().withGenerated(tokenGenerated).withScope(identityScope).withVersion(tokenVersion).build();
         RefreshResponse refreshResponse = sharingClient.refreshJson(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
         assertTrue(refreshResponse.isSuccess());
 
@@ -175,51 +174,50 @@ public class SharingClientTests {
 
     @ParameterizedTest
     @CsvSource({
-            "UID2, 3",
-            "EUID, 3",
-            "UID2, 4",
-            "EUID, 4"
+            "UID2, V3",
+            "EUID, V3",
+            "UID2, V4",
+            "EUID, V4"
     })
-    public void phoneTest(IdentityScope identityScope, int tokenVersion) throws Exception {
+    public void phoneTest(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
         String rawUidPhone = "BEOGxroPLdcY7LrSiwjY52+X05V0ryELpJmoWAyXiwbZ";
-        String advertisingToken = getAdvertisingToken(identityScope, tokenVersion, rawUidPhone, Uid2TokenGenerator.defaultParams());
+        String advertisingToken = AdvertisingTokenBuilder.builder().withRawUid(rawUidPhone).withScope(identityScope).withVersion(tokenVersion).build();
         RefreshResponse refreshResponse = sharingClient.refreshJson(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
         assertTrue(refreshResponse.isSuccess());
 
         DecryptionResponse decryptionResponse = sharingClient.decryptTokenIntoRawUid(advertisingToken);
         assertTrue(decryptionResponse.isSuccess());
         assertEquals(rawUidPhone, decryptionResponse.getUid());
-        assertEquals(tokenVersion, decryptionResponse.getAdvertisingTokenVersion());
+        assertEquals(tokenVersion.ordinal() + 2, decryptionResponse.getAdvertisingTokenVersion());
         assertEquals(IdentityType.Phone, decryptionResponse.getIdentityType());
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {2, 3, 4})
-    public void legacyResponseFromOldOperator(int tokenVersion) throws Exception {
+    @ValueSource(strings = {"V2", "V3", "V4"})
+    public void legacyResponseFromOldOperator(TokenVersionForTesting tokenVersion) throws Exception {
         RefreshResponse refreshResponse = sharingClient.refreshJson(keySetToJsonForSharing(MASTER_KEY, SITE_KEY));
         assertTrue(refreshResponse.isSuccess());
-        String advertisingToken = getAdvertisingToken(IdentityScope.UID2, tokenVersion, EXAMPLE_UID, Uid2TokenGenerator.defaultParams());
+        String advertisingToken = AdvertisingTokenBuilder.builder().withVersion(tokenVersion).build();
 
         decryptAndAssertSuccess(advertisingToken, tokenVersion);
     }
 
     @ParameterizedTest
     @CsvSource({
-            "UID2, 2",
-            "EUID, 2",
-            "UID2, 3",
-            "EUID, 3",
-            "UID2, 4",
-            "EUID, 4"
+            "UID2, V2",
+            "EUID, V2",
+            "UID2, V3",
+            "EUID, V3",
+            "UID2, V4",
+            "EUID, V4"
     })
     //similar to BidstreamClientTests.TokenGeneratedInTheFutureLegacyClient, but uses KeySharingResponse and Decrypt without domain parameter
-    public void tokenGeneratedInTheFutureLegacyClient(IdentityScope identityScope, int tokenVersion) throws Exception {
+    public void tokenGeneratedInTheFutureLegacyClient(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, identityScope);
         client.refreshJson(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
 
-        Uid2TokenGenerator.Params params = Uid2TokenGenerator.defaultParams();
-        params.tokenGenerated = Instant.now().plus(99, ChronoUnit.DAYS);
-        String advertisingToken = getAdvertisingToken(identityScope, tokenVersion, EXAMPLE_UID, params);
+        Instant tokenGenerated = Instant.now().plus(99, ChronoUnit.DAYS);
+        String advertisingToken = AdvertisingTokenBuilder.builder().withGenerated(tokenGenerated).withScope(identityScope).withVersion(tokenVersion).build();
 
         DecryptionResponse decryptionResponse = client.decrypt(advertisingToken);
         assertSuccess(decryptionResponse, tokenVersion);
@@ -227,20 +225,19 @@ public class SharingClientTests {
 
     @ParameterizedTest
     @CsvSource({
-            "UID2, 2",
-            "EUID, 2",
-            "UID2, 3",
-            "EUID, 3",
-            "UID2, 4",
-            "EUID, 4"
+            "UID2, V2",
+            "EUID, V2",
+            "UID2, V3",
+            "EUID, V3",
+            "UID2, V4",
+            "EUID, V4"
     })
-    public void tokenLifetimeTooLongLegacyClient(IdentityScope identityScope, int tokenVersion) throws Exception {
+    public void tokenLifetimeTooLongLegacyClient(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, identityScope);
         client.refreshJson(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
 
-        Uid2TokenGenerator.Params params = Uid2TokenGenerator.defaultParams();
-        params.tokenExpiry = Instant.now().plus(3, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES);
-        String advertisingToken = getAdvertisingToken(identityScope, tokenVersion, EXAMPLE_UID, params);
+        Instant tokenExpiry = Instant.now().plus(3, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES);
+        String advertisingToken = AdvertisingTokenBuilder.builder().withExpiry(tokenExpiry).withScope(identityScope).withVersion(tokenVersion).build();
 
         DecryptionResponse decryptionResponse = client.decrypt(advertisingToken);
         assertSuccess(decryptionResponse, tokenVersion);
@@ -261,7 +258,7 @@ public class SharingClientTests {
     private String sharingEncrypt(SharingClient client, IdentityScope identityScope) {
         EncryptionDataResponse encrypted = client.encryptRawUidIntoToken(EXAMPLE_UID);
         assertEquals(EncryptionStatus.SUCCESS, encrypted.getStatus());
-        validateAdvertisingToken(encrypted.getEncryptedData(), identityScope, IdentityType.Email, 4);
+        validateAdvertisingToken(encrypted.getEncryptedData(), identityScope, IdentityType.Email, TokenVersionForTesting  .V4);
         return encrypted.getEncryptedData();
     }
 
@@ -299,7 +296,7 @@ public class SharingClientTests {
         assertTrue(refreshResponse.isSuccess());
 
         DecryptionResponse res = receivingClient.decryptTokenIntoRawUid(advertisingToken);
-        assertSame(DecryptionStatus.SUCCESS, res.getStatus());
+        assertEquals(DecryptionStatus.SUCCESS, res.getStatus());
         assertEquals(EXAMPLE_UID, res.getUid());
     }
 
