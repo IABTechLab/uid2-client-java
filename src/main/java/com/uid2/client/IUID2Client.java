@@ -2,6 +2,10 @@ package com.uid2.client;
 
 import java.time.Instant;
 
+/**
+ * @deprecated Please use BidstreamClient or SharingClient instead.
+ */
+@Deprecated
 public interface IUID2Client {
 
     /**

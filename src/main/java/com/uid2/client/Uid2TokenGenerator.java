@@ -19,9 +19,13 @@ class Uid2TokenGenerator {
     {
         Instant tokenExpiry = Instant.now().plus(1, ChronoUnit.HOURS);
         public int identityScope = IdentityScope.UID2.value;
+        public Instant tokenGenerated = Instant.now();
+        public int tokenPrivacyBits = 0;
 
         public Params() {}
         public Params withTokenExpiry(Instant expiry) { tokenExpiry = expiry; return this; }
+        public Params WithTokenGenerated(Instant generated) { tokenGenerated = generated; return this; }
+        public Params WithPrivacyBits(int privacyBits) {  tokenPrivacyBits = privacyBits; return this; }
     }
 
     public static Params defaultParams() { return new Params(); }
@@ -38,8 +42,8 @@ class Uid2TokenGenerator {
         identityWriter.putInt((int) siteId);
         identityWriter.putInt(uidBytes.length);
         identityWriter.put(uidBytes);
-        identityWriter.putInt(0);
-        identityWriter.putLong(Instant.now().minus(1, ChronoUnit.HOURS).toEpochMilli());
+        identityWriter.putInt(params.tokenPrivacyBits);
+        identityWriter.putLong(params.tokenGenerated.toEpochMilli());
         byte[] identityIv = new byte[16];
         rd.nextBytes(identityIv);
         byte[] encryptedIdentity = encrypt(identityWriter.array(), identityIv, siteKey.getSecret());
@@ -63,20 +67,20 @@ class Uid2TokenGenerator {
     }
 
     public static String generateUid2TokenV3(String uid, Key masterKey, long siteId, Key siteKey, Params params) {
-        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V3);
+        return generateUID2TokenV3OrV4(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V3);
     }
 
     public static String generateUid2TokenV4(String uid, Key masterKey, long siteId, Key siteKey, Params params)  {
-        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V4);
+        return generateUID2TokenV3OrV4(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V4);
     }
 
     public static String generateEuidTokenV4(String uid, Key masterKey, long siteId, Key siteKey, Params params) {
         params.identityScope = IdentityScope.EUID.value;
-        return generateUID2TokenWithDebugInfo(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V4);
+        return generateUID2TokenV3OrV4(uid, masterKey, siteId, siteKey, params, AdvertisingTokenVersion.V4);
     }
 
 
-    private static String generateUID2TokenWithDebugInfo(String uid, Key masterKey, long siteId, Key siteKey, Params params, AdvertisingTokenVersion adTokenVersion) {
+    private static String generateUID2TokenV3OrV4(String uid, Key masterKey, long siteId, Key siteKey, Params params, AdvertisingTokenVersion adTokenVersion) {
         final ByteBuffer sitePayloadWriter = ByteBuffer.allocate(128);
 
         // publisher data
@@ -85,14 +89,14 @@ class Uid2TokenGenerator {
         sitePayloadWriter.putInt(0); // client key id
 
         // user identity data
-        sitePayloadWriter.putInt(0); // privacy bits
-        sitePayloadWriter.putLong(Instant.now().minus(1, ChronoUnit.HOURS).toEpochMilli()); // established
-        sitePayloadWriter.putLong(Instant.now().toEpochMilli()); // last refreshed
+        sitePayloadWriter.putInt(params.tokenPrivacyBits); // privacy bits
+        sitePayloadWriter.putLong(params.tokenGenerated.toEpochMilli()); // established
+        sitePayloadWriter.putLong(params.tokenGenerated.toEpochMilli()); // last refreshed
         sitePayloadWriter.put(Base64.getDecoder().decode(uid));
 
         final ByteBuffer masterPayloadWriter = ByteBuffer.allocate(256);
         masterPayloadWriter.putLong(params.tokenExpiry.toEpochMilli());
-        masterPayloadWriter.putLong(Instant.now().toEpochMilli()); // token created
+        masterPayloadWriter.putLong(params.tokenGenerated.toEpochMilli()); // token created
 
         // operator identity data
         masterPayloadWriter.putInt(0); // site id
