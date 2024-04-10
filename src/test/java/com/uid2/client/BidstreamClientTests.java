@@ -280,7 +280,6 @@ public class BidstreamClientTests {
         assertTrue(response.isSuccess());
         assertEquals(EXAMPLE_UID, response.getUid());
         assertEquals(tokenVersion.ordinal() + 2, response.getAdvertisingTokenVersion());
-        assertEquals(tokenVersion.ordinal() + 2, response.getAdvertisingTokenVersion());
         if (tokenVersion != TokenVersionForTesting.V2) {
             assertEquals(IdentityType.Email, response.getIdentityType());
         }
