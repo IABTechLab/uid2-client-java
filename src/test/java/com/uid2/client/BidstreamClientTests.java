@@ -104,6 +104,7 @@ public class BidstreamClientTests {
     }
 
     @ParameterizedTest
+    //Note V2 does not have a "token generated" field, therefore v2 tokens can't have a future "token generated" date and are excluded from this test.
     @CsvSource({
             "UID2, V3",
             "EUID, V3",
