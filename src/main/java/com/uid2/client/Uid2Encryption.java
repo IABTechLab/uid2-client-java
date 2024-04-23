@@ -103,7 +103,7 @@ class Uid2Encryption {
                 return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId, siteKey.getSiteId(), null, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
             }
 
-            if (!doesTokenHaveValidLifetime(clientType, keys, established, expiry, now)) {
+            if (!doesTokenHaveValidLifetime(clientType, keys, now, expiry, now)) {
                 return DecryptionResponse.makeError(DecryptionStatus.INVALID_TOKEN_LIFETIME, established, siteId, siteKey.getSiteId(), null, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
             }
 
@@ -136,7 +136,8 @@ class Uid2Encryption {
             final ByteBuffer masterReader = ByteBuffer.wrap(masterPayload);
 
             final long expiresMilliseconds = masterReader.getLong();
-            final long createdMilliseconds = masterReader.getLong();
+            final long generatedMilliseconds = masterReader.getLong();
+            Instant generated = Instant.ofEpochMilli(generatedMilliseconds);
 
             final int operatorSideId = masterReader.getInt();
             final byte operatorType = masterReader.get();
@@ -168,8 +169,8 @@ class Uid2Encryption {
                 return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId, siteKey.getSiteId(), identityType, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
             }
 
-            if (!doesTokenHaveValidLifetime(clientType, keys, established, expiry, now)) {
-                return DecryptionResponse.makeError(DecryptionStatus.INVALID_TOKEN_LIFETIME, established, siteId, siteKey.getSiteId(), identityType, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
+            if (!doesTokenHaveValidLifetime(clientType, keys, generated, expiry, now)) {
+                return DecryptionResponse.makeError(DecryptionStatus.INVALID_TOKEN_LIFETIME, generated, siteId, siteKey.getSiteId(), identityType, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
             }
 
             return new DecryptionResponse(DecryptionStatus.SUCCESS, idString, established, siteId, siteKey.getSiteId(), identityType, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
@@ -401,7 +402,7 @@ class Uid2Encryption {
         }
     }
 
-    private static boolean doesTokenHaveValidLifetime(ClientType clientType, KeyContainer keys, Instant established, Instant expiry, Instant now) {
+    private static boolean doesTokenHaveValidLifetime(ClientType clientType, KeyContainer keys, Instant generatedOrNow, Instant expiry, Instant now) {
         long maxLifetimeSeconds;
         switch (clientType) {
             case BIDSTREAM:
@@ -413,17 +414,18 @@ class Uid2Encryption {
             default: //Legacy
                 return true;
         }
-        return doesTokenHaveValidLifetimeImpl(established, expiry, now, maxLifetimeSeconds, keys.getAllowClockSkewSeconds());
+        //generatedOrNow allows "now" for token v2, since v2 does not contain a "token generated" field. v2 therefore checks against remaining lifetime rather than total lifetime.
+        return doesTokenHaveValidLifetimeImpl(generatedOrNow, expiry, now, maxLifetimeSeconds, keys.getAllowClockSkewSeconds());
     }
 
-    private static boolean doesTokenHaveValidLifetimeImpl(Instant established, Instant expiry, Instant now, long maxLifetimeSeconds, long allowClockSkewSeconds)
+    private static boolean doesTokenHaveValidLifetimeImpl(Instant generatedOrNow, Instant expiry, Instant now, long maxLifetimeSeconds, long allowClockSkewSeconds)
     {
-        Duration lifetime = Duration.between(established, expiry);
+        Duration lifetime = Duration.between(generatedOrNow, expiry);
         if (lifetime.getSeconds() > maxLifetimeSeconds) {
             return false;
         }
 
-        Duration skewDuration = Duration.between(now, established);
+        Duration skewDuration = Duration.between(now, generatedOrNow);
         return skewDuration.getSeconds() <= allowClockSkewSeconds;
     }
 

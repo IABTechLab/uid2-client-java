@@ -16,6 +16,7 @@ class AdvertisingTokenBuilder {
     Instant expiry = Instant.now().plus(1, ChronoUnit.HOURS);
     IdentityScope identityScope = IdentityScope.UID2;
     Instant generated = Instant.now();
+    Instant established = Instant.now();
 
     static AdvertisingTokenBuilder builder() {
         return new AdvertisingTokenBuilder();
@@ -69,9 +70,14 @@ class AdvertisingTokenBuilder {
         return this;
     }
 
+    AdvertisingTokenBuilder withEstablished(Instant established)
+    {
+        this.established = established;
+        return this;
+    }
 
     String build() throws Exception {
-        Uid2TokenGenerator.Params params = Uid2TokenGenerator.defaultParams().WithPrivacyBits(privacyBits).withTokenExpiry(expiry).WithTokenGenerated(generated);
+        Uid2TokenGenerator.Params params = Uid2TokenGenerator.defaultParams().WithPrivacyBits(privacyBits).withTokenExpiry(expiry).WithTokenGenerated(generated).WithIdentityEstablished(established);
 
         params.identityScope = identityScope.value;
         String token;

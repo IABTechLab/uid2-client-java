@@ -33,9 +33,10 @@ public class BidstreamClientTests {
             "UID2, V4",
             "EUID, V4"
     })
-    public void smokeTest(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
-        String advertisingToken = AdvertisingTokenBuilder.builder().withScope(identityScope).withVersion(tokenVersion).build();
-        callAndVerifyRefreshJson(identityScope);
+    public void smokeTestForBidstream(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
+        Instant now = Instant.now();
+        String advertisingToken = AdvertisingTokenBuilder.builder().withScope(identityScope).withVersion(tokenVersion).withEstablished(now.minus(120, ChronoUnit.DAYS)).withGenerated(now.plus(-1, ChronoUnit.DAYS)).withExpiry(now.plus(2, ChronoUnit.DAYS)).build();
+        refresh(keyBidstreamResponse(identityScope, MASTER_KEY, SITE_KEY));
 
         decryptAndAssertSuccess(advertisingToken, tokenVersion);
     }
@@ -50,7 +51,7 @@ public class BidstreamClientTests {
     public void phoneTest(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
         String rawUidPhone = "BEOGxroPLdcY7LrSiwjY52+X05V0ryELpJmoWAyXiwbZ";
         String advertisingToken = AdvertisingTokenBuilder.builder().withRawUid(rawUidPhone).withScope(identityScope).withVersion(tokenVersion).build();
-        callAndVerifyRefreshJson(identityScope);
+        refresh(keyBidstreamResponse(identityScope, MASTER_KEY, SITE_KEY));
 
         DecryptionResponse decryptionResponse = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, null);
         assertTrue(decryptionResponse.isSuccess());
@@ -68,13 +69,19 @@ public class BidstreamClientTests {
             "UID2, V4",
             "EUID, V4"
     })
-    public void tokenLifetimeTooLongForBidstream(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
-        Instant tokenExpiry = Instant.now().plus(3, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES);
-        String advertisingToken = AdvertisingTokenBuilder.builder().withExpiry(tokenExpiry).withScope(identityScope).withVersion(tokenVersion).build();
-        callAndVerifyRefreshJson(identityScope);
+    public void tokenLifetimeTooLongForBidstreamButRemainingLifetimeAllowed(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
+        Instant generated = Instant.now().minus(1, ChronoUnit.DAYS);
+        Instant tokenExpiry = generated.plus(3, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES);
+        String advertisingToken = AdvertisingTokenBuilder.builder().withExpiry(tokenExpiry).withScope(identityScope).withVersion(tokenVersion).withGenerated(generated).build();
+        refresh(keyBidstreamResponse(identityScope, MASTER_KEY, SITE_KEY));
 
         DecryptionResponse decryptionResponse = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, null);
-        assertFails(decryptionResponse, tokenVersion);
+
+        if (tokenVersion == TokenVersionForTesting.V2) {
+            assertSuccess(decryptionResponse, tokenVersion);
+        } else {
+            assertFails(decryptionResponse, tokenVersion);
+        }
     }
 
     @ParameterizedTest
@@ -86,10 +93,27 @@ public class BidstreamClientTests {
             "UID2, V4",
             "EUID, V4"
     })
+    public void tokenRemainingLifetimeTooLongForBidstream(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
+        Instant tokenExpiry = Instant.now().plus(3, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES);
+        Instant generated = Instant.now();
+        String advertisingToken = AdvertisingTokenBuilder.builder().withExpiry(tokenExpiry).withScope(identityScope).withVersion(tokenVersion).withGenerated(generated).build();
+        refresh(keyBidstreamResponse(identityScope, MASTER_KEY, SITE_KEY));
+
+        DecryptionResponse decryptionResponse = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, null);
+        assertFails(decryptionResponse, tokenVersion);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "UID2, V3",
+            "EUID, V3",
+            "UID2, V4",
+            "EUID, V4"
+    })
     public void tokenGeneratedInTheFutureToSimulateClockSkew(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
         Instant tokenGenerated = Instant.now().plus(31, ChronoUnit.MINUTES);
         String advertisingToken = AdvertisingTokenBuilder.builder().withGenerated(tokenGenerated).withScope(identityScope).withVersion(tokenVersion).build();
-        callAndVerifyRefreshJson(identityScope);
+        refresh(keyBidstreamResponse(identityScope, MASTER_KEY, SITE_KEY));
 
         DecryptionResponse decryptionResponse = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, null);
         assertFails(decryptionResponse, tokenVersion);
@@ -107,7 +131,7 @@ public class BidstreamClientTests {
     public void tokenGeneratedInTheFutureWithinAllowedClockSkew(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
         Instant tokenGenerated = Instant.now().plus(30, ChronoUnit.MINUTES);
         String advertisingToken = AdvertisingTokenBuilder.builder().withGenerated(tokenGenerated).withScope(identityScope).withVersion(tokenVersion).build();
-        callAndVerifyRefreshJson(identityScope);
+        refresh(keyBidstreamResponse(identityScope, MASTER_KEY, SITE_KEY));
 
         decryptAndAssertSuccess(advertisingToken, tokenVersion);
     }
@@ -115,8 +139,7 @@ public class BidstreamClientTests {
     @ParameterizedTest
     @ValueSource(strings = {"V2", "V3", "V4"})
     public void legacyResponseFromOldOperator(TokenVersionForTesting tokenVersion) throws Exception {
-        RefreshResponse refreshResponse = bidstreamClient.refreshJson(keySetToJsonForSharing(MASTER_KEY, SITE_KEY));
-        assertTrue(refreshResponse.isSuccess());
+        refresh(keySetToJsonForSharing(MASTER_KEY, SITE_KEY));
         String advertisingToken = AdvertisingTokenBuilder.builder().withVersion(tokenVersion).build();
 
         decryptAndAssertSuccess(advertisingToken, tokenVersion);
@@ -165,7 +188,7 @@ public class BidstreamClientTests {
     @ParameterizedTest
     @MethodSource("data_IdentityScopeAndType_TestCases")
     public void identityScopeAndType_TestCases(String uid, IdentityScope identityScope, IdentityType identityType) throws Exception {
-        callAndVerifyRefreshJson(identityScope);
+        refresh(keyBidstreamResponse(identityScope, MASTER_KEY, SITE_KEY));
 
         String advertisingToken = AdvertisingTokenBuilder.builder().withRawUid(uid).withScope(identityScope).build();
         DecryptionResponse res = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, null);
@@ -194,7 +217,7 @@ public class BidstreamClientTests {
             "example.org, V4"
     })
     public void TokenIsCstgDerivedTest(String domainName, TokenVersionForTesting tokenVersion) throws Exception {
-        callAndVerifyRefreshJson(IdentityScope.UID2);
+        refresh(keyBidstreamResponse(IdentityScope.UID2, MASTER_KEY, SITE_KEY));
         int privacyBits = PrivacyBitsBuilder.Builder().WithClientSideGenerated(true).Build();
 
         String advertisingToken = AdvertisingTokenBuilder.builder().withVersion(tokenVersion).withPrivacyBits(privacyBits).build();
@@ -221,8 +244,7 @@ public class BidstreamClientTests {
 
         Key masterKeyExpired = new Key(MASTER_KEY_ID, -1, NOW, NOW.minus(2, ChronoUnit.HOURS), NOW.minus(1, ChronoUnit.HOURS), getMasterSecret());
         Key siteKeyExpired = new Key(SITE_KEY_ID, SITE_ID, NOW, NOW.minus(2, ChronoUnit.HOURS), NOW.minus(1, ChronoUnit.HOURS), getSiteSecret());
-        RefreshResponse refreshResponse = bidstreamClient.refreshJson(keyBidstreamResponse(IdentityScope.UID2, masterKeyExpired, siteKeyExpired));
-        assertTrue(refreshResponse.isSuccess());
+        refresh(keyBidstreamResponse(IdentityScope.UID2, masterKeyExpired, siteKeyExpired));
 
         DecryptionResponse res = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, null);
         assertEquals(DecryptionStatus.KEYS_NOT_SYNCED, res.getStatus());
@@ -234,8 +256,7 @@ public class BidstreamClientTests {
 
         Key anotherMasterKey = new Key(MASTER_KEY_ID + SITE_KEY_ID + 1, -1, NOW, NOW, NOW.plus(1, ChronoUnit.HOURS), getMasterSecret());
         Key anotherSiteKey = new Key(MASTER_KEY_ID + SITE_KEY_ID + 2, SITE_ID, NOW, NOW, NOW.plus(1, ChronoUnit.HOURS), getSiteSecret());
-        RefreshResponse refreshResponse = bidstreamClient.refreshJson(keyBidstreamResponse(IdentityScope.UID2, anotherMasterKey, anotherSiteKey));
-        assertTrue(refreshResponse.isSuccess());
+        refresh(keyBidstreamResponse(IdentityScope.UID2, anotherMasterKey, anotherSiteKey));
 
         DecryptionResponse res = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, null);
         assertEquals(DecryptionStatus.NOT_AUTHORIZED_FOR_MASTER_KEY, res.getStatus());
@@ -246,7 +267,7 @@ public class BidstreamClientTests {
         String payload = AdvertisingTokenBuilder.builder().build();
         byte[] payloadInBytes = Uid2Base64UrlCoder.decode(payload);
         String advertisingToken = Uid2Base64UrlCoder.encode(Arrays.copyOfRange(payloadInBytes, 0, payloadInBytes.length - 1));
-        bidstreamClient.refreshJson(keyBidstreamResponse(IdentityScope.UID2, MASTER_KEY, SITE_KEY));
+        refresh(keyBidstreamResponse(IdentityScope.UID2, MASTER_KEY, SITE_KEY));
         DecryptionResponse res = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, null);
         assertEquals(DecryptionStatus.INVALID_PAYLOAD, res.getStatus());
     }
@@ -256,7 +277,7 @@ public class BidstreamClientTests {
         final Instant expiry = Instant.parse("2021-03-22T09:01:02Z");
         final Instant generated = expiry.minus(60, ChronoUnit.SECONDS);
 
-        bidstreamClient.refreshJson(keyBidstreamResponse(IdentityScope.UID2, MASTER_KEY, SITE_KEY));
+        refresh(keyBidstreamResponse(IdentityScope.UID2, MASTER_KEY, SITE_KEY));
         String advertisingToken = AdvertisingTokenBuilder.builder().withExpiry(expiry).withGenerated(generated).build();
 
         DecryptionResponse res = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, null, expiry.plus(1, ChronoUnit.SECONDS));
@@ -266,8 +287,8 @@ public class BidstreamClientTests {
         assertEquals(EXAMPLE_UID, res.getUid());
     }
 
-    private void callAndVerifyRefreshJson(IdentityScope identityScope) {
-        RefreshResponse refreshResponse = bidstreamClient.refreshJson(keyBidstreamResponse(identityScope, MASTER_KEY, SITE_KEY));
+    private void refresh(String json) {
+        RefreshResponse refreshResponse = bidstreamClient.refreshJson(json);
         assertTrue(refreshResponse.isSuccess());
     }
 
