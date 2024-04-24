@@ -29,7 +29,7 @@ public class IntegrationExamples {
         System.out.println("SiteId: " + result.getSiteId());
         System.out.println("UID: " + result.getUid());
         System.out.println("Established: " + result.getEstablished());
-        System.out.println("SiteId: " + result.getSiteId());
+        System.out.println("AdvertisingTokenVersion: " + result.getAdvertisingTokenVersion());
         System.out.println("IsClientSideGenerated: " + result.getIsClientSideGenerated());
     }
 

@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
@@ -40,7 +41,7 @@ public class SharingClientTests {
         jsonWriter.name("token_expiry_seconds").value(tokenExpirySeconds);
         jsonWriter.name("identity_scope").value(identityScope.toString());
         jsonWriter.name("allow_clock_skew_seconds").value(1800); // 30 min
-        jsonWriter.name("max_sharing_lifetime_seconds").value(2592000); // 30 days
+        jsonWriter.name("max_sharing_lifetime_seconds").value(Duration.ofDays(30).getSeconds()); // 30 days
         jsonWriter.name("unexpected_header_field").value("123"); //ensure new fields can be handled by old SDK versions
 
         if (defaultKeysetId != null)
@@ -96,6 +97,11 @@ public class SharingClientTests {
         assertSuccess(decryptionResponse, tokenVersion);
     }
 
+    private void refresh(String json) throws IOException {
+        RefreshResponse refreshResponse = sharingClient.refreshJson(json);
+        assertTrue(refreshResponse.isSuccess());
+    }
+
     @ParameterizedTest
     @CsvSource({
             "UID2, V2",
@@ -105,11 +111,11 @@ public class SharingClientTests {
             "UID2, V4",
             "EUID, V4"
     })
-    public void smokeTest(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
-        String advertisingToken = AdvertisingTokenBuilder.builder().withScope(identityScope).withVersion(tokenVersion).build();
+    public void smokeTestForSharing(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
+        Instant now = Instant.now();
+        String advertisingToken = AdvertisingTokenBuilder.builder().withScope(identityScope).withEstablished(now.minus(120, ChronoUnit.DAYS)).withExpiry(now.plus(29, ChronoUnit.DAYS)).withGenerated(now.minus(1, ChronoUnit.DAYS)).withVersion(tokenVersion).build();
 
-        RefreshResponse refreshResponse = sharingClient.refreshJson(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
-        assertTrue(refreshResponse.isSuccess());
+        refresh(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
 
         decryptAndAssertSuccess(advertisingToken, tokenVersion);
     }
@@ -123,14 +129,20 @@ public class SharingClientTests {
             "UID2, V4",
             "EUID, V4"
     })
-    public void tokenLifetimeTooLongForSharing(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
-        Instant tokenExpiry = Instant.now().plus(30, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES);
-        String advertisingToken = AdvertisingTokenBuilder.builder().withExpiry(tokenExpiry).withScope(identityScope).withVersion(tokenVersion).build();
-        RefreshResponse refreshResponse = sharingClient.refreshJson(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
-        assertTrue(refreshResponse.isSuccess());
+    public void tokenLifetimeTooLongForSharingButRemainingLifetimeAllowed(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
+        Instant now = Instant.now();
+        Instant generated = now.minus(1, ChronoUnit.DAYS);
+        Instant tokenExpiry = generated.plus(30, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES);
+        String advertisingToken = AdvertisingTokenBuilder.builder().withExpiry(tokenExpiry).withScope(identityScope).withVersion(tokenVersion).withGenerated(generated).build();
+        refresh(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
 
         DecryptionResponse decryptionResponse = sharingClient.decryptTokenIntoRawUid(advertisingToken);
-        assertFails(decryptionResponse, tokenVersion);
+
+        if (tokenVersion == TokenVersionForTesting.V2) {
+            assertSuccess(decryptionResponse, tokenVersion);
+        } else {
+            assertFails(decryptionResponse, tokenVersion);
+        }
     }
 
     @ParameterizedTest
@@ -142,11 +154,28 @@ public class SharingClientTests {
             "UID2, V4",
             "EUID, V4"
     })
+    public void tokenRemainingLifetimeTooLongForSharing(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
+        Instant now = Instant.now();
+        Instant tokenExpiry = now.plus(30, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES);
+        String advertisingToken = AdvertisingTokenBuilder.builder().withExpiry(tokenExpiry).withScope(identityScope).withVersion(tokenVersion).withGenerated(now).build();
+        refresh(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
+
+        DecryptionResponse decryptionResponse = sharingClient.decryptTokenIntoRawUid(advertisingToken);
+        assertFails(decryptionResponse, tokenVersion);
+    }
+
+    @ParameterizedTest
+    //Note V2 does not have a "token generated" field, therefore v2 tokens can't have a future "token generated" date and are excluded from this test.
+    @CsvSource({
+            "UID2, V3",
+            "EUID, V3",
+            "UID2, V4",
+            "EUID, V4"
+    })
     public void tokenGeneratedInTheFutureToSimulateClockSkew(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
         Instant tokenGenerated = Instant.now().plus(31, ChronoUnit.MINUTES);
         String advertisingToken = AdvertisingTokenBuilder.builder().withGenerated(tokenGenerated).withScope(identityScope).withVersion(tokenVersion).build();
-        RefreshResponse refreshResponse = sharingClient.refreshJson(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
-        assertTrue(refreshResponse.isSuccess());
+        refresh(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
 
         DecryptionResponse decryptionResponse = sharingClient.decryptTokenIntoRawUid(advertisingToken);
         assertFails(decryptionResponse, tokenVersion);
@@ -164,8 +193,7 @@ public class SharingClientTests {
     public void tokenGeneratedInTheFutureWithinAllowedClockSkew(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
         Instant tokenGenerated = Instant.now().plus(30, ChronoUnit.MINUTES);
         String advertisingToken = AdvertisingTokenBuilder.builder().withGenerated(tokenGenerated).withScope(identityScope).withVersion(tokenVersion).build();
-        RefreshResponse refreshResponse = sharingClient.refreshJson(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
-        assertTrue(refreshResponse.isSuccess());
+        refresh(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
 
         decryptAndAssertSuccess(advertisingToken, tokenVersion);
     }
@@ -180,8 +208,7 @@ public class SharingClientTests {
     public void phoneTest(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
         String rawUidPhone = "BEOGxroPLdcY7LrSiwjY52+X05V0ryELpJmoWAyXiwbZ";
         String advertisingToken = AdvertisingTokenBuilder.builder().withRawUid(rawUidPhone).withScope(identityScope).withVersion(tokenVersion).build();
-        RefreshResponse refreshResponse = sharingClient.refreshJson(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
-        assertTrue(refreshResponse.isSuccess());
+        refresh(keySharingResponse(identityScope, MASTER_KEY, SITE_KEY));
 
         DecryptionResponse decryptionResponse = sharingClient.decryptTokenIntoRawUid(advertisingToken);
         assertTrue(decryptionResponse.isSuccess());
@@ -193,8 +220,7 @@ public class SharingClientTests {
     @ParameterizedTest
     @ValueSource(strings = {"V2", "V3", "V4"})
     public void legacyResponseFromOldOperator(TokenVersionForTesting tokenVersion) throws Exception {
-        RefreshResponse refreshResponse = sharingClient.refreshJson(keySetToJsonForSharing(MASTER_KEY, SITE_KEY));
-        assertTrue(refreshResponse.isSuccess());
+        refresh(keySetToJsonForSharing(MASTER_KEY, SITE_KEY));
         String advertisingToken = AdvertisingTokenBuilder.builder().withVersion(tokenVersion).build();
 
         decryptAndAssertSuccess(advertisingToken, tokenVersion);
@@ -243,8 +269,7 @@ public class SharingClientTests {
 
     // tests below taken from EncryptionTestsV4.cs under "//  Sharing tests" comment and modified to use SharingClient and the new JSON /key/sharing response
     private SharingClient SharingSetupAndEncrypt() throws IOException {
-        RefreshResponse refreshResult = sharingClient.refreshJson(keySetToJsonForSharing(MASTER_KEY, SITE_KEY));
-        assertTrue(refreshResult.isSuccess());
+        refresh(keySetToJsonForSharing(MASTER_KEY, SITE_KEY));
 
         return sharingClient;
     }
@@ -264,8 +289,7 @@ public class SharingClientTests {
     @ValueSource(strings = {"UID2", "EUID"})
     public void ClientProducesTokenWithCorrectPrefix(IdentityScope identityScope) throws Exception {
         SharingClient sharingClient = new SharingClient("ep", "ak", CLIENT_SECRET);
-        RefreshResponse refreshResponse = sharingClient.refreshJson(keySetToJsonForSharing(identityScope, MASTER_KEY, SITE_KEY));
-        assertTrue(refreshResponse.isSuccess());
+        sharingClient.refreshJson(keySetToJsonForSharing(identityScope, MASTER_KEY, SITE_KEY));
 
         sharingEncrypt(sharingClient, identityScope); //this validates token and asserts
     }
@@ -290,8 +314,7 @@ public class SharingClientTests {
         SharingClient receivingClient = new SharingClient("ep", "ak", CLIENT_SECRET);
         String json = keySharingResponse(IdentityScope.UID2, 4874, 12345, null, MASTER_KEY, SITE_KEY);
 
-        RefreshResponse refreshResponse = receivingClient.refreshJson(json);
-        assertTrue(refreshResponse.isSuccess());
+        receivingClient.refreshJson(json);
 
         DecryptionResponse res = receivingClient.decryptTokenIntoRawUid(advertisingToken);
         assertEquals(DecryptionStatus.SUCCESS, res.getStatus());
@@ -319,7 +342,6 @@ public class SharingClientTests {
     public void EuidClientProducesEuidToken() throws IOException {
         SharingClient sharingClient = new SharingClient("ep", "ak", CLIENT_SECRET);
         RefreshResponse refreshResponse = sharingClient.refreshJson(keySetToJsonForSharing(IdentityScope.EUID, MASTER_KEY, SITE_KEY));
-        assertTrue(refreshResponse.isSuccess());
 
         String advertisingToken = sharingEncrypt(sharingClient, IdentityScope.EUID); //this validates token and asserts
 
@@ -329,8 +351,7 @@ public class SharingClientTests {
     @Test
     public void RawUidProducesCorrectIdentityTypeInToken() throws Exception
     {
-        RefreshResponse refreshResponse = sharingClient.refreshJson(keySetToJsonForSharing(IdentityScope.EUID, MASTER_KEY, SITE_KEY));
-        assertTrue(refreshResponse.isSuccess());
+        refresh(keySetToJsonForSharing(IdentityScope.EUID, MASTER_KEY, SITE_KEY));
 
         //see UID2-79+Token+and+ID+format+v3 . Also note EUID does not support v2 or phone
         assertEquals(IdentityType.Email, GetTokenIdentityType("Q4bGug8t1xjsutKLCNjnb5fTlXSvIQukmahYDJeLBtk=")); //v2 +12345678901. Although this was generated from a phone number, it's a v2 raw UID which doesn't encode this information, so token assumes email by default.
@@ -361,8 +382,7 @@ public class SharingClientTests {
         Key MASTER_KEY2 = new Key(264, -1, NOW.minus(2, ChronoUnit.DAYS), NOW.minus(1, ChronoUnit.DAYS), NOW.minus(1, ChronoUnit.HOURS), getMasterSecret());
         Key SITE_KEY2 = new Key(265, SITE_ID, NOW.minus(10, ChronoUnit.DAYS), NOW.minus(1, ChronoUnit.DAYS), NOW.minus(1, ChronoUnit.HOURS), getSiteSecret());
 
-        RefreshResponse refreshResponse = sharingClient.refreshJson(keySetToJsonForSharing(MASTER_KEY, MASTER_KEY2, SITE_KEY, SITE_KEY2));
-        assertTrue(refreshResponse.isSuccess());
+        refresh(keySetToJsonForSharing(MASTER_KEY, MASTER_KEY2, SITE_KEY, SITE_KEY2));
 
         String advertisingToken = sharingEncrypt(sharingClient);
 
@@ -374,8 +394,7 @@ public class SharingClientTests {
     @Test
     public void CannotEncryptIfNoKeyFromTheDefaultKeyset() throws IOException {
         String json = keySetToJsonForSharing(MASTER_KEY);
-        RefreshResponse refreshResponse = sharingClient.refreshJson(json);
-        assertTrue(refreshResponse.isSuccess());
+        refresh(json);
 
         EncryptionDataResponse encrypted = sharingClient.encryptRawUidIntoToken(EXAMPLE_UID);
         assertEquals(EncryptionStatus.NOT_AUTHORIZED_FOR_KEY, encrypted.getStatus());
@@ -384,8 +403,7 @@ public class SharingClientTests {
     @Test
     public void CannotEncryptIfTheresNoDefaultKeysetHeader() throws IOException {
         String json = keySetToJsonForSharing(MASTER_KEY);
-        RefreshResponse refreshResponse = sharingClient.refreshJson(json);
-        assertTrue(refreshResponse.isSuccess());
+        refresh(json);
 
         EncryptionDataResponse encrypted = sharingClient.encryptRawUidIntoToken(EXAMPLE_UID);
         assertEquals(EncryptionStatus.NOT_AUTHORIZED_FOR_KEY, encrypted.getStatus());
@@ -394,8 +412,7 @@ public class SharingClientTests {
     @Test
     public void ExpiryInTokenMatchesExpiryInResponse() throws IOException {
         String json = keySharingResponse(IdentityScope.UID2, SITE_ID,99999, 2, MASTER_KEY, SITE_KEY);
-        RefreshResponse refreshResponse = sharingClient.refreshJson(json);
-        assertTrue(refreshResponse.isSuccess());
+        refresh(json);
 
         Instant encryptedAt = Instant.now();
         EncryptionDataResponse encrypted = sharingClient.encryptRawUidIntoToken(EXAMPLE_UID, encryptedAt);
@@ -412,7 +429,7 @@ public class SharingClientTests {
     @Test
     public void EncryptKeyExpired() throws IOException {
         Key key = new Key(SITE_KEY_ID, SITE_ID, NOW, NOW, NOW.minus(1, ChronoUnit.DAYS), getTestSecret(9));
-        sharingClient.refreshJson(keySetToJsonForSharing(MASTER_KEY, key));
+        refresh(keySetToJsonForSharing(MASTER_KEY, key));
         EncryptionDataResponse encrypted = sharingClient.encryptRawUidIntoToken(EXAMPLE_UID);
         assertEquals(EncryptionStatus.NOT_AUTHORIZED_FOR_KEY, encrypted.getStatus()); //note: KeyInactive was the result for EncryptData, because EncryptData allowed you to pass an expired key. In the Sharing scenario, expired and inactive keys are ignored when encrypting.
     }
@@ -420,7 +437,7 @@ public class SharingClientTests {
     @Test
     public void EncryptKeyInactive() throws IOException {
         Key key = new Key(SITE_KEY_ID, SITE_ID, NOW, NOW.plus(1, ChronoUnit.DAYS), NOW.plus(2, ChronoUnit.DAYS), getTestSecret(9));
-        sharingClient.refreshJson(keySetToJsonForSharing(MASTER_KEY, key));
+        refresh(keySetToJsonForSharing(MASTER_KEY, key));
         EncryptionDataResponse encrypted = sharingClient.encryptRawUidIntoToken(EXAMPLE_UID);
         assertEquals(EncryptionStatus.NOT_AUTHORIZED_FOR_KEY, encrypted.getStatus());
     }
@@ -429,7 +446,7 @@ public class SharingClientTests {
     @Test
     public void EncryptSiteKeyExpired() throws IOException {
         Key key = new Key(SITE_KEY_ID, SITE_ID, NOW, NOW, NOW.minus(1, ChronoUnit.DAYS), getTestSecret(9));
-        sharingClient.refreshJson(keySetToJsonForSharing(MASTER_KEY, key));
+        refresh(keySetToJsonForSharing(MASTER_KEY, key));
         EncryptionDataResponse encrypted = sharingClient.encryptRawUidIntoToken(EXAMPLE_UID);
         assertEquals(EncryptionStatus.NOT_AUTHORIZED_FOR_KEY, encrypted.getStatus());
     }
@@ -437,7 +454,7 @@ public class SharingClientTests {
     @Test
     public void EncryptSiteKeyInactive() throws IOException {
         Key key = new Key(SITE_KEY_ID, SITE_ID, NOW, NOW.plus(1, ChronoUnit.DAYS), NOW.plus(2, ChronoUnit.DAYS), getTestSecret(9));
-        sharingClient.refreshJson(keySetToJsonForSharing(MASTER_KEY, key));
+        refresh(keySetToJsonForSharing(MASTER_KEY, key));
         EncryptionDataResponse encrypted = sharingClient.encryptRawUidIntoToken(EXAMPLE_UID);
         assertEquals(EncryptionStatus.NOT_AUTHORIZED_FOR_KEY, encrypted.getStatus());
     }

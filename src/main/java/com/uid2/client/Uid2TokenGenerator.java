@@ -20,11 +20,13 @@ class Uid2TokenGenerator {
         Instant tokenExpiry = Instant.now().plus(1, ChronoUnit.HOURS);
         public int identityScope = IdentityScope.UID2.value;
         public Instant tokenGenerated = Instant.now();
+        public Instant identityEstablished = Instant.now();
         public int tokenPrivacyBits = 0;
 
         public Params() {}
         public Params withTokenExpiry(Instant expiry) { tokenExpiry = expiry; return this; }
-        public Params WithTokenGenerated(Instant generated) { tokenGenerated = generated; return this; }
+        public Params WithTokenGenerated(Instant generated) { tokenGenerated = generated; return this; } //when was the most recent refresh done (or if not refreshed, when was the /token/generate or CSTG call)
+        public Params WithIdentityEstablished(Instant established) { identityEstablished = established; return this; } //when was the first call to /token/generate or CSTG
         public Params WithPrivacyBits(int privacyBits) {  tokenPrivacyBits = privacyBits; return this; }
     }
 
@@ -43,7 +45,7 @@ class Uid2TokenGenerator {
         identityWriter.putInt(uidBytes.length);
         identityWriter.put(uidBytes);
         identityWriter.putInt(params.tokenPrivacyBits);
-        identityWriter.putLong(params.tokenGenerated.toEpochMilli());
+        identityWriter.putLong(params.identityEstablished.toEpochMilli());
         byte[] identityIv = new byte[16];
         rd.nextBytes(identityIv);
         byte[] encryptedIdentity = encrypt(identityWriter.array(), identityIv, siteKey.getSecret());
@@ -90,13 +92,13 @@ class Uid2TokenGenerator {
 
         // user identity data
         sitePayloadWriter.putInt(params.tokenPrivacyBits); // privacy bits
-        sitePayloadWriter.putLong(params.tokenGenerated.toEpochMilli()); // established
+        sitePayloadWriter.putLong(params.identityEstablished.toEpochMilli()); // established
         sitePayloadWriter.putLong(params.tokenGenerated.toEpochMilli()); // last refreshed
         sitePayloadWriter.put(Base64.getDecoder().decode(uid));
 
         final ByteBuffer masterPayloadWriter = ByteBuffer.allocate(256);
         masterPayloadWriter.putLong(params.tokenExpiry.toEpochMilli());
-        masterPayloadWriter.putLong(params.tokenGenerated.toEpochMilli()); // token created
+        masterPayloadWriter.putLong(params.tokenGenerated.toEpochMilli()); //identity refreshed, seems to be identical to TokenGenerated in Operator
 
         // operator identity data
         masterPayloadWriter.putInt(0); // site id
