@@ -35,7 +35,7 @@ public class BidstreamClientTests {
     })
     public void smokeTestForBidstream(IdentityScope identityScope, TokenVersionForTesting tokenVersion) throws Exception {
         Instant now = Instant.now();
-        String advertisingToken = AdvertisingTokenBuilder.builder().withScope(identityScope).withVersion(tokenVersion).withEstablished(now.minus(120, ChronoUnit.DAYS)).withGenerated(now.plus(-1, ChronoUnit.DAYS)).withExpiry(now.plus(2, ChronoUnit.DAYS)).build();
+        String advertisingToken = AdvertisingTokenBuilder.builder().withScope(identityScope).withVersion(tokenVersion).withEstablished(now.minus(120, ChronoUnit.DAYS)).withGenerated(now.minus(1, ChronoUnit.DAYS)).withExpiry(now.plus(2, ChronoUnit.DAYS)).build();
         refresh(keyBidstreamResponse(identityScope, MASTER_KEY, SITE_KEY));
 
         decryptAndAssertSuccess(advertisingToken, tokenVersion);
