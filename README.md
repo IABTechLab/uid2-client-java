@@ -3,15 +3,10 @@
 The UID 2 Project is subject to the IAB Tech Lab Intellectual Property Rights (IPR) Policy, and is managed by the IAB Tech Lab Addressability Working Group and [Privacy & Rearc Commit Group](https://iabtechlab.com/working-groups/privacy-rearc-commit-group/). Please review the [governance rules](https://github.com/IABTechLab/uid2-core/blob/master/Software%20Development%20and%20Release%20Procedures.md).
 
 This document includes:
-* [Who Is this SDK for?](#who-is-this-sdk-for)
 * [Requirements](#requirements)
 * [Install](#install)
 * [Usage](#usage)
 * [Example usage for DSPs](#example-usage-for-dsps)
-
-## Who Is this SDK for?
-
-This SDK simplifies integration with UID2 for Publishers, DSPs, and UID Sharers, as described in [UID2 Integration Guides](https://unifiedid.com/docs/category/integration-guides). 
 
 ## Requirements
 
