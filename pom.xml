@@ -6,7 +6,7 @@
 
     <groupId>com.uid2</groupId>
     <artifactId>uid2-client</artifactId>
-    <version>4.4.0</version>
+    <version>4.5.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>UID2 Client</description>
