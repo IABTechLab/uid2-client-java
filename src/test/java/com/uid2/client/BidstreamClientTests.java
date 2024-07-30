@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.stream.Stream;
 
-import static com.uid2.client.EncryptionTestsV4.validateAdvertisingToken;
+import static com.uid2.client.EncryptionV4Tests.validateAdvertisingToken;
 import static com.uid2.client.SharingClientTests.keySetToJsonForSharing;
 import static com.uid2.client.TestData.*;
 import static org.junit.jupiter.api.Assertions.*;

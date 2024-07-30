@@ -8,7 +8,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Base64;
 
-public class EncryptionTestsV3 {
+public class EncryptionV3Tests {
     @Test
     public void smokeTest() throws Exception {
         UID2Client client = new UID2Client("ep", "ak", CLIENT_SECRET, IdentityScope.UID2);
