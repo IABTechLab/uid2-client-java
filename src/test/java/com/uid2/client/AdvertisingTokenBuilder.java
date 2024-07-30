@@ -104,7 +104,7 @@ class AdvertisingTokenBuilder {
         }
 
 
-        EncryptionTestsV4.validateAdvertisingToken(token, identityScope, identityType, version);
+        EncryptionV4Tests.validateAdvertisingToken(token, identityScope, identityType, version);
         return token;
     }
 }

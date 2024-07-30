@@ -43,11 +43,17 @@ class Uid2Encryption {
         }
         else if (unsignedByte  == AdvertisingTokenVersion.V4.value())
         {
-            //same as V3 but use Base64URL encoding
-            return decryptV3(Uid2Base64UrlCoder.decode(token), keys, now, identityScope, domainName, clientType, 4);
+            // Accept either base64 or base64url encoding.
+            return decryptV3(Base64.getDecoder().decode(base64UrlToBase64(token)), keys, now, identityScope, domainName, clientType, 4);
         }
 
         return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
+    }
+
+    static String base64UrlToBase64(String value) {
+        // Base64 decoder doesn't require padding.
+        return value.replace('-', '+')
+                .replace('_', '/');
     }
 
     static DecryptionResponse decryptV2(byte[] encryptedId, KeyContainer keys, Instant now, String domainName, ClientType clientType) throws Exception {

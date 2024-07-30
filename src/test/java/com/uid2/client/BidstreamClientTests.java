@@ -4,18 +4,16 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.*;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.stream.Stream;
 
-import static com.uid2.client.EncryptionTestsV4.validateAdvertisingToken;
+import static com.uid2.client.EncryptionV4Tests.validateAdvertisingToken;
 import static com.uid2.client.SharingClientTests.keySetToJsonForSharing;
 import static com.uid2.client.TestData.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -286,6 +284,26 @@ public class BidstreamClientTests {
 
         res = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, null, expiry.minus(1, ChronoUnit.SECONDS));
         assertEquals(EXAMPLE_UID, res.getUid());
+    }
+
+    @ParameterizedTest
+    @EnumSource(IdentityScope.class)
+    void decryptV4TokenEncodedAsBase64(IdentityScope identityScope) throws Exception {
+        refresh(keyBidstreamResponse(identityScope, MASTER_KEY, SITE_KEY));
+
+        String advertisingToken;
+        do {
+            advertisingToken = AdvertisingTokenBuilder.builder()
+                    .withVersion(TokenVersionForTesting.V4)
+                    .withScope(identityScope)
+                    .build();
+
+            byte[] tokenAsBytes = Uid2Base64UrlCoder.decode(advertisingToken);
+            advertisingToken = Base64.getEncoder().encodeToString(tokenAsBytes);
+        }
+        while (!advertisingToken.contains("=") || !advertisingToken.contains("/") || !advertisingToken.contains("+"));
+
+        decryptAndAssertSuccess(advertisingToken, TokenVersionForTesting.V4);
     }
 
     private void refresh(String json) {

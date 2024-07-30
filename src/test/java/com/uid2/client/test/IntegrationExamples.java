@@ -6,8 +6,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+
 import static org.junit.jupiter.api.Assertions.*;
 
+@EnabledIfEnvironmentVariable(named = "UID2_BASE_URL", matches = "\\S+")
 public class IntegrationExamples {
     final String TEST_ENDPOINT = System.getenv("UID2_BASE_URL");
     final String TEST_API_KEY =  System.getenv("UID2_API_KEY");

@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.stream.Collectors;
 
-public class EncryptionTestsV4 {
+public class EncryptionV4Tests {
     // unit tests to ensure the base64url encoding and decoding are identical in all supported
     // uid2 client sdks in different programming languages
     @Test

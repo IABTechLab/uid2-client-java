@@ -14,7 +14,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 
 import static com.uid2.client.BidstreamClientTests.*;
-import static com.uid2.client.EncryptionTestsV4.validateAdvertisingToken;
+import static com.uid2.client.EncryptionV4Tests.validateAdvertisingToken;
 import static com.uid2.client.TestData.*;
 import static org.junit.jupiter.api.Assertions.*;
 
