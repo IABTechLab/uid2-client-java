@@ -8,6 +8,7 @@ class KeyContainer {
     private final HashMap<Long, Key> keys = new HashMap<>();
     private final HashMap<Integer, List<Key>> keysBySite = new HashMap<>(); //for legacy /key/latest
     private final HashMap<Integer, List<Key>> keysByKeyset = new HashMap<>();
+    private final Map<Integer, Site> siteIdToSite = new HashMap<>();
     private Instant latestKeyExpiry;
     private int callerSiteId;
     private int masterKeysetId;
@@ -38,7 +39,7 @@ class KeyContainer {
         }
     }
 
-    KeyContainer(int callerSiteId, int masterKeysetId, int defaultKeysetId, long tokenExpirySeconds, List<Key> keyList, IdentityScope identityScope, long maxBidstreamLifetimeSeconds, long maxSharingLifetimeSeconds, long allowClockSkewSeconds) {
+    KeyContainer(int callerSiteId, int masterKeysetId, int defaultKeysetId, long tokenExpirySeconds, List<Key> keyList, List<Site> sites, IdentityScope identityScope, long maxBidstreamLifetimeSeconds, long maxSharingLifetimeSeconds, long allowClockSkewSeconds) {
         this.callerSiteId = callerSiteId;
         this.masterKeysetId = masterKeysetId;
         this.defaultKeysetId = defaultKeysetId;
@@ -61,6 +62,10 @@ class KeyContainer {
         for(Map.Entry<Integer, List<Key>> entry : keysByKeyset.entrySet()) {
             entry.getValue().sort(Comparator.comparing(Key::getActivates));
         }
+
+        for (Site site : sites) {
+            this.siteIdToSite.put(site.getId(), site);
+        }
     }
 
 
@@ -80,6 +85,16 @@ class KeyContainer {
     public Key getMasterKey(Instant now)
     {
         return getKeysetActiveKey(masterKeysetId, now);
+    }
+
+    public boolean isDomainOrAppNameAllowedForSite(int siteId, String domainOrAppName) {
+        if (domainOrAppName == null) {
+            return false;
+        }
+        if (siteIdToSite.containsKey(siteId)) {
+            return siteIdToSite.get(siteId).allowDomainOrAppName(domainOrAppName);
+        }
+        return false;
     }
 
     private Key getKeysetActiveKey(int keysetId, Instant now)

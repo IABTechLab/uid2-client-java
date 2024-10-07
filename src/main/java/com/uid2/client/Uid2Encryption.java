@@ -20,7 +20,7 @@ class Uid2Encryption {
     public static final int GCM_AUTHTAG_LENGTH = 16;
     public static final int GCM_IV_LENGTH = 12;
 
-    static DecryptionResponse decrypt(String token, KeyContainer keys, Instant now, IdentityScope identityScope, String domainName, ClientType clientType) throws Exception {
+    static DecryptionResponse decrypt(String token, KeyContainer keys, Instant now, IdentityScope identityScope, String domainOrAppName, ClientType clientType) throws Exception {
 
         if (token.length() < 4)
         {
@@ -33,18 +33,18 @@ class Uid2Encryption {
 
         if (data[0] == 2)
         {
-            return decryptV2(Base64.getDecoder().decode(token), keys, now, domainName, clientType);
+            return decryptV2(Base64.getDecoder().decode(token), keys, now, domainOrAppName, clientType);
         }
         //java byte is signed so we wanna convert to unsigned before checking the enum
         int unsignedByte = ((int) data[1]) & 0xff;
         if (unsignedByte == AdvertisingTokenVersion.V3.value())
         {
-            return decryptV3(Base64.getDecoder().decode(token), keys, now, identityScope, domainName, clientType, 3);
+            return decryptV3(Base64.getDecoder().decode(token), keys, now, identityScope, domainOrAppName, clientType, 3);
         }
         else if (unsignedByte  == AdvertisingTokenVersion.V4.value())
         {
             // Accept either base64 or base64url encoding.
-            return decryptV3(Base64.getDecoder().decode(base64UrlToBase64(token)), keys, now, identityScope, domainName, clientType, 4);
+            return decryptV3(Base64.getDecoder().decode(base64UrlToBase64(token)), keys, now, identityScope, domainOrAppName, clientType, 4);
         }
 
         return DecryptionResponse.makeError(DecryptionStatus.VERSION_NOT_SUPPORTED);
@@ -56,7 +56,7 @@ class Uid2Encryption {
                 .replace('_', '/');
     }
 
-    static DecryptionResponse decryptV2(byte[] encryptedId, KeyContainer keys, Instant now, String domainName, ClientType clientType) throws Exception {
+    static DecryptionResponse decryptV2(byte[] encryptedId, KeyContainer keys, Instant now, String domainOrAppName, ClientType clientType) throws Exception {
         try {
             ByteBuffer rootReader = ByteBuffer.wrap(encryptedId);
             int version = (int) rootReader.get();
@@ -108,6 +108,9 @@ class Uid2Encryption {
             if (now.isAfter(expiry)) {
                 return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId, siteKey.getSiteId(), null, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
             }
+            if (!isDomainOrAppNameAllowedForSite(clientType, privacyBits.isClientSideGenerated(), siteId, domainOrAppName, keys)) {
+                return DecryptionResponse.makeError(DecryptionStatus.DOMAIN_OR_APP_NAME_CHECK_FAILED, established, siteId, siteKey.getSiteId(), null, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
+            }
 
             if (!doesTokenHaveValidLifetime(clientType, keys, now, expiry, now)) {
                 return DecryptionResponse.makeError(DecryptionStatus.INVALID_TOKEN_LIFETIME, established, siteId, siteKey.getSiteId(), null, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
@@ -119,7 +122,7 @@ class Uid2Encryption {
         }
     }
 
-    static DecryptionResponse decryptV3(byte[] encryptedId, KeyContainer keys, Instant now, IdentityScope identityScope, String domainName, ClientType clientType, int advertisingTokenVersion) {
+    static DecryptionResponse decryptV3(byte[] encryptedId, KeyContainer keys, Instant now, IdentityScope identityScope, String domainOrAppName, ClientType clientType, int advertisingTokenVersion) {
         try {
             final IdentityType identityType = getIdentityType(encryptedId);
             final ByteBuffer rootReader = ByteBuffer.wrap(encryptedId);
@@ -174,6 +177,9 @@ class Uid2Encryption {
             if (now.isAfter(expiry)) {
                 return DecryptionResponse.makeError(DecryptionStatus.EXPIRED_TOKEN, established, siteId, siteKey.getSiteId(), identityType, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
             }
+            if (!isDomainOrAppNameAllowedForSite(clientType, privacyBits.isClientSideGenerated(), siteId, domainOrAppName, keys)) {
+                return DecryptionResponse.makeError(DecryptionStatus.DOMAIN_OR_APP_NAME_CHECK_FAILED, established, siteId, siteKey.getSiteId(), identityType, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
+            }
 
             if (!doesTokenHaveValidLifetime(clientType, keys, generated, expiry, now)) {
                 return DecryptionResponse.makeError(DecryptionStatus.INVALID_TOKEN_LIFETIME, generated, siteId, siteKey.getSiteId(), identityType, advertisingTokenVersion, privacyBits.isClientSideGenerated(), expiry);
@@ -220,7 +226,7 @@ class Uid2Encryption {
     }
 
 
-    static EncryptionDataResponse encryptData(EncryptionDataRequest request, KeyContainer keys, IdentityScope identityScope, String domainName, ClientType clientType) {
+    static EncryptionDataResponse encryptData(EncryptionDataRequest request, KeyContainer keys, IdentityScope identityScope, String domainOrAppName, ClientType clientType) {
         if (request.getData() == null) {
             throw new IllegalArgumentException("data to encrypt must not be null");
         }
@@ -241,7 +247,7 @@ class Uid2Encryption {
                 siteKeySiteId = siteId;
             } else {
                 try {
-                    DecryptionResponse decryptedToken = decrypt(request.getAdvertisingToken(), keys, now, identityScope, domainName, clientType);
+                    DecryptionResponse decryptedToken = decrypt(request.getAdvertisingToken(), keys, now, identityScope, domainOrAppName, clientType);
                     if (!decryptedToken.isSuccess()) {
                         return EncryptionDataResponse.makeError(EncryptionStatus.TOKEN_DECRYPT_FAILURE);
                     }
@@ -405,6 +411,16 @@ class Uid2Encryption {
     public static class CryptoException extends Exception {
         public CryptoException(Throwable inner) {
             super(inner);
+        }
+    }
+
+    private static boolean isDomainOrAppNameAllowedForSite(ClientType clientType, boolean isClientSideGenerated, Integer siteId, String domainOrAppName, KeyContainer keys) {
+        if (!isClientSideGenerated) {
+            return true;
+        } else if (!clientType.equals(ClientType.BIDSTREAM) && !clientType.equals(ClientType.LEGACY)) {
+            return true;
+        } else {
+            return keys.isDomainOrAppNameAllowedForSite(siteId, domainOrAppName);
         }
     }
 

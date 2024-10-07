@@ -9,12 +9,12 @@ public class BidstreamClient {
         tokenHelper = new TokenHelper(baseUrl, clientApiKey, base64SecretKey);
     }
 
-    public DecryptionResponse decryptTokenIntoRawUid(String token, String domainNameFromBidRequest) {
-        return tokenHelper.decrypt(token, Instant.now(), domainNameFromBidRequest, ClientType.BIDSTREAM);
+    public DecryptionResponse decryptTokenIntoRawUid(String token, String domainOrAppNameFromBidRequest) {
+        return tokenHelper.decrypt(token, Instant.now(), domainOrAppNameFromBidRequest, ClientType.BIDSTREAM);
     }
 
-    DecryptionResponse decryptTokenIntoRawUid(String token, String domainNameFromBidRequest, Instant now) {
-        return tokenHelper.decrypt(token, now, domainNameFromBidRequest, ClientType.BIDSTREAM);
+    DecryptionResponse decryptTokenIntoRawUid(String token, String domainOrAppNameFromBidRequest, Instant now) {
+        return tokenHelper.decrypt(token, now, domainOrAppNameFromBidRequest, ClientType.BIDSTREAM);
     }
 
     public RefreshResponse refresh() {

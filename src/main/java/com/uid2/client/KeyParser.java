@@ -61,8 +61,33 @@ class KeyParser {
                 keys.add(key);
             }
 
-            return new KeyContainer(callerSiteId, masterKeysetId, defaultKeysetId, tokenExpirySeconds, keys, identityScope, maxBidstreamLifetimeSeconds, maxSharingLifetimeSeconds, allowClockSkewSeconds);
+            JsonArray sitesJson = body.getAsJsonArray("site_data");
+            List<Site> sites = new ArrayList<>();
+            if (!isNull(sitesJson)) {
+                for (JsonElement siteJson : sitesJson.asList()) {
+                    Site site = getSiteFromJson(siteJson.getAsJsonObject());
+                    if (site != null) {
+                        sites.add(site);
+                    }
+                }
+            }
+
+            return new KeyContainer(callerSiteId, masterKeysetId, defaultKeysetId, tokenExpirySeconds, keys, sites, identityScope, maxBidstreamLifetimeSeconds, maxSharingLifetimeSeconds, allowClockSkewSeconds);
         }
+    }
+
+    private static Site getSiteFromJson(JsonObject siteJson) {
+        int siteId = getAsInt(siteJson, "id");
+        if (siteId == 0) {
+            return null;
+        }
+        JsonArray domainOrAppNamesJArray = siteJson.getAsJsonArray("domain_names");
+        List<String> domainOrAppNames = new ArrayList<>();
+        for (int i = 0; i < domainOrAppNamesJArray.size(); ++i) {
+            domainOrAppNames.add(domainOrAppNamesJArray.get(i).getAsString());
+        }
+
+        return new Site(siteId, domainOrAppNames);
     }
 
     static private int getAsInt(JsonObject body, String memberName) {

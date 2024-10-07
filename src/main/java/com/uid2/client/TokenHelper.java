@@ -15,7 +15,7 @@ class TokenHelper {
         this.uid2Helper = new Uid2Helper(base64SecretKey);
     }
 
-    DecryptionResponse decrypt(String token, Instant now, String domainNameFromBidRequest, ClientType clientType) {
+    DecryptionResponse decrypt(String token, Instant now, String domainOrAppNameFromBidRequest, ClientType clientType) {
         KeyContainer keyContainer = this.container.get();
         if (keyContainer == null) {
             return DecryptionResponse.makeError(DecryptionStatus.NOT_INITIALIZED);
@@ -26,7 +26,7 @@ class TokenHelper {
         }
 
         try {
-            return Uid2Encryption.decrypt(token, keyContainer, now, keyContainer.getIdentityScope(), domainNameFromBidRequest, clientType);
+            return Uid2Encryption.decrypt(token, keyContainer, now, keyContainer.getIdentityScope(), domainOrAppNameFromBidRequest, clientType);
         } catch (Exception e) {
             return DecryptionResponse.makeError(DecryptionStatus.INVALID_PAYLOAD);
         }
