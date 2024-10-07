@@ -206,16 +206,23 @@ public class BidstreamClientTests {
         );
     }
 
+    // These are the domain or app names associated with site SITE_ID, as defined by keyBidstreamResponse()
     @ParameterizedTest
     @CsvSource({
             "example.com, V2",
             "example.org, V2",
+            "com.123.Game.App.android, V2",
+            "123456789, V2",
+            "example.com, V3",
+            "example.org, V3",
+            "com.123.Game.App.android, V3",
+            "123456789, V3",
             "example.com, V4",
             "example.org, V4",
-            "example.com, V4",
-            "example.org, V4"
+            "com.123.Game.App.android, V4",
+            "123456789, V4"
     })
-    public void TokenIsCstgDerivedTest(String domainName, TokenVersionForTesting tokenVersion) throws Exception {
+    public void tokenIsCstgDerivedTest(String domainName, TokenVersionForTesting tokenVersion) throws Exception {
         refresh(keyBidstreamResponse(IdentityScope.UID2, MASTER_KEY, SITE_KEY));
         int privacyBits = PrivacyBitsBuilder.Builder().WithClientSideGenerated(true).Build();
 
@@ -224,6 +231,104 @@ public class BidstreamClientTests {
         validateAdvertisingToken(advertisingToken, IdentityScope.UID2, IdentityType.Email, tokenVersion);
         DecryptionResponse res = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, domainName);
         assertTrue(res.getIsClientSideGenerated());
+        assertTrue(res.isSuccess());
+        assertEquals(DecryptionStatus.SUCCESS, res.getStatus());
+        assertEquals(EXAMPLE_UID, res.getUid());
+    }
+
+    // These are the domain or app names associated with site SITE_ID but vary in capitalization, as defined by keyBidstreamResponse()
+    @ParameterizedTest
+    @CsvSource({
+            "Example.com, V2",
+            "Example.Org, V2",
+            "com.123.Game.App.android, V2",
+            "Example.com, V3",
+            "Example.Org, V3",
+            "com.123.Game.App.android, V3",
+            "Example.com, V4",
+            "Example.Org, V4",
+            "com.123.Game.App.android, V4",
+    })
+    public void domainOrAppNameCaseInSensitiveTest(String domainName, TokenVersionForTesting tokenVersion) throws Exception {
+        refresh(keyBidstreamResponse(IdentityScope.UID2, MASTER_KEY, SITE_KEY));
+        int privacyBits = PrivacyBitsBuilder.Builder().WithClientSideGenerated(true).Build();
+
+        String advertisingToken = AdvertisingTokenBuilder.builder().withVersion(tokenVersion).withPrivacyBits(privacyBits).build();
+
+        validateAdvertisingToken(advertisingToken, IdentityScope.UID2, IdentityType.Email, tokenVersion);
+        DecryptionResponse res = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, domainName);
+        assertTrue(res.getIsClientSideGenerated());
+        assertTrue(res.isSuccess());
+        assertEquals(DecryptionStatus.SUCCESS, res.getStatus());
+        assertEquals(EXAMPLE_UID, res.getUid());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            ", V2",
+            "example.net, V2", // Domain associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "example.edu, V2", // Domain associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "com.123.Game.App.ios, V2", // App associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "123456780, V2", // App associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "foo.com, V2",     // Domain not associated with any site.
+            ", V3",
+            "example.net, V3", // Domain associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "example.edu, V3", // Domain associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "com.123.Game.App.ios, V3", // App associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "123456780, V3", // App associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "foo.com, V3",     // Domain not associated with any site.
+            ", V4",
+            "example.net, V4", // Domain associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "example.edu, V4", // Domain associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "com.123.Game.App.ios, V4", // App associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "123456780, V4", // App associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "foo.com, V4",     // Domain not associated with any site.
+    })
+    public void tokenIsCstgDerivedDomainOrAppNameFailTest(String domainName, TokenVersionForTesting tokenVersion) throws Exception {
+        refresh(keyBidstreamResponse(IdentityScope.UID2, MASTER_KEY, SITE_KEY));
+        int privacyBits = PrivacyBitsBuilder.Builder().WithClientSideGenerated(true).Build();
+
+        String advertisingToken = AdvertisingTokenBuilder.builder().withVersion(tokenVersion).withPrivacyBits(privacyBits).build();
+
+        validateAdvertisingToken(advertisingToken, IdentityScope.UID2, IdentityType.Email, tokenVersion);
+        DecryptionResponse res = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, domainName);
+        assertTrue(res.getIsClientSideGenerated());
+        assertFalse(res.isSuccess());
+        assertEquals(DecryptionStatus.DOMAIN_OR_APP_NAME_CHECK_FAILED, res.getStatus());
+        assertNull(res.getUid());
+    }
+
+    // Any domain or app name is OK, because the token is not client-side generated.
+    @ParameterizedTest
+    @CsvSource({
+            ", V2",
+            "example.net, V2", // Domain associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "example.edu, V2", // Domain associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "com.123.Game.App.ios, V2", // App associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "123456780, V2", // App associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "foo.com, V2",     // Domain not associated with any site.
+            ", V3",
+            "example.net, V3", // Domain associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "example.edu, V3", // Domain associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "com.123.Game.App.ios, V3", // App associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "123456780, V3", // App associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "foo.com, V3",     // Domain not associated with any site.
+            ", V4",
+            "example.net, V4", // Domain associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "example.edu, V4", // Domain associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "com.123.Game.App.ios, V4", // App associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "123456780, V4", // App associated with site SITE_ID2, as defined by keyBidstreamResponse().
+            "foo.com, V4",     // Domain not associated with any site.
+    })
+    public void tokenIsNotCstgDerivedDomainNameSuccessTest(String domainName, TokenVersionForTesting tokenVersion) throws Exception {
+        refresh(keyBidstreamResponse(IdentityScope.UID2, MASTER_KEY, SITE_KEY));
+        int privacyBits = PrivacyBitsBuilder.Builder().WithClientSideGenerated(false).Build();
+
+        String advertisingToken = AdvertisingTokenBuilder.builder().withVersion(tokenVersion).withPrivacyBits(privacyBits).build();
+
+        validateAdvertisingToken(advertisingToken, IdentityScope.UID2, IdentityType.Email, tokenVersion);
+        DecryptionResponse res = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, domainName);
+        assertFalse(res.getIsClientSideGenerated());
         assertTrue(res.isSuccess());
         assertEquals(DecryptionStatus.SUCCESS, res.getStatus());
         assertEquals(EXAMPLE_UID, res.getUid());
@@ -352,16 +457,19 @@ public class BidstreamClientTests {
         JsonArray domainNames1 = new JsonArray();
         domainNames1.add("example.com");
         domainNames1.add("example.org");
+        domainNames1.add("com.123.Game.App.android");
+        domainNames1.add("123456789");
         site1.add("domain_names", domainNames1);
         site1.addProperty("unexpected_domain_field", "123");
 
+
         JsonObject site2 = new JsonObject();
-        site1.addProperty("id", SITE_ID2);
+        site2.addProperty("id", SITE_ID2);
         JsonArray domainNames2 = new JsonArray();
         domainNames2.add("example.net");
         domainNames2.add("example.edu");
-        site1.add("domain_names", domainNames2);
-        site1.addProperty("unexpected_domain_field", "123");
+        site2.add("domain_names", domainNames2);
+        site2.addProperty("unexpected_domain_field", "123");
 
         JsonArray siteData = new JsonArray();
         siteData.add(site1);
