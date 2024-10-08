@@ -6,7 +6,9 @@ import java.io.InputStreamReader;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 class KeyParser {
@@ -82,12 +84,12 @@ class KeyParser {
             return null;
         }
         JsonArray domainOrAppNamesJArray = siteJson.getAsJsonArray("domain_names");
-        List<String> domainOrAppNames = new ArrayList<>();
+        Set<String> domainOrAppNamesSet = new HashSet<>();
         for (int i = 0; i < domainOrAppNamesJArray.size(); ++i) {
-            domainOrAppNames.add(domainOrAppNamesJArray.get(i).getAsString());
+            domainOrAppNamesSet.add(domainOrAppNamesJArray.get(i).getAsString());
         }
 
-        return new Site(siteId, domainOrAppNames);
+        return new Site(siteId, domainOrAppNamesSet);
     }
 
     static private int getAsInt(JsonObject body, String memberName) {
