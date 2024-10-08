@@ -206,6 +206,21 @@ public class BidstreamClientTests {
         );
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"V2", "V3", "V4"})
+    public void userOptedOutTest(TokenVersionForTesting tokenVersion) throws Exception {
+        refresh(keyBidstreamResponse(IdentityScope.UID2, MASTER_KEY, SITE_KEY));
+        int privacyBits = PrivacyBitsBuilder.Builder().WithOptedOut(true).Build();
+
+        String advertisingToken = AdvertisingTokenBuilder.builder().withVersion(tokenVersion).withPrivacyBits(privacyBits).build();
+
+        validateAdvertisingToken(advertisingToken, IdentityScope.UID2, IdentityType.Email, tokenVersion);
+        DecryptionResponse res = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, null);
+        assertFalse(res.isSuccess());
+        assertEquals(DecryptionStatus.SUCCESS, res.getStatus());
+        assertNull(res.getUid());
+    }
+
     // These are the domain or app names associated with site SITE_ID, as defined by keyBidstreamResponse()
     @ParameterizedTest
     @CsvSource({
