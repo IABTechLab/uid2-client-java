@@ -13,7 +13,7 @@ public class BidstreamClient {
         return tokenHelper.decrypt(token, Instant.now(), domainOrAppNameFromBidRequest, ClientType.BIDSTREAM);
     }
 
-    DecryptionResponse decryptTokenIntoRawUid(String token, String domainOrAppNameFromBidRequest, Instant now) {
+    public DecryptionResponse decryptTokenIntoRawUid(String token, String domainOrAppNameFromBidRequest, Instant now) {
         return tokenHelper.decrypt(token, now, domainOrAppNameFromBidRequest, ClientType.BIDSTREAM);
     }
 

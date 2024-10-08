@@ -389,6 +389,13 @@ public class BidstreamClientTests {
 
         res = bidstreamClient.decryptTokenIntoRawUid(advertisingToken, null, expiry.minus(1, ChronoUnit.SECONDS));
         assertEquals(EXAMPLE_UID, res.getUid());
+
+        // case when domain / app name is present
+        int privacyBits = PrivacyBitsBuilder.Builder().WithClientSideGenerated(true).Build();
+        String cstgAdvertisingToken = AdvertisingTokenBuilder.builder().withExpiry(expiry).withGenerated(generated)
+                .withPrivacyBits(privacyBits).build();
+        res = bidstreamClient.decryptTokenIntoRawUid(cstgAdvertisingToken, "example.com", expiry.minus(1, ChronoUnit.SECONDS));
+        assertTrue(res.isSuccess());
     }
 
     @ParameterizedTest

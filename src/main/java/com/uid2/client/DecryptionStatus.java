@@ -49,7 +49,7 @@ public enum DecryptionStatus {
       */
     INVALID_TOKEN_LIFETIME,
      /**
-      * DOMAIN_OR_APP_NAME_CHECK_FAILED: The supplied domain name or app name doesn't match with the allowed names of the participant who generated this token
+      * DOMAIN_OR_APP_NAME_CHECK_FAILED: The supplied domain name or app name doesn't match with the allowed names of the site/app where this token was generated
       */
     DOMAIN_OR_APP_NAME_CHECK_FAILED
 }
