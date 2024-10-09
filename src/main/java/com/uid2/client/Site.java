@@ -1,16 +1,18 @@
 package com.uid2.client;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 import java.util.Set;
 
-@Getter
-@AllArgsConstructor
 public class Site {
     private final int id;
 
     private final Set<String> domainOrAppNames;
+
+    public int getId() { return id;}
+
+    public Site(int id, Set<String> domainOrAppNames) {
+        this.id = id;
+        this.domainOrAppNames = domainOrAppNames;
+    }
 
     public boolean allowDomainOrAppName(String domainOrAppName) {
         // Using streams because HashSet's contains() is case sensitive
