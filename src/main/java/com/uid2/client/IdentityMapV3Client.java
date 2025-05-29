@@ -13,13 +13,13 @@ public class IdentityMapV3Client {
 
     /**
      * @param identityMapInput  represents the input required for <a href="https://unifiedid.com/docs/endpoints/post-identity-map">/identity/map</a>
-     * @return                  an IdentityMapResponse instance
+     * @return                  an IdentityMapV3Response instance
      * @throws Uid2Exception    if the response did not contain a "success" status, or the response code was not 200, or there was an error communicating with the provided UID2 Base URL
      */
     public IdentityMapV3Response generateIdentityMap(IdentityMapV3Input identityMapInput) {
         EnvelopeV2 envelope = identityMapHelper.createEnvelopeForIdentityMapRequest(identityMapInput);
 
-        String responseString = uid2ClientHelper.makeRequest(envelope, "/v2/identity/map");
+        String responseString = uid2ClientHelper.makeRequest(envelope, "/v3/identity/map");
         return identityMapHelper.createIdentityMapResponse(responseString, envelope, identityMapInput);
     }
 

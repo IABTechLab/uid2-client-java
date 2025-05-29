@@ -45,10 +45,10 @@ public class IdentityMapV3Input {
             hashedNormalizedEmails = new ArrayList<>();
             for (String email : emailsOrPhones) {
                 if (alreadyHashed) {
-                    hashedNormalizedEmails.add(email);
+                    hashedNormalizedEmails.add(new Identity(email));
                 } else {
                     String hashedEmail = InputUtil.normalizeAndHashEmail(email);
-                    hashedNormalizedEmails.add(hashedEmail);
+                    hashedNormalizedEmails.add(new Identity(hashedEmail));
                     addHashedToRawDiiMapping(hashedEmail, email);
                 }
             }
@@ -56,7 +56,7 @@ public class IdentityMapV3Input {
             hashedNormalizedPhones = new ArrayList<>();
             for (String phone : emailsOrPhones) {
                 if (alreadyHashed) {
-                    hashedNormalizedPhones.add(phone);
+                    hashedNormalizedPhones.add(new Identity(phone));
                 } else {
                     if (!InputUtil.isPhoneNumberNormalized(phone)) {
                         throw new IllegalArgumentException("phone number is not normalized: " + phone);
@@ -64,7 +64,7 @@ public class IdentityMapV3Input {
 
                     String hashedNormalizedPhone = InputUtil.getBase64EncodedHash(phone);
                     addHashedToRawDiiMapping(hashedNormalizedPhone, phone);
-                    hashedNormalizedPhones.add(hashedNormalizedPhone);
+                    hashedNormalizedPhones.add(new Identity(hashedNormalizedPhone));
                 }
             }
         }
@@ -83,9 +83,18 @@ public class IdentityMapV3Input {
     }
 
     @SerializedName("email_hash")
-    private List<String> hashedNormalizedEmails;
+    private List<Identity> hashedNormalizedEmails;
     @SerializedName("phone_hash")
-    private List<String> hashedNormalizedPhones;
+    private List<Identity> hashedNormalizedPhones;
 
     private final transient HashMap<String, List<String>> hashedDiiToRawDiis = new HashMap<>();
+
+    private static class Identity {
+        @SerializedName("i")
+        private final String i;
+
+        public Identity(String value) {
+            this.i = value;
+        }
+    }
 }
