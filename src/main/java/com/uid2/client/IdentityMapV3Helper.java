@@ -24,7 +24,7 @@ public class IdentityMapV3Helper {
      * @param responseString the response body returned by a call to <a href="https://unifiedid.com/docs/endpoints/post-identity-map">/identity/map</a>
      * @param envelope the EnvelopeV2 instance returned by {@link #createEnvelopeForIdentityMapRequest}
      * @param identityMapInput the same instance that was passed to {@link #createEnvelopeForIdentityMapRequest}.
-     * @return an IdentityMapResponse instance
+     * @return an IdentityMapV3Response instance
      */
     public IdentityMapV3Response createIdentityMapResponse(String responseString, EnvelopeV2 envelope, IdentityMapV3Input identityMapInput) {
         String decryptedResponseString = uid2Helper.decrypt(responseString, envelope.getNonce());

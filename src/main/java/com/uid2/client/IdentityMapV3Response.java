@@ -1,78 +1,99 @@
 package com.uid2.client;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class IdentityMapV3Response {
     IdentityMapV3Response(String response, IdentityMapV3Input identityMapInput) {
-        JsonObject responseJson = new Gson().fromJson(response, JsonObject.class);
-        status = responseJson.get("status").getAsString();
+        ApiResponse apiResponse = new Gson().fromJson(response, ApiResponse.class);
+        status = apiResponse.status;
 
         if (!isSuccess()) {
             throw new Uid2Exception("Got unexpected identity map status: " + status);
         }
 
-        Gson gson = new Gson();
-        JsonObject body = getBodyAsJson(responseJson);
+        populateIdentities(apiResponse.body, identityMapInput);
+    }
 
-        Iterable<JsonElement> mapped = getJsonArray(body, "mapped");
-        for (JsonElement identity : mapped) {
-            List<String> rawDiis = getRawDiis(identity, identityMapInput);
-            MappedIdentity mappedIdentity = gson.fromJson(identity, MappedIdentity.class);
-            for (String rawDii : rawDiis) {
-                mappedIdentities.put(rawDii, mappedIdentity);
-            }
-        }
-
-        Iterable<JsonElement> unmapped = getJsonArray(body, "unmapped");
-        for (JsonElement identity : unmapped) {
-            List<String> rawDiis = getRawDiis(identity, identityMapInput);
-            UnmappedIdentity unmappedIdentity = gson.fromJson(identity, UnmappedIdentity.class);
-            for (String rawDii : rawDiis) {
-                unmappedIdentities.put(rawDii, unmappedIdentity);
-            }
+    private void populateIdentities(Map<String, List<ApiIdentity>> apiResponse, IdentityMapV3Input identityMapInput) {
+        for (Map.Entry<String, List<ApiIdentity>> identitiesForType : apiResponse.entrySet()) {
+            populateIdentitiesForType(identityMapInput, identitiesForType.getKey(), identitiesForType.getValue());
         }
     }
 
-    private static Iterable<JsonElement> getJsonArray(JsonObject body, String header) {
-        JsonElement jsonElement = body.get(header);
-        if (jsonElement == null) {
-            return Collections.emptyList();
+    private void populateIdentitiesForType(IdentityMapV3Input identityMapInput, String identityType, List<ApiIdentity> identities) {
+        for (int i = 0; i < identities.size(); i++) {
+            ApiIdentity apiIdentity = identities.get(i);
+            List<String> rawDiis = identityMapInput.getRawDiis(identityType, i);
+            for (String rawDii : rawDiis)
+                if (apiIdentity.error != null) {
+                    unmappedIdentities.put(rawDii, new UnmappedIdentity(apiIdentity));
+                } else {
+                    mappedIdentities.put(rawDii, new MappedIdentity(apiIdentity));
+                }
         }
-        return jsonElement.getAsJsonArray();
     }
 
-    private List<String> getRawDiis(JsonElement identity, IdentityMapV3Input identityMapInput) {
-        String identifier = identity.getAsJsonObject().get("identifier").getAsString();
-        return identityMapInput.getRawDiis(identifier);
+    private static IdentityMapV3Input getIdentityMapInput(IdentityMapV3Input identityMapInput) {
+        return identityMapInput;
     }
 
     public boolean isSuccess() {
         return "success".equals(status);
     }
-    static JsonObject getBodyAsJson(JsonObject jsonResponse) {
-        return jsonResponse.get("body").getAsJsonObject();
+
+    static public class ApiResponse {
+        @SerializedName("status")
+        public String status;
+
+        @SerializedName("body")
+        public Map<String, List<ApiIdentity>> body;
+    }
+
+    static public class ApiIdentity {
+        @SerializedName("u")
+        public String currentUid;
+
+        @SerializedName("p")
+        public String previousUid;
+
+        @SerializedName("r")
+        public Long refreshFromSeconds;
+
+        @SerializedName("e")
+        public String error;
     }
 
     static public class MappedIdentity {
-        public MappedIdentity(String rawUid, String bucketId) {
-            this.rawUid = rawUid;
-            this.bucketId = bucketId;
+        public MappedIdentity(String currentUid, String previousUid, Long refreshFromSeconds) {
+            this.currentUid = currentUid;
+            this.previousUid = previousUid;
+            this.refreshFromSeconds = refreshFromSeconds;
         }
 
-        public String getRawUid() {return rawUid;}
-        public String getBucketId() {return bucketId;}
+        public MappedIdentity(ApiIdentity apiIdentity) {
+            this(apiIdentity.currentUid, apiIdentity.previousUid, apiIdentity.refreshFromSeconds);
+        }
 
-        @SerializedName("advertising_id")
-        private final String rawUid;
-        @SerializedName("bucket_id")
-        private final String bucketId;
+        private final String currentUid;
+        private final String previousUid;
+        private final Long refreshFromSeconds;
+
+        public String getCurrentUid() {
+            return currentUid;
+        }
+
+        public String getPreviousUid() {
+            return previousUid;
+        }
+
+        public Long getRefreshFromSeconds() {
+            return refreshFromSeconds;
+        }
     }
 
     static public class UnmappedIdentity {
@@ -80,9 +101,15 @@ public class IdentityMapV3Response {
             this.reason = reason;
         }
 
-        public String getReason() {return reason;}
+        public UnmappedIdentity(ApiIdentity apiIdentity) {
+            this(apiIdentity.error);
+        }
 
         private final String reason;
+
+        public String getReason() {
+            return reason;
+        }
     }
 
     public HashMap<String, MappedIdentity> getMappedIdentities() {
