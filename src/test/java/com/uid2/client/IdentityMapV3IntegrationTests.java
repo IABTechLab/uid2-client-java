@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -193,6 +194,7 @@ public class IdentityMapV3IntegrationTests {
             IdentityMapV3Response.MappedIdentity mappedIdentity = identityMapResponse.getMappedIdentities().get(dii);
             assertNotNull(mappedIdentity);
             assertFalse(mappedIdentity.getCurrentUid().isEmpty());
+            assertTrue(mappedIdentity.getRefreshFromSeconds() > Instant.now().minusSeconds(24 * 60 * 60).getEpochSecond());
 
             IdentityMapV3Response.UnmappedIdentity unmappedIdentity = identityMapResponse.getUnmappedIdentities().get(dii);
             assertNull(unmappedIdentity);
