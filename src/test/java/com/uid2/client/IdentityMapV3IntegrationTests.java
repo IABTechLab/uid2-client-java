@@ -170,7 +170,7 @@ public class IdentityMapV3IntegrationTests {
                 .withHashedEmails(Arrays.asList(mappedEmailHash, optedOutEmailHash))
                 .withPhones(Arrays.asList(mappedPhone, optedOutPhone))
                 .withHashedPhones(Arrays.asList(mappedPhoneHash, optedOutPhoneHash));
-        
+
         Response response = new Response(identityMapInput);
 
         response.assertMapped(mappedEmail);
@@ -182,6 +182,24 @@ public class IdentityMapV3IntegrationTests {
         response.assertUnmapped("OPTOUT", optedOutEmailHash);
         response.assertUnmapped("OPTOUT", optedOutPhone);
         response.assertUnmapped("OPTOUT", optedOutPhoneHash);
+    }
+
+    @Test
+    public void identityMapAllIdentityTypesInOneRequestAddedOneByOne() {
+        IdentityMapV3Input identityMapInput = new IdentityMapV3Input();
+
+        identityMapInput.withEmail(mappedEmail);
+        identityMapInput.withPhone(optedOutPhone);
+        identityMapInput.withHashedPhone(mappedPhoneHash);
+        identityMapInput.withHashedEmail(optedOutEmailHash);
+
+        Response response = new Response(identityMapInput);
+
+        response.assertMapped(mappedEmail);
+        response.assertMapped(mappedPhoneHash);
+
+        response.assertUnmapped("OPTOUT", optedOutPhone);
+        response.assertUnmapped("OPTOUT", optedOutEmailHash);
     }
 
 

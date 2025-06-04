@@ -29,12 +29,13 @@ public class IdentityMapV3Response {
         for (int i = 0; i < identities.size(); i++) {
             ApiIdentity apiIdentity = identities.get(i);
             List<String> rawDiis = identityMapInput.getRawDiis(identityType, i);
-            for (String rawDii : rawDiis)
+            for (String rawDii : rawDiis) {
                 if (apiIdentity.error != null) {
                     unmappedIdentities.put(rawDii, new UnmappedIdentity(apiIdentity));
                 } else {
                     mappedIdentities.put(rawDii, new MappedIdentity(apiIdentity));
                 }
+            }
         }
     }
 

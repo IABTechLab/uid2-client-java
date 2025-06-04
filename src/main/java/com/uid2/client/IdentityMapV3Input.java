@@ -45,44 +45,65 @@ public class IdentityMapV3Input {
     @SerializedName("phone_hash")
     private final List<Identity> hashedPhones = new ArrayList<>();
 
-    private IdentityMapV3Input() {}
+    public IdentityMapV3Input() {}
 
     public IdentityMapV3Input withHashedEmails(List<String> hashedEmails) {
         for (String hashedEmail : hashedEmails) {
-            this.hashedEmails.add(new Identity(hashedEmail));
-            addToDiiMappings(hashedEmail, hashedEmail);
+            withHashedEmail(hashedEmail);
         }
+        return this;
+    }
+
+    public IdentityMapV3Input withHashedEmail(String hashedEmail) {
+        this.hashedEmails.add(new Identity(hashedEmail));
+        addToDiiMappings(hashedEmail, hashedEmail);
         return this;
     }
 
     public IdentityMapV3Input withHashedPhones(List<String> hashedPhones) {
         for (String hashedPhone : hashedPhones) {
-            this.hashedPhones.add(new Identity(hashedPhone));
-            addToDiiMappings(hashedPhone, hashedPhone);
+            withHashedPhone(hashedPhone);
         }
+        return this;
+    }
+
+    public IdentityMapV3Input withHashedPhone(String hashedPhone) {
+        this.hashedPhones.add(new Identity(hashedPhone));
+        addToDiiMappings(hashedPhone, hashedPhone);
         return this;
     }
 
     public IdentityMapV3Input withEmails(List<String> emails) {
         for (String email : emails) {
-            String hash = InputUtil.normalizeAndHashEmail(email);
-            this.hashedEmails.add(new Identity(hash));
-            addToDiiMappings(hash, email);
+            withEmail(email);
         }
+        return this;
+    }
+
+    public IdentityMapV3Input withEmail(String email) {
+        String hashedEmail = InputUtil.normalizeAndHashEmail(email);
+        this.hashedEmails.add(new Identity(hashedEmail));
+        addToDiiMappings(hashedEmail, email);
         return this;
     }
 
     public IdentityMapV3Input withPhones(List<String> phones) {
         for (String phone : phones) {
-            if (!InputUtil.isPhoneNumberNormalized(phone)) {
-                throw new IllegalArgumentException("phone number is not normalized: " + phone);
-            }
-
-            String hash = InputUtil.getBase64EncodedHash(phone);
-            this.hashedPhones.add(new Identity(hash));
-            addToDiiMappings(hash, phone);
+            withPhone(phone);
         }
         return this;
+    }
+
+    public IdentityMapV3Input withPhone(String phone) {
+        if (!InputUtil.isPhoneNumberNormalized(phone)) {
+            throw new IllegalArgumentException("phone number is not normalized: " + phone);
+        }
+
+        String hashedPhone = InputUtil.getBase64EncodedHash(phone);
+        this.hashedPhones.add(new Identity(hashedPhone));
+        addToDiiMappings(hashedPhone, phone);
+        return this;
+
     }
 
     private void addToDiiMappings(String hashedDii, String rawDii) {
