@@ -138,7 +138,7 @@ public class IdentityMapV3Input {
 
     }
 
-    List<String> getRawDiis(String identityType, int i) {
+    List<String> getInputDiis(String identityType, int i) {
         return diiMappings.get(getEncodedDii(identityType, i));
     }
 
