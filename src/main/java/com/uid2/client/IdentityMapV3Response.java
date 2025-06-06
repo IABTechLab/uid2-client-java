@@ -3,6 +3,7 @@ package com.uid2.client;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,30 +71,30 @@ public class IdentityMapV3Response {
     }
 
     static public class MappedIdentity {
-        public MappedIdentity(String currentUid, String previousUid, Long refreshFromSeconds) {
+        public MappedIdentity(String currentUid, String previousUid, Instant refreshFrom) {
             this.currentUid = currentUid;
             this.previousUid = previousUid;
-            this.refreshFromSeconds = refreshFromSeconds;
+            this.refreshFrom = refreshFrom;
         }
 
         public MappedIdentity(ApiIdentity apiIdentity) {
-            this(apiIdentity.currentUid, apiIdentity.previousUid, apiIdentity.refreshFromSeconds);
+            this(apiIdentity.currentUid, apiIdentity.previousUid, Instant.ofEpochSecond(apiIdentity.refreshFromSeconds));
         }
 
         private final String currentUid;
         private final String previousUid;
-        private final Long refreshFromSeconds;
+        private final Instant refreshFrom;
 
-        public String getCurrentUid() {
+        public String getCurrentRawUid() {
             return currentUid;
         }
 
-        public String getPreviousUid() {
+        public String getPreviousRawUid() {
             return previousUid;
         }
 
-        public Long getRefreshFromSeconds() {
-            return refreshFromSeconds;
+        public Instant getRefreshFrom() {
+            return refreshFrom;
         }
     }
 

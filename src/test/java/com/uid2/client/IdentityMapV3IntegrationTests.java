@@ -111,10 +111,10 @@ public class IdentityMapV3IntegrationTests {
         HashMap<String, IdentityMapV3Response.MappedIdentity> mappedIdentities = identityMapResponse.getMappedIdentities();
         assertEquals(4, mappedIdentities.size()); //it's not 5 because the last email is an exact match to the first email
 
-        String rawUid = mappedIdentities.get("JANE.SAOIRSE@gmail.com").getCurrentUid();
-        assertEquals(rawUid, mappedIdentities.get("Jane.Saoirse@gmail.com").getCurrentUid());
-        assertEquals(rawUid, mappedIdentities.get("JaneSaoirse+UID2@gmail.com").getCurrentUid());
-        assertEquals(rawUid, mappedIdentities.get("janesaoirse@gmail.com").getCurrentUid());
+        String rawUid = mappedIdentities.get("JANE.SAOIRSE@gmail.com").getCurrentRawUid();
+        assertEquals(rawUid, mappedIdentities.get("Jane.Saoirse@gmail.com").getCurrentRawUid());
+        assertEquals(rawUid, mappedIdentities.get("JaneSaoirse+UID2@gmail.com").getCurrentRawUid());
+        assertEquals(rawUid, mappedIdentities.get("janesaoirse@gmail.com").getCurrentRawUid());
     }
 
 
@@ -211,8 +211,11 @@ public class IdentityMapV3IntegrationTests {
         void assertMapped(String dii) {
             IdentityMapV3Response.MappedIdentity mappedIdentity = identityMapResponse.getMappedIdentities().get(dii);
             assertNotNull(mappedIdentity);
-            assertFalse(mappedIdentity.getCurrentUid().isEmpty());
-            assertTrue(mappedIdentity.getRefreshFromSeconds() > Instant.now().minusSeconds(24 * 60 * 60).getEpochSecond());
+            assertFalse(mappedIdentity.getCurrentRawUid().isEmpty());
+
+            // Refresh from should be now or in the future, allow some slack for time between request and this assertion
+            Instant aMinuteAgo = Instant.now().minusSeconds(60);
+            assertTrue(mappedIdentity.getRefreshFrom().isAfter(aMinuteAgo));
 
             IdentityMapV3Response.UnmappedIdentity unmappedIdentity = identityMapResponse.getUnmappedIdentities().get(dii);
             assertNull(unmappedIdentity);
@@ -254,7 +257,7 @@ public class IdentityMapV3IntegrationTests {
             IdentityMapV3Response identityMapResponse = identityMapHelper.createIdentityMapResponse(responseString, envelopeV2, identityMapInput);
 
             IdentityMapV3Response.MappedIdentity mappedIdentity = identityMapResponse.getMappedIdentities().get(mappedEmail);
-            assertFalse(mappedIdentity.getCurrentUid().isEmpty());
+            assertFalse(mappedIdentity.getCurrentRawUid().isEmpty());
         } catch (IOException e) {
             throw new Uid2Exception("error communicating with api endpoint", e);
         }
