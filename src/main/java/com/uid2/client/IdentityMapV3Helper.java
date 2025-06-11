@@ -31,5 +31,5 @@ public class IdentityMapV3Helper {
         return new IdentityMapV3Response(decryptedResponseString, identityMapInput);
     }
 
-    Uid2Helper uid2Helper;
+    private final Uid2Helper uid2Helper;
 }

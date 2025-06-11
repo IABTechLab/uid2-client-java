@@ -40,15 +40,11 @@ public class IdentityMapV3Response {
         }
     }
 
-    private static IdentityMapV3Input getIdentityMapInput(IdentityMapV3Input identityMapInput) {
-        return identityMapInput;
-    }
-
     public boolean isSuccess() {
         return "success".equals(status);
     }
 
-    static public class ApiResponse {
+    public static class ApiResponse {
         @SerializedName("status")
         public String status;
 
@@ -56,7 +52,7 @@ public class IdentityMapV3Response {
         public Map<String, List<ApiIdentity>> body;
     }
 
-    static public class ApiIdentity {
+    public static class ApiIdentity {
         @SerializedName("u")
         public String currentUid;
 
@@ -70,7 +66,7 @@ public class IdentityMapV3Response {
         public String error;
     }
 
-    static public class MappedIdentity {
+    public static class MappedIdentity {
         public MappedIdentity(String currentUid, String previousUid, Instant refreshFrom) {
             this.currentUid = currentUid;
             this.previousUid = previousUid;
@@ -98,7 +94,7 @@ public class IdentityMapV3Response {
         }
     }
 
-    static public class UnmappedIdentity {
+    public static class UnmappedIdentity {
         public UnmappedIdentity(String reason)
         {
             this.reason = UnmappedIdentityReason.fromString(reason);
@@ -119,11 +115,11 @@ public class IdentityMapV3Response {
     }
 
     public HashMap<String, MappedIdentity> getMappedIdentities() {
-        return mappedIdentities;
+        return new HashMap<>(mappedIdentities);
     }
 
     public HashMap<String, UnmappedIdentity> getUnmappedIdentities() {
-        return unmappedIdentities;
+        return new HashMap<>(unmappedIdentities);
     }
 
     private final String status;

@@ -37,7 +37,8 @@ public class IdentityMapV3Input {
         return new IdentityMapV3Input().withHashedPhones(hashedPhones);
     }
 
-    private transient final Map<String, List<String>> diiMappings = new HashMap<>();
+    // Transient as this should not be part of the serialized JSON payload we send to UID2 Operator
+    private transient final Map<String, List<String>> hashedDiiToRawDii = new HashMap<>();
 
     @SerializedName("email_hash")
     private final List<Identity> hashedEmails = new ArrayList<>();
@@ -139,14 +140,14 @@ public class IdentityMapV3Input {
     }
 
     List<String> getInputDiis(String identityType, int i) {
-        return diiMappings.get(getEncodedDii(identityType, i));
+        return hashedDiiToRawDii.get(getHashedDii(identityType, i));
     }
 
     private void addToDiiMappings(String hashedDii, String rawDii) {
-        diiMappings.computeIfAbsent(hashedDii, k -> new ArrayList<>()).add(rawDii);
+        hashedDiiToRawDii.computeIfAbsent(hashedDii, k -> new ArrayList<>()).add(rawDii);
     }
 
-    private String getEncodedDii(String identityType, int i) {
+    private String getHashedDii(String identityType, int i) {
         switch (identityType) {
             case "email_hash": return hashedEmails.get(i).identity;
             case "phone_hash": return hashedPhones.get(i).identity;
