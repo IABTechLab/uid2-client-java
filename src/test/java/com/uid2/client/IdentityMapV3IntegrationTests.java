@@ -38,7 +38,7 @@ public class IdentityMapV3IntegrationTests {
         response.assertMapped(mappedEmail);
         response.assertMapped(optedOutEmail2);
 
-        response.assertUnmapped("OPTOUT", optedOutEmail);
+        response.assertUnmapped(UnmappedIdentityReason.OPTOUT, optedOutEmail);
     }
 
     @Test
@@ -55,7 +55,7 @@ public class IdentityMapV3IntegrationTests {
         IdentityMapV3Input identityMapInput = IdentityMapV3Input.fromEmails(Collections.singletonList(optedOutEmail));
         Response response = new Response(identityMapInput);
 
-        response.assertUnmapped("OPTOUT", optedOutEmail);
+        response.assertUnmapped(UnmappedIdentityReason.OPTOUT, optedOutEmail);
     }
 
 
@@ -77,7 +77,7 @@ public class IdentityMapV3IntegrationTests {
 
         Response response = new Response(identityMapInput);
 
-        response.assertUnmapped("INVALID", "this is not a hashed email");
+        response.assertUnmapped(UnmappedIdentityReason.INVALID, "this is not a hashed email");
     }
 
     @Test
@@ -85,7 +85,7 @@ public class IdentityMapV3IntegrationTests {
         IdentityMapV3Input identityMapInput = IdentityMapV3Input.fromHashedPhones(Collections.singletonList("this is not a hashed phone"));
 
         Response response = new Response(identityMapInput);
-        response.assertUnmapped("INVALID", "this is not a hashed phone");
+        response.assertUnmapped(UnmappedIdentityReason.INVALID, "this is not a hashed phone");
     }
 
     @Test
@@ -100,7 +100,7 @@ public class IdentityMapV3IntegrationTests {
         response.assertMapped(hashedEmail1);
         response.assertMapped(hashedEmail2);
 
-        response.assertUnmapped("OPTOUT", hashedOptedOutEmail);
+        response.assertUnmapped(UnmappedIdentityReason.OPTOUT, hashedOptedOutEmail);
     }
 
     @Test
@@ -125,7 +125,7 @@ public class IdentityMapV3IntegrationTests {
 
         response.assertMapped(mappedEmailHash);
 
-        response.assertUnmapped("OPTOUT", optedOutEmailHash);
+        response.assertUnmapped(UnmappedIdentityReason.OPTOUT, optedOutEmailHash);
     }
 
     @Test
@@ -145,7 +145,7 @@ public class IdentityMapV3IntegrationTests {
         response.assertMapped(mappedPhone);
         response.assertMapped(mappedPhone2);
 
-        response.assertUnmapped("OPTOUT", optedOutPhone);
+        response.assertUnmapped(UnmappedIdentityReason.OPTOUT, optedOutPhone);
     }
 
     @Test
@@ -160,7 +160,7 @@ public class IdentityMapV3IntegrationTests {
         response.assertMapped(hashedPhone1);
         response.assertMapped(hashedPhone2);
 
-        response.assertUnmapped("OPTOUT", hashedOptedOutPhone);
+        response.assertUnmapped(UnmappedIdentityReason.OPTOUT, hashedOptedOutPhone);
     }
 
     @Test
@@ -178,10 +178,10 @@ public class IdentityMapV3IntegrationTests {
         response.assertMapped(mappedPhone);
         response.assertMapped(mappedPhoneHash);
 
-        response.assertUnmapped("OPTOUT", optedOutEmail);
-        response.assertUnmapped("OPTOUT", optedOutEmailHash);
-        response.assertUnmapped("OPTOUT", optedOutPhone);
-        response.assertUnmapped("OPTOUT", optedOutPhoneHash);
+        response.assertUnmapped(UnmappedIdentityReason.OPTOUT, optedOutEmail);
+        response.assertUnmapped(UnmappedIdentityReason.OPTOUT, optedOutEmailHash);
+        response.assertUnmapped(UnmappedIdentityReason.OPTOUT, optedOutPhone);
+        response.assertUnmapped(UnmappedIdentityReason.OPTOUT, optedOutPhoneHash);
     }
 
     @Test
@@ -198,8 +198,8 @@ public class IdentityMapV3IntegrationTests {
         response.assertMapped(mappedEmail);
         response.assertMapped(mappedPhoneHash);
 
-        response.assertUnmapped("OPTOUT", optedOutPhone);
-        response.assertUnmapped("OPTOUT", optedOutEmailHash);
+        response.assertUnmapped(UnmappedIdentityReason.OPTOUT, optedOutPhone);
+        response.assertUnmapped(UnmappedIdentityReason.OPTOUT, optedOutEmailHash);
     }
 
 
@@ -217,14 +217,14 @@ public class IdentityMapV3IntegrationTests {
             Instant aMinuteAgo = Instant.now().minusSeconds(60);
             assertTrue(mappedIdentity.getRefreshFrom().isAfter(aMinuteAgo));
 
-            IdentityMapV3Response.UnmappedIdentity unmappedIdentity = identityMapResponse.getUnmappedIdentities().get(dii);
-            assertNull(unmappedIdentity);
+            IdentityMapV3Response.UnmappedIdentity unmappedIdentityReason = identityMapResponse.getUnmappedIdentities().get(dii);
+            assertNull(unmappedIdentityReason);
         }
 
-        void assertUnmapped(String reason, String dii) {
+        void assertUnmapped(UnmappedIdentityReason reason, String dii) {
             HashMap<String, IdentityMapV3Response.UnmappedIdentity> unmappedIdentities = identityMapResponse.getUnmappedIdentities();
-            IdentityMapV3Response.UnmappedIdentity dii2 = unmappedIdentities.get(dii);
-            assertEquals(reason, dii2.getReason());
+            IdentityMapV3Response.UnmappedIdentity unmappedIdentity = unmappedIdentities.get(dii);
+            assertEquals(reason, unmappedIdentity.getReason());
 
             IdentityMapV3Response.MappedIdentity mappedIdentity = identityMapResponse.getMappedIdentities().get(dii);
             assertNull(mappedIdentity);

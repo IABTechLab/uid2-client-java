@@ -31,10 +31,10 @@ public class IdentityMapV3Response {
             ApiIdentity apiIdentity = identities.get(i);
             List<String> inputDiis = identityMapInput.getInputDiis(identityType, i);
             for (String inputDii : inputDiis) {
-                if (apiIdentity.error != null) {
-                    unmappedIdentities.put(inputDii, new UnmappedIdentity(apiIdentity));
-                } else {
+                if (apiIdentity.error == null) {
                     mappedIdentities.put(inputDii, new MappedIdentity(apiIdentity));
+                } else {
+                    unmappedIdentities.put(inputDii, new UnmappedIdentity(apiIdentity.error));
                 }
             }
         }
@@ -99,19 +99,23 @@ public class IdentityMapV3Response {
     }
 
     static public class UnmappedIdentity {
-        public UnmappedIdentity(String reason) {
-            this.reason = reason;
+        public UnmappedIdentity(String reason)
+        {
+            this.reason = UnmappedIdentityReason.fromString(reason);
+            this.rawReason = reason;
         }
 
-        public UnmappedIdentity(ApiIdentity apiIdentity) {
-            this(apiIdentity.error);
-        }
-
-        private final String reason;
-
-        public String getReason() {
+        public UnmappedIdentityReason getReason() {
             return reason;
         }
+
+        public String getRawReason() {
+            return rawReason;
+        }
+
+        private final UnmappedIdentityReason reason;
+
+        private final String rawReason;
     }
 
     public HashMap<String, MappedIdentity> getMappedIdentities() {
