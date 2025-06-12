@@ -108,61 +108,36 @@ public class IdentityMapV3ResponseTest {
     void unmappedIdentityReasonUnknown() {
         IdentityMapV3Input input = IdentityMapV3Input.fromEmails(Arrays.asList(SOME_EMAIL));
 
-        IdentityMapV3Response response = new IdentityMapV3Response(unmappedResponsePayload("SOME_NEW_UNMAPPED_REASON"), input);
+        IdentityMapV3Response response = new IdentityMapV3Response(unmappedResponsePayload("some new unmapped reason"), input);
         assertTrue(response.isSuccess());
 
         IdentityMapV3Response.UnmappedIdentity unmappedIdentity = response.getUnmappedIdentities().get(SOME_EMAIL);
         assertEquals(UnmappedIdentityReason.UNKNOWN, unmappedIdentity.getReason());
-        assertEquals("SOME_NEW_UNMAPPED_REASON", unmappedIdentity.getRawReason());
+        assertEquals("some new unmapped reason", unmappedIdentity.getRawReason());
     }
 
     @Test
     void unmappedIdentityReasonOptout() {
         IdentityMapV3Input input = IdentityMapV3Input.fromEmails(Arrays.asList(SOME_EMAIL));
 
-        IdentityMapV3Response response = new IdentityMapV3Response(unmappedResponsePayload("OPTOUT"), input);
+        IdentityMapV3Response response = new IdentityMapV3Response(unmappedResponsePayload("optout"), input);
         assertTrue(response.isSuccess());
 
         IdentityMapV3Response.UnmappedIdentity unmappedIdentity = response.getUnmappedIdentities().get(SOME_EMAIL);
         assertEquals(UnmappedIdentityReason.OPTOUT, unmappedIdentity.getReason());
-        assertEquals("OPTOUT", unmappedIdentity.getRawReason());
+        assertEquals("optout", unmappedIdentity.getRawReason());
     }
 
     @Test
     void unmappedIdentityReasonInvalid() {
         IdentityMapV3Input input = IdentityMapV3Input.fromEmails(Arrays.asList(SOME_EMAIL));
 
-        IdentityMapV3Response response = new IdentityMapV3Response(unmappedResponsePayload("INVALID"), input);
+        IdentityMapV3Response response = new IdentityMapV3Response(unmappedResponsePayload("invalid identifier"), input);
         assertTrue(response.isSuccess());
 
         IdentityMapV3Response.UnmappedIdentity unmappedIdentity = response.getUnmappedIdentities().get(SOME_EMAIL);
-        assertEquals(UnmappedIdentityReason.INVALID, unmappedIdentity.getReason());
-        assertEquals("INVALID", unmappedIdentity.getRawReason());
-    }
-
-    @Test
-    void unmappedIdentityReasonCaseInsensitive() {
-        IdentityMapV3Input input = IdentityMapV3Input.fromEmails(Arrays.asList(SOME_EMAIL));
-
-        IdentityMapV3Response.UnmappedIdentity lowercaseOptout =
-                new IdentityMapV3Response(unmappedResponsePayload("optout"), input).getUnmappedIdentities().get(SOME_EMAIL);
-        assertEquals(UnmappedIdentityReason.OPTOUT, lowercaseOptout.getReason());
-        assertEquals("optout", lowercaseOptout.getRawReason());
-
-        IdentityMapV3Response.UnmappedIdentity lowercaseInvalid =
-                new IdentityMapV3Response(unmappedResponsePayload("invalid"), input).getUnmappedIdentities().get(SOME_EMAIL);
-        assertEquals(UnmappedIdentityReason.INVALID, lowercaseInvalid.getReason());
-        assertEquals("invalid", lowercaseInvalid.getRawReason());
-
-        IdentityMapV3Response.UnmappedIdentity mixedOptout =
-                new IdentityMapV3Response(unmappedResponsePayload("OptOut"), input).getUnmappedIdentities().get(SOME_EMAIL);
-        assertEquals(UnmappedIdentityReason.OPTOUT, mixedOptout.getReason());
-        assertEquals("OptOut", mixedOptout.getRawReason());
-
-        IdentityMapV3Response.UnmappedIdentity mixedInvalid =
-                new IdentityMapV3Response(unmappedResponsePayload("InVaLiD"), input).getUnmappedIdentities().get(SOME_EMAIL);
-        assertEquals(UnmappedIdentityReason.INVALID, mixedInvalid.getReason());
-        assertEquals("InVaLiD", mixedInvalid.getRawReason());
+        assertEquals(UnmappedIdentityReason.INVALID_IDENTIFIER, unmappedIdentity.getReason());
+        assertEquals("invalid identifier", unmappedIdentity.getRawReason());
     }
 
     @Test

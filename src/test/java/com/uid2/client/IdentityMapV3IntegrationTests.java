@@ -77,7 +77,7 @@ public class IdentityMapV3IntegrationTests {
 
         Response response = new Response(identityMapInput);
 
-        response.assertUnmapped(UnmappedIdentityReason.INVALID, "this is not a hashed email");
+        response.assertUnmapped(UnmappedIdentityReason.INVALID_IDENTIFIER, "this is not a hashed email");
     }
 
     @Test
@@ -85,7 +85,7 @@ public class IdentityMapV3IntegrationTests {
         IdentityMapV3Input identityMapInput = IdentityMapV3Input.fromHashedPhones(Collections.singletonList("this is not a hashed phone"));
 
         Response response = new Response(identityMapInput);
-        response.assertUnmapped(UnmappedIdentityReason.INVALID, "this is not a hashed phone");
+        response.assertUnmapped(UnmappedIdentityReason.INVALID_IDENTIFIER, "this is not a hashed phone");
     }
 
     @Test

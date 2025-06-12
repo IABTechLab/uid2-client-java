@@ -3,14 +3,15 @@ package com.uid2.client;
 
 public enum UnmappedIdentityReason {
     OPTOUT,
-    INVALID,
+    INVALID_IDENTIFIER,
     UNKNOWN;
 
     public static UnmappedIdentityReason fromString(String reason) {
-        for (UnmappedIdentityReason knownReason : values()) {
-            if (knownReason.name().equals(reason.toUpperCase())) {
-                return knownReason;
-            }
+        if (reason.equals("optout")) {
+            return OPTOUT;
+        }
+        if (reason.equals("invalid identifier")) {
+            return INVALID_IDENTIFIER;
         }
         
         return UNKNOWN;
