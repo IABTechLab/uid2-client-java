@@ -41,10 +41,10 @@ public class IdentityMapV3Input {
     private transient final Map<String, List<String>> hashedDiiToRawDii = new HashMap<>();
 
     @SerializedName("email_hash")
-    private final List<Identity> hashedEmails = new ArrayList<>();
+    private final List<String> hashedEmails = new ArrayList<>();
 
     @SerializedName("phone_hash")
-    private final List<Identity> hashedPhones = new ArrayList<>();
+    private final List<String> hashedPhones = new ArrayList<>();
 
     // We never send unhashed emails or phone numbers in the SDK, but they are required fields in the API request
     @SerializedName("email")
@@ -70,7 +70,7 @@ public class IdentityMapV3Input {
      * @return this IdentityMapV3Input instance
      */
     public IdentityMapV3Input withHashedEmail(String hashedEmail) {
-        this.hashedEmails.add(new Identity(hashedEmail));
+        this.hashedEmails.add(hashedEmail);
         addToDiiMappings(hashedEmail, hashedEmail);
         return this;
     }
@@ -91,7 +91,7 @@ public class IdentityMapV3Input {
      * @return this IdentityMapV3Input instance
      */
     public IdentityMapV3Input withHashedPhone(String hashedPhone) {
-        this.hashedPhones.add(new Identity(hashedPhone));
+        this.hashedPhones.add(hashedPhone);
         addToDiiMappings(hashedPhone, hashedPhone);
         return this;
     }
@@ -113,7 +113,7 @@ public class IdentityMapV3Input {
      */
     public IdentityMapV3Input withEmail(String email) {
         String hashedEmail = InputUtil.normalizeAndHashEmail(email);
-        this.hashedEmails.add(new Identity(hashedEmail));
+        this.hashedEmails.add(hashedEmail);
         addToDiiMappings(hashedEmail, email);
         return this;
     }
@@ -139,7 +139,7 @@ public class IdentityMapV3Input {
         }
 
         String hashedPhone = InputUtil.getBase64EncodedHash(phone);
-        this.hashedPhones.add(new Identity(hashedPhone));
+        this.hashedPhones.add(hashedPhone);
         addToDiiMappings(hashedPhone, phone);
         return this;
     }
@@ -154,19 +154,9 @@ public class IdentityMapV3Input {
 
     private String getHashedDii(String identityType, int i) {
         switch (identityType) {
-            case "email_hash": return hashedEmails.get(i).identity;
-            case "phone_hash": return hashedPhones.get(i).identity;
+            case "email_hash": return hashedEmails.get(i);
+            case "phone_hash": return hashedPhones.get(i);
         }
         throw new Uid2Exception("Unexpected identity type: " + identityType);
-    }
-
-
-    private static class Identity {
-        @SerializedName("i")
-        private final String identity;
-
-        public Identity(String value) {
-            this.identity = value;
-        }
     }
 }
