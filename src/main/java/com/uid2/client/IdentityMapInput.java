@@ -86,5 +86,11 @@ public class IdentityMapInput {
     @SerializedName("phone_hash")
     private List<String> hashedNormalizedPhones;
 
+    // We never send unhashed emails or phone numbers in the SDK, but they are required fields in the API request
+    @SerializedName("email")
+    private List<String> emails = Collections.unmodifiableList(new ArrayList<>());
+    @SerializedName("phone")
+    private List<String> phones = Collections.unmodifiableList(new ArrayList<>());
+
     private final transient HashMap<String, List<String>> hashedDiiToRawDiis = new HashMap<>();
 }
