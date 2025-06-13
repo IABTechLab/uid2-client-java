@@ -46,6 +46,12 @@ public class IdentityMapV3Input {
     @SerializedName("phone_hash")
     private final List<Identity> hashedPhones = new ArrayList<>();
 
+    // We never send unhashed emails or phone numbers in the SDK, but they are required fields in the API request
+    @SerializedName("email")
+    private List<String> emails = Collections.unmodifiableList(new ArrayList<>());
+    @SerializedName("phone")
+    private List<String> phones = Collections.unmodifiableList(new ArrayList<>());
+
     public IdentityMapV3Input() {}
 
     /**
@@ -136,7 +142,6 @@ public class IdentityMapV3Input {
         this.hashedPhones.add(new Identity(hashedPhone));
         addToDiiMappings(hashedPhone, phone);
         return this;
-
     }
 
     List<String> getInputDiis(String identityType, int i) {
