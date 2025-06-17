@@ -31,5 +31,10 @@ public class IdentityMapV3Helper {
         return new IdentityMapV3Response(decryptedResponseString, identityMapInput);
     }
 
+    public IdentityMapV3Response createIdentityMapResponse(byte[] response, EnvelopeV2 envelope, IdentityMapV3Input identityMapInput) {
+        String decryptedResponseString = uid2Helper.decrypt(response, envelope.getNonce());
+        return new IdentityMapV3Response(decryptedResponseString, identityMapInput);
+    }
+
     private final Uid2Helper uid2Helper;
 }

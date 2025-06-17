@@ -1,5 +1,7 @@
 package com.uid2.client;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -30,10 +32,14 @@ public class Uid2Helper {
         final byte envelopeVersion = 1;
         envelopeBuffer.put(envelopeVersion);
         envelopeBuffer.put(encrypted);
-        return new EnvelopeV2(InputUtil.byteArrayToBase64(envelopeBuffer.array()), nonce);
+        return new EnvelopeV2(envelopeBuffer.array(), nonce);
     }
 
     public String decrypt(String response, byte[] nonceInRequest) {
+        return decrypt(response, secretKey, false, nonceInRequest);
+    }
+
+    public String decrypt(byte[] response, byte[] nonceInRequest) {
         return decrypt(response, secretKey, false, nonceInRequest);
     }
 
@@ -44,6 +50,10 @@ public class Uid2Helper {
     private static String decrypt(String response, byte[] secretKey, boolean isRefreshResponse, byte[] nonceInRequest) {
         //from parseV2Response
         byte[] responseBytes = InputUtil.base64ToByteArray(response);
+        return decrypt(responseBytes, secretKey, isRefreshResponse, nonceInRequest);
+    }
+
+    private static String decrypt(byte[] responseBytes, byte[] secretKey, boolean isRefreshResponse, byte[] nonceInRequest) {
         byte[] payload = Uid2Encryption.decryptGCM(responseBytes, 0, secretKey);
 
         byte[] resultBytes;

@@ -19,8 +19,12 @@ public class IdentityMapV3Client {
     public IdentityMapV3Response generateIdentityMap(IdentityMapV3Input identityMapInput) {
         EnvelopeV2 envelope = identityMapHelper.createEnvelopeForIdentityMapRequest(identityMapInput);
 
-        String responseString = uid2ClientHelper.makeRequest(envelope, "/v3/identity/map");
-        return identityMapHelper.createIdentityMapResponse(responseString, envelope, identityMapInput);
+        Uid2Response response = uid2ClientHelper.makeBinaryRequest("/v3/identity/map", envelope);
+        if (response.isBinary()) {
+            return identityMapHelper.createIdentityMapResponse(response.getAsBytes(), envelope, identityMapInput);
+        } else {
+            return identityMapHelper.createIdentityMapResponse(response.getAsString(), envelope, identityMapInput);
+        }
     }
 
     private final IdentityMapV3Helper identityMapHelper;

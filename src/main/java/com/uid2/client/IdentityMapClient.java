@@ -19,7 +19,7 @@ public class IdentityMapClient {
     public IdentityMapResponse generateIdentityMap(IdentityMapInput identityMapInput) {
         EnvelopeV2 envelope = identityMapHelper.createEnvelopeForIdentityMapRequest(identityMapInput);
 
-        String responseString = uid2ClientHelper.makeRequest(envelope, "/v2/identity/map");
+        String responseString = uid2ClientHelper.makeRequest("/v2/identity/map", envelope).getAsString();
         return identityMapHelper.createIdentityMapResponse(responseString, envelope, identityMapInput);
     }
 
