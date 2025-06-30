@@ -21,7 +21,7 @@ public class PublisherUid2Client {
     public IdentityTokens generateToken(TokenGenerateInput tokenGenerateInput) {
         EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(tokenGenerateInput);
 
-        String responseString = uid2ClientHelper.makeRequest(envelope, "/v2/token/generate");
+        String responseString = uid2ClientHelper.makeRequest("/v2/token/generate", envelope).getAsString();
         return publisherUid2Helper.createIdentityfromTokenGenerateResponse(responseString, envelope);
     }
 
@@ -33,7 +33,7 @@ public class PublisherUid2Client {
     public TokenGenerateResponse generateTokenResponse(TokenGenerateInput tokenGenerateInput) {
         EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(tokenGenerateInput);
 
-        String responseString = uid2ClientHelper.makeRequest(envelope, "/v2/token/generate");
+        String responseString = uid2ClientHelper.makeRequest("/v2/token/generate", envelope).getAsString();
         return publisherUid2Helper.createTokenGenerateResponse(responseString, envelope);
     }
 
@@ -42,7 +42,7 @@ public class PublisherUid2Client {
      * @return the refreshed IdentityTokens instance (with a new advertising token and updated expiry times). Typically, this will be used to replace the current identity in the user's session
      */
     public TokenRefreshResponse refreshToken(IdentityTokens currentIdentity) {
-        String responseString = uid2ClientHelper.makeRequest(currentIdentity.getRefreshToken(), "/v2/token/refresh");
+        String responseString = uid2ClientHelper.makeRequest("/v2/token/refresh", currentIdentity.getRefreshToken()).getAsString();
         return PublisherUid2Helper.createTokenRefreshResponse(responseString, currentIdentity);
     }
 

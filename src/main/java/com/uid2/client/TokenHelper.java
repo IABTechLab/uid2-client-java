@@ -48,7 +48,7 @@ class TokenHelper {
     RefreshResponse refresh(String urlSuffix) {
         try{
             EnvelopeV2 envelope = uid2Helper.createEnvelopeV2("".getBytes());
-            String responseString = uid2ClientHelper.makeRequest(envelope, urlSuffix);
+            String responseString = uid2ClientHelper.makeRequest(urlSuffix, envelope).getAsString();
             byte[] response = uid2Helper.decrypt(responseString, envelope.getNonce()).getBytes();
             this.container.set(KeyParser.parse(new ByteArrayInputStream(response)));
             return RefreshResponse.makeSuccess();
