@@ -545,7 +545,7 @@ public class DocSampleCodeTest {
     
     @Test
     public void testImportStatements() {
-        // Documentation sdk-ref-java.md Line 419-422: Import statements verification for migration guide
+        // Documentation sdk-ref-java.md Line 437-442: Import statements verification for migration guide
         // Verify that all documented import classes are accessible and can be instantiated
         
         // import com.uid2.client.IdentityMapV3Client;
@@ -584,19 +584,80 @@ public class DocSampleCodeTest {
         assertTrue(hasUnknown);
     }
 
+    @Test
+    public void testRecommendedChangesExamples() {
+        // Documentation sdk-ref-java.md Line 446-488: Recommended changes examples for v3 optional features
+        
+        // Documentation sdk-ref-java.md Line 449-460: 1. Mix identity types in a single request
+        // Before - single identity type only
+        IdentityMapInput inputV2 = IdentityMapInput.fromEmails(Arrays.asList("user@example.com"));
+        
+        // After - can mix identity types (new v3 capability)
+        IdentityMapV3Input mixedInput = new IdentityMapV3Input()
+            .withEmail("user@example.com")
+            .withPhone("+12345678901")
+            .withHashedEmail("preHashedEmail")
+            .withHashedPhone("preHashedPhone");
+        
+        IdentityMapV3Response mixedResponse = identityMapV3Client.generateIdentityMap(mixedInput);
+        assertNotNull(mixedResponse);
+        
+        // Documentation sdk-ref-java.md Line 463-475: 2. Access previous UID2s
+        // Before - only current UID2 available
+        IdentityMapClient clientV2 = new IdentityMapClient(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);
+        IdentityMapResponse responseV2 = clientV2.generateIdentityMap(inputV2);
+        IdentityMapResponse.MappedIdentity mappedV2 = responseV2.getMappedIdentities().get("user@example.com");
+        if (mappedV2 != null) {
+            String uid = mappedV2.getRawUid();
+            assertNotNull(uid);
+        }
+        
+        // After - access to both current and previous UID2s
+        IdentityMapV3Response responseV3 = identityMapV3Client.generateIdentityMap(IdentityMapV3Input.fromEmails(Arrays.asList("user@example.com")));
+        IdentityMapV3Response.MappedIdentity mappedV3 = responseV3.getMappedIdentities().get("user@example.com");
+        if (mappedV3 != null) {
+            String currentUid = mappedV3.getCurrentRawUid();
+            String previousUid = mappedV3.getPreviousRawUid();  // Available for 90 days after rotation
+            Instant refreshFrom = mappedV3.getRefreshFrom();
+            
+            assertNotNull(currentUid);
+            assertNotNull(refreshFrom);
+            // previousUid may be null if no rotation occurred
+        }
+        
+        // Documentation sdk-ref-java.md Line 478-488: 3. Use structured error reasons
+        // Before - string-based error reasons
+        IdentityMapResponse.UnmappedIdentity unmappedV2 = responseV2.getUnmappedIdentities().get("user@example.com");
+        if (unmappedV2 != null) {
+            String reason = unmappedV2.getReason();
+            assertNotNull(reason);
+        }
+        
+        // After - structured enum-based error reasons
+        IdentityMapV3Response.UnmappedIdentity unmappedV3 = responseV3.getUnmappedIdentities().get("user@example.com");
+        if (unmappedV3 != null) {
+            UnmappedIdentityReason reason = unmappedV3.getReason(); // Enum: OPTOUT, INVALID_IDENTIFIER, UNKNOWN
+            assertNotNull(reason);
+            
+            // Or continue using string reasons if preferred
+            String rawReason = unmappedV3.getRawReason();
+            assertNotNull(rawReason);
+        }
+    }
+
     // ========================================
     // DSP USAGE TESTS  
     // ========================================
     
     @Test
     public void testDspUsageExample() {
-        // Documentation sdk-ref-java.md Line 514: DSP Usage - BidstreamClient creation
+        // Documentation sdk-ref-java.md Line 528: DSP Usage - BidstreamClient creation
         BidstreamClient client = new BidstreamClient(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);
         
-        // Documentation sdk-ref-java.md Line 520: Refresh at startup and periodically
+        // Documentation sdk-ref-java.md Line 534: Refresh at startup and periodically
         client.refresh();
         
-        // Documentation sdk-ref-java.md Line 529: Decrypt token into raw UID2 with domain/app name
+        // Documentation sdk-ref-java.md Line 543: Decrypt token into raw UID2 with domain/app name
         String mockUidToken = "mock-uid-token"; // In real usage, this would be from bid request
         String domainOrAppName = "example.com"; // or app name, or null
         
@@ -624,13 +685,13 @@ public class DocSampleCodeTest {
     
     @Test
     public void testSharingClientUsageExample() {
-        // Documentation sdk-ref-java.md Line 557: UID2 Sharers Usage - SharingClient creation
+        // Documentation sdk-ref-java.md Line 571: UID2 Sharers Usage - SharingClient creation
         SharingClient client = new SharingClient(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);
         
-        // Documentation sdk-ref-java.md Line 562: Refresh at startup and periodically
+        // Documentation sdk-ref-java.md Line 576: Refresh at startup and periodically
         client.refresh();
         
-        // Documentation sdk-ref-java.md Line 567: Encrypt raw UID as sender
+        // Documentation sdk-ref-java.md Line 581: Encrypt raw UID as sender
         String mockRawUid = "mock-raw-uid"; // In real usage, this would be actual raw UID2
         
         try {
@@ -650,7 +711,7 @@ public class DocSampleCodeTest {
             assertTrue(true);
         }
         
-        // Documentation sdk-ref-java.md Line 581: Decrypt token as receiver
+        // Documentation sdk-ref-java.md Line 595: Decrypt token as receiver
         String mockUidToken = "mock-uid-token"; // In real usage, this would be from sender
         
         try {
@@ -677,23 +738,23 @@ public class DocSampleCodeTest {
     
     @Test
     public void testV2LegacyUsageExample() {
-        // Documentation sdk-ref-java.md Line 480: V2 Implementation - Legacy IdentityMapClient creation
+        // Documentation sdk-ref-java.md Line 494: V2 Implementation - Legacy IdentityMapClient creation
         IdentityMapClient identityMapClient = new IdentityMapClient(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);
         
-        // Documentation sdk-ref-java.md Line 485: V2 Input construction (single identity type only)
+        // Documentation sdk-ref-java.md Line 499: V2 Input construction (single identity type only)
         IdentityMapInput input = IdentityMapInput.fromEmails(Arrays.asList("user@example.com"));
         
-        // Documentation sdk-ref-java.md Line 485: V2 API call
+        // Documentation sdk-ref-java.md Line 499: V2 API call
         IdentityMapResponse identityMapResponse = identityMapClient.generateIdentityMap(input);
         
-        // Documentation sdk-ref-java.md Line 492-493: V2 Response handling with proper types
+        // Documentation sdk-ref-java.md Line 506-507: V2 Response handling with proper types
         HashMap<String, IdentityMapResponse.MappedIdentity> mappedIdentities = identityMapResponse.getMappedIdentities();
         HashMap<String, IdentityMapResponse.UnmappedIdentity> unmappedIdentities = identityMapResponse.getUnmappedIdentities();
         
         assertNotNull(mappedIdentities);
         assertNotNull(unmappedIdentities);
         
-        // Documentation sdk-ref-java.md Line 498-501: V2 Result processing with bucket ID
+        // Documentation sdk-ref-java.md Line 512-515: V2 Result processing with bucket ID
         IdentityMapResponse.MappedIdentity mappedIdentity = mappedIdentities.get("user@example.com");
         if (mappedIdentity != null) {
             String rawUID = mappedIdentity.getRawUid();
@@ -706,9 +767,9 @@ public class DocSampleCodeTest {
     
     @Test 
     public void testV2ToV3MigrationExamples() {
-        // Documentation sdk-ref-java.md Line 410-415: Basic email mapping migration example
+        // Documentation sdk-ref-java.md Line 427-432: Basic client class migration example
         
-        // Documentation sdk-ref-java.md Line 411: V2 approach (before migration)
+        // Documentation sdk-ref-java.md Line 430: V2 approach (before migration)
         IdentityMapClient clientV2 = new IdentityMapClient(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);
         IdentityMapInput inputV2 = IdentityMapInput.fromEmails(Arrays.asList("user@example.com"));
         IdentityMapResponse responseV2 = clientV2.generateIdentityMap(inputV2);
@@ -717,7 +778,7 @@ public class DocSampleCodeTest {
             uidV2 = responseV2.getMappedIdentities().values().iterator().next().getRawUid();
         }
         
-        // Documentation sdk-ref-java.md Line 414: V3 approach (after migration)
+        // Documentation sdk-ref-java.md Line 433: V3 approach (after migration)
         IdentityMapV3Client clientV3 = new IdentityMapV3Client(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);
         IdentityMapV3Input inputV3 = IdentityMapV3Input.fromEmails(Arrays.asList("user@example.com"));
         IdentityMapV3Response responseV3 = clientV3.generateIdentityMap(inputV3);
@@ -730,7 +791,7 @@ public class DocSampleCodeTest {
         assertNotNull(responseV2);
         assertNotNull(responseV3);
         
-        // Documentation sdk-ref-java.md Line 517-527: Enhanced response processing with UID rotation support
+        // Enhanced response processing with UID rotation support from recommended changes section
         IdentityMapV3Response.MappedIdentity mapped = responseV3.getMappedIdentities().get("user@example.com");
         if (mapped != null) {
             String currentUid = mapped.getCurrentRawUid();
@@ -740,14 +801,14 @@ public class DocSampleCodeTest {
             assertNotNull(currentUid);
             assertNotNull(refreshFrom);
             
-            // Documentation sdk-ref-java.md Line 524-526: Check if refresh is needed
+            // Check if refresh is needed
             if (Instant.now().isAfter(refreshFrom)) {
                 // Refresh this identity
                 assertTrue(true); // Placeholder for refresh logic
             }
         }
         
-        // Documentation sdk-ref-java.md Line 535-549: Error handling migration with structured switch statement
+        // Error handling migration with structured switch statement from recommended changes section
         IdentityMapV3Response.UnmappedIdentity unmapped = responseV3.getUnmappedIdentities().get("user@example.com");
         if (unmapped != null) {
             switch (unmapped.getReason()) {
