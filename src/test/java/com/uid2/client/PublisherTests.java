@@ -515,10 +515,11 @@ class PublisherTests {
 
     @Test
     public void requestToNotGenerateTokensForOptedOutUsers() {
+        // This method is deprecated and no longer adds a policy field, but we keep it for backwards compatibility
         TokenGenerateInput input = TokenGenerateInput.fromEmail("test@example.com").doNotGenerateTokensForOptedOut();
 
         JsonObject json = new Gson().fromJson(input.getAsJsonString(), JsonObject.class);
-        assertEquals(1, json.get("policy").getAsInt());
+        assertNull(json.get("policy"));
     }
 
     private String encrypt(String body) {
