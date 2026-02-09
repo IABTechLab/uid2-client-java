@@ -373,7 +373,7 @@ public class DocSampleCodeTest {
         PublisherUid2Client publisherUid2Client = new PublisherUid2Client(UID2_BASE_URL, UID2_API_KEY, UID2_SECRET_KEY);
         
         // Documentation sdk-ref-java.md Line 147: Generate token from email with opt-out check
-        TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail("user@example.com").doNotGenerateTokensForOptedOut());
+        TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail("user@example.com"));
         
         assertNotNull(tokenGenerateResponse);
     }
@@ -381,7 +381,7 @@ public class DocSampleCodeTest {
     @Test
     public void testPublisherClientServerIntegrationExample() {
         // Documentation sdk-ref-java.md Line 147: Publisher Client-Server Integration - generate token response
-        TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail("user@example.com").doNotGenerateTokensForOptedOut());
+        TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail("user@example.com"));
         
         // Documentation sdk-ref-java.md Line 165: Send identity as JSON string back to client
         String identityJsonString = tokenGenerateResponse.getIdentityJsonString();
@@ -396,7 +396,7 @@ public class DocSampleCodeTest {
     @Test
     public void testPublisherServerSideIntegrationExample() {
         // Documentation sdk-ref-java.md Line 147: Publisher Server-Side Integration workflow - generate token
-        TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail("user@example.com").doNotGenerateTokensForOptedOut());
+        TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail("user@example.com"));
         
         // Documentation sdk-ref-java.md Line 176: Store identity as JSON string
         String identityJsonString = tokenGenerateResponse.getIdentityJsonString();
@@ -443,7 +443,7 @@ public class DocSampleCodeTest {
         PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);
         
         // Documentation sdk-ref-java.md Line 224: Create envelope for token generate request
-        EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail("user@example.com").doNotGenerateTokensForOptedOut());
+        EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail("user@example.com"));
         
         assertNotNull(envelope);
         assertNotNull(envelope.getEnvelope());
@@ -472,7 +472,7 @@ public class DocSampleCodeTest {
     public void testPublisherAdvancedClientServerExample() {
         // Documentation sdk-ref-java.md Line 250-252: Publisher Advanced Client-Server Integration
         PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);
-        EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail("user@example.com").doNotGenerateTokensForOptedOut());
+        EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail("user@example.com"));
         
         // Documentation sdk-ref-java.md Line 251: Get identity JSON string from token generate response
         // tokenGenerateResponse.getIdentityJsonString() - line 251
@@ -485,7 +485,7 @@ public class DocSampleCodeTest {
         PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);
         
         // Simulate the full advanced flow
-        EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail("user@example.com").doNotGenerateTokensForOptedOut());
+        EnvelopeV2 envelope = publisherUid2Helper.createEnvelopeForTokenGenerateRequest(TokenGenerateInput.fromEmail("user@example.com"));
         
         // Documentation sdk-ref-java.md Line 275-277: Generate IdentityTokens object from JSON
         String identityJsonString = "{}"; // Mock data
@@ -525,7 +525,7 @@ public class DocSampleCodeTest {
         PublisherUid2Helper publisherUid2Helper = new PublisherUid2Helper(UID2_SECRET_KEY);
         
         // First create a valid identity to use for refresh response
-        TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail("user@example.com").doNotGenerateTokensForOptedOut());
+        TokenGenerateResponse tokenGenerateResponse = publisherUid2Client.generateTokenResponse(TokenGenerateInput.fromEmail("user@example.com"));
         
         if (tokenGenerateResponse != null && tokenGenerateResponse.getIdentity() != null) {
             IdentityTokens identity = tokenGenerateResponse.getIdentity();
