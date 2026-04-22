@@ -32,4 +32,5 @@ jobs:
       publish_to_maven: ${{ inputs.publish_to_maven }}
       java_version: ${{ inputs.java_version }}
       publish_vulnerabilities: ${{ inputs.publish_vulnerabilities }}
+      merge_environment: ${{ github.ref_protected && 'ci-auto-merge' || '' }}
     secrets: inherit
